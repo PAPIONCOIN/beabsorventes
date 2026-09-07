@@ -4,6 +4,7 @@ import {
   CONTACT_EMAIL,
   CONTACT_PHONE_DISPLAY,
   CONTACT_WHATSAPP,
+  mailToUrl,
 } from "@/lib/contact";
 
 export function SiteFooter() {
@@ -50,7 +51,7 @@ export function SiteFooter() {
           <p className="text-muted">Envios para todo o Brasil.</p>
           <p className="mt-1 text-muted">O tempo de confecção é de 5 dias.</p>
           <p className="mt-4">
-            <a className="break-all text-muted hover:text-fg" href={`mailto:${CONTACT_EMAIL}`}>
+            <a className="break-all text-muted hover:text-fg" href={mailToUrl()}>
               {CONTACT_EMAIL}
             </a>
           </p>

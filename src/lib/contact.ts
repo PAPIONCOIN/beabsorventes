@@ -3,6 +3,12 @@ export const CONTACT_PHONE_DISPLAY = "+55 11 99589-5103";
 export const CONTACT_PHONE_E164 = "5511995895103";
 export const CONTACT_WHATSAPP = `https://wa.me/${CONTACT_PHONE_E164}`;
 
+export function mailToUrl(subject = "Contato beabsorventes", body = "") {
+  const parts = [`subject=${encodeURIComponent(subject)}`];
+  if (body.trim()) parts.push(`body=${encodeURIComponent(body)}`);
+  return `mailto:${CONTACT_EMAIL}?${parts.join("&")}`;
+}
+
 export const CONTACT_TOPICS = [
   "Dúvida sobre modelos",
   "Acompanhar pedido",

@@ -9,6 +9,7 @@ import {
   CONTACT_PHONE_DISPLAY,
   CONTACT_TOPICS,
   CONTACT_WHATSAPP,
+  mailToUrl,
   whatsappMessageUrl,
   type ContactTopic,
 } from "@/lib/contact";
@@ -21,6 +22,8 @@ function Contato() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [whatsUrl, setWhatsUrl] = useState(CONTACT_WHATSAPP);
+  const [mailUrl, setMailUrl] = useState(mailToUrl());
+  const [sentVia, setSentVia] = useState<"email" | "whatsapp" | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -29,29 +32,63 @@ function Contato() {
     message: "",
   });
 
+  function composedMessage() {
+    return [
+      `Nome: ${form.name}`,
+      `E-mail: ${form.email}`,
+      form.phone ? `Telefone: ${form.phone}` : null,
+      `Assunto: ${form.topic}`,
+      "",
+      form.message,
+    ]
+      .filter((line): line is string => line !== null)
+      .join("\n");
+  }
+
+  async function sendFormSubmit() {
+    await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        topic: form.topic,
+        message: form.message,
+        _subject: `Beabsorventes · ${form.topic}`,
+        _replyto: form.email,
+      }),
+    });
+  }
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
+    setBusy(true);
+    const mail = mailToUrl(`Beabsorventes · ${form.topic}`, composedMessage());
+    setMailUrl(mail);
+    window.location.href = mail;
+    setSentVia("email");
+    setSent(true);
+    try {
+      await sendFormSubmit();
+    } catch {
+      /* o aplicativo de e-mail já abriu */
+    }
+    setBusy(false);
+  }
+
+  async function onWhatsApp() {
     setBusy(true);
     const url = whatsappMessageUrl(form);
     setWhatsUrl(url);
     window.open(url, "_blank", "noopener,noreferrer");
+    setSentVia("whatsapp");
     setSent(true);
     try {
-      await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          topic: form.topic,
-          message: form.message,
-          _subject: `Beabsorventes · ${form.topic}`,
-        }),
-      });
+      await sendFormSubmit();
     } catch {
       /* WhatsApp já abriu */
     }
@@ -74,19 +111,25 @@ function Contato() {
           <div className="mt-10 rounded-xl bg-bg-warm p-6">
             <h2 className="font-display text-2xl italic">Mensagem enviada</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Abrimos o WhatsApp com o texto que você escreveu. Se a janela não
-              aparecer, use o botão abaixo.
+              {sentVia === "email"
+                ? "Abrimos o aplicativo de e-mail com a mensagem. Se a janela não aparecer, use o botão abaixo."
+                : "Abrimos o WhatsApp com o texto que você escreveu. Se a janela não aparecer, use o botão abaixo."}
             </p>
             <Button asChild className="mt-6">
-              <a href={whatsUrl} target="_blank" rel="noreferrer">
-                Abrir WhatsApp
-              </a>
+              {sentVia === "email" ? (
+                <a href={mailUrl}>Enviar e-mail</a>
+              ) : (
+                <a href={whatsUrl} target="_blank" rel="noreferrer">
+                  Abrir WhatsApp
+                </a>
+              )}
             </Button>
             <button
               type="button"
               className="mt-4 block text-sm text-muted hover:text-fg"
               onClick={() => {
                 setSent(false);
+                setSentVia(null);
                 setForm((prev) => ({ ...prev, message: "" }));
               }}
             >
@@ -144,7 +187,17 @@ function Contato() {
               />
             </div>
             <Button type="submit" size="lg" className="w-full" disabled={busy}>
-              {busy ? "Enviando…" : "Enviar no WhatsApp"}
+              {busy ? "Enviando…" : "Enviar e-mail"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={busy}
+              onClick={() => void onWhatsApp()}
+            >
+              Enviar no WhatsApp
             </Button>
           </form>
         )}
@@ -160,7 +213,7 @@ function Contato() {
           <div>
             <dt className="text-muted">E-mail</dt>
             <dd>
-              <a className="hover:text-primary" href={`mailto:${CONTACT_EMAIL}`}>
+              <a className="hover:text-primary" href={mailToUrl()}>
                 {CONTACT_EMAIL}
               </a>
             </dd>

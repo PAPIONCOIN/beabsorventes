@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CONTACT_EMAIL } from "@/lib/contact";
+import { CONTACT_EMAIL, mailToUrl } from "@/lib/contact";
 
 export const Route = createFileRoute("/privacidade")({ component: Privacidade });
 
@@ -30,7 +30,7 @@ function Privacidade() {
         <p>
           Para exercer seus direitos de acesso, correção ou exclusão, escreva
           para{" "}
-          <a className="text-fg underline-offset-4 hover:underline" href={`mailto:${CONTACT_EMAIL}`}>
+          <a className="text-fg underline-offset-4 hover:underline" href={mailToUrl("Privacidade beabsorventes")}>
             {CONTACT_EMAIL}
           </a>
           .
