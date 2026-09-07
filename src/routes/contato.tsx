@@ -10,7 +10,6 @@ import {
   CONTACT_TOPICS,
   CONTACT_WHATSAPP,
   mailToUrl,
-  whatsappMessageUrl,
   type ContactTopic,
 } from "@/lib/contact";
 import { formatPhone } from "@/lib/utils";
@@ -21,9 +20,7 @@ export const Route = createFileRoute("/contato")({ component: Contato });
 function Contato() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
-  const [whatsUrl, setWhatsUrl] = useState(CONTACT_WHATSAPP);
-  const [mailUrl, setMailUrl] = useState(mailToUrl());
-  const [sentVia, setSentVia] = useState<"email" | "whatsapp" | null>(null);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -32,67 +29,40 @@ function Contato() {
     message: "",
   });
 
-  function composedMessage() {
-    return [
-      `Nome: ${form.name}`,
-      `E-mail: ${form.email}`,
-      form.phone ? `Telefone: ${form.phone}` : null,
-      `Assunto: ${form.topic}`,
-      "",
-      form.message,
-    ]
-      .filter((line): line is string => line !== null)
-      .join("\n");
-  }
-
-  async function sendFormSubmit() {
-    await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        topic: form.topic,
-        message: form.message,
-        _subject: `Beabsorventes · ${form.topic}`,
-        _replyto: form.email,
-      }),
-    });
-  }
-
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
-    const mail = mailToUrl(`Beabsorventes · ${form.topic}`, composedMessage());
-    setMailUrl(mail);
-    window.location.href = mail;
-    setSentVia("email");
-    setSent(true);
+    setError("");
     try {
-      await sendFormSubmit();
+      const res = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone || "não informado",
+          topic: form.topic,
+          message: form.message,
+          _subject: `Contato beabsorventes · ${form.topic}`,
+          _template: "box",
+          _captcha: "false",
+          _replyto: form.email,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error("formsubmit");
+      }
+      setSent(true);
     } catch {
-      /* o aplicativo de e-mail já abriu */
+      setError(
+        "Não foi possível enviar agora. Use o e-mail ao lado ou tente de novo.",
+      );
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
-  }
-
-  async function onWhatsApp() {
-    setBusy(true);
-    const url = whatsappMessageUrl(form);
-    setWhatsUrl(url);
-    window.open(url, "_blank", "noopener,noreferrer");
-    setSentVia("whatsapp");
-    setSent(true);
-    try {
-      await sendFormSubmit();
-    } catch {
-      /* WhatsApp já abriu */
-    }
-    setBusy(false);
   }
 
   return (
@@ -103,33 +73,20 @@ function Contato() {
         </p>
         <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Fale conosco</h1>
         <p className="mt-4 max-w-xl text-muted">
-          Dúvidas sobre modelos, pedidos ou trocas. Respondemos pelo WhatsApp e
-          pelo e-mail, em horário comercial.
+          A mensagem deste formulário chega no e-mail {CONTACT_EMAIL}.
         </p>
 
         {sent ? (
           <div className="mt-10 rounded-xl bg-bg-warm p-6">
             <h2 className="font-display text-2xl italic">Mensagem enviada</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              {sentVia === "email"
-                ? "Abrimos o aplicativo de e-mail com a mensagem. Se a janela não aparecer, use o botão abaixo."
-                : "Abrimos o WhatsApp com o texto que você escreveu. Se a janela não aparecer, use o botão abaixo."}
+              Recebemos no e-mail {CONTACT_EMAIL}. Respondemos em horário comercial.
             </p>
-            <Button asChild className="mt-6">
-              {sentVia === "email" ? (
-                <a href={mailUrl}>Enviar e-mail</a>
-              ) : (
-                <a href={whatsUrl} target="_blank" rel="noreferrer">
-                  Abrir WhatsApp
-                </a>
-              )}
-            </Button>
             <button
               type="button"
-              className="mt-4 block text-sm text-muted hover:text-fg"
+              className="mt-6 text-sm text-muted hover:text-fg"
               onClick={() => {
                 setSent(false);
-                setSentVia(null);
                 setForm((prev) => ({ ...prev, message: "" }));
               }}
             >
@@ -186,18 +143,9 @@ function Contato() {
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
               />
             </div>
+            {error ? <p className="text-sm text-primary">{error}</p> : null}
             <Button type="submit" size="lg" className="w-full" disabled={busy}>
               {busy ? "Enviando…" : "Enviar e-mail"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="w-full"
-              disabled={busy}
-              onClick={() => void onWhatsApp()}
-            >
-              Enviar no WhatsApp
             </Button>
           </form>
         )}
