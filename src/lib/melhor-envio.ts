@@ -33,7 +33,13 @@ function meToken() {
 }
 
 function fromCep() {
-  return (process.env.MELHOR_ENVIO_FROM_CEP ?? ORIGIN_CEP).replace(/\D/g, "").slice(0, 8);
+  return asCep(process.env.MELHOR_ENVIO_FROM_CEP ?? ORIGIN_CEP);
+}
+
+function asCep(value: unknown) {
+  const digits = String(value ?? "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length === 7) return digits.padStart(8, "0");
+  return digits;
 }
 
 export function quoteProducts(items: CartLine[]) {
@@ -76,15 +82,20 @@ export function quoteProducts(items: CartLine[]) {
 }
 
 function parseQuotes(data: unknown): ShippingQuote[] {
-  if (!Array.isArray(data)) return [];
+  const list = Array.isArray(data)
+    ? data
+    : data && typeof data === "object" && Array.isArray((data as { data?: unknown }).data)
+      ? ((data as { data: unknown[] }).data)
+      : [];
   const quotes: ShippingQuote[] = [];
-  for (const raw of data as MeQuote[]) {
-    if (!raw || raw.error || typeof raw.id !== "number") continue;
+  for (const raw of list as MeQuote[]) {
+    if (!raw || raw.error) continue;
+    const id = Number(raw.id);
     const price = Number(raw.custom_price ?? raw.price);
     const days = Number(raw.custom_delivery_time ?? raw.delivery_time);
-    if (!Number.isFinite(price) || price <= 0) continue;
+    if (!Number.isFinite(id) || id <= 0 || !Number.isFinite(price) || price <= 0) continue;
     quotes.push({
-      serviceId: raw.id,
+      serviceId: id,
       name: raw.name ?? "Frete",
       company: raw.company?.name ?? "Transportadora",
       priceCents: Math.round(price * 100),
@@ -95,15 +106,32 @@ function parseQuotes(data: unknown): ShippingQuote[] {
   return quotes.slice(0, 5);
 }
 
+async function destinationPlace(cep: string) {
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = (await response.json()) as {
+      erro?: boolean;
+      localidade?: string;
+      uf?: string;
+    };
+    if (data.erro) return { city: "", state: "" };
+    return { city: data.localidade ?? "", state: data.uf ?? "" };
+  } catch {
+    return { city: "", state: "" };
+  }
+}
+
 export async function fetchMelhorEnvioQuotes(
   destinationCep: string,
   items: CartLine[],
 ): Promise<ShippingQuote[]> {
   const token = meToken();
   const origin = fromCep();
+  const dest = asCep(destinationCep);
   const products = quoteProducts(items);
-  if (!token || origin.length !== 8 || products.length === 0) return [];
+  if (!token || origin.length !== 8 || dest.length !== 8 || products.length === 0) return [];
 
+  const place = await destinationPlace(dest);
   const response = await fetch(`${meBase()}/me/shipment/calculate`, {
     method: "POST",
     headers: {
@@ -113,8 +141,18 @@ export async function fetchMelhorEnvioQuotes(
       "User-Agent": `Beabsorventes (${CONTACT_EMAIL})`,
     },
     body: JSON.stringify({
-      from: { postal_code: origin },
-      to: { postal_code: destinationCep.replace(/\D/g, "").slice(0, 8) },
+      from: {
+        postal_code: origin,
+        address: "Rua Principal",
+        number: "1",
+        city: "Praia Grande",
+        state_abbr: "SP",
+      },
+      to: {
+        postal_code: dest,
+        city: place.city || undefined,
+        state_abbr: place.state || undefined,
+      },
       products,
       options: {
         receipt: false,
@@ -128,7 +166,7 @@ export async function fetchMelhorEnvioQuotes(
   });
 
   if (!response.ok) {
-    console.error("[melhor-envio] calculate", response.status, await response.text());
+    console.error("[melhor-envio] calculate", dest, response.status, await response.text());
     return [];
   }
   return parseQuotes(await response.json());
@@ -303,7 +341,7 @@ async function senderFromAccount() {
       address.state_abbr ?? address.state,
       process.env.MELHOR_ENVIO_FROM_STATE || "SP",
     ).slice(0, 2).toUpperCase(),
-    postal_code: asText(address.postal_code, origin).replace(/\D/g, "").slice(0, 8),
+    postal_code: asCep(address.postal_code || origin),
   };
 }
 
@@ -405,7 +443,7 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
       district: asText(input.address.neighborhood, "Centro"),
       city: asText(input.address.city, "Praia Grande"),
       state_abbr: asText(input.address.state, "SP").slice(0, 2).toUpperCase(),
-      postal_code: asText(input.address.cep).replace(/\D/g, "").slice(0, 8),
+      postal_code: asCep(input.address.cep),
       country_id: "BR",
     },
     products: input.items.map((item) => ({
