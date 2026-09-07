@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL } from "@/lib/contact";
+import { sendInboxMail } from "@/lib/send-mail";
 
 export type OrderMailItem = {
   name: string;
@@ -92,19 +92,14 @@ export function orderMailFields(input: OrderMailInput) {
 
 export async function sendOrderMail(input: OrderMailInput) {
   const fields = orderMailFields(input);
-  const body = new FormData();
-  for (const [key, value] of Object.entries(fields)) {
-    body.append(key, value);
-  }
-
-  const res = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
-    method: "POST",
-    headers: { Accept: "application/json" },
-    body,
+  const { _subject, _replyto, _template, _captcha, ...rest } = fields;
+  const mailed = await sendInboxMail({
+    subject: _subject,
+    replyTo: _replyto || input.email,
+    fields: rest,
   });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`Falha ao enviar e-mail do pedido (${res.status}) ${detail}`);
+  if (!mailed) {
+    throw new Error("Falha ao enviar e-mail do pedido");
   }
   return true;
 }

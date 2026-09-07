@@ -13,6 +13,7 @@ import {
   sendContactMessage,
   type ContactTopic,
 } from "@/lib/contact";
+import { sendInboxMailFromBrowser } from "@/lib/send-mail";
 import { formatPhone } from "@/lib/utils";
 import { BrandMark } from "@/components/logo";
 
@@ -35,17 +36,30 @@ function Contato() {
     setBusy(true);
     setError("");
     try {
-      const result = await sendContactMessage({
-        data: {
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          topic: form.topic,
-          message: form.message,
-        },
-      });
-      if (!result.ok) {
-        setError("message" in result && result.message ? result.message : "Não foi possível enviar agora. Tente de novo.");
+      const payload = {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        topic: form.topic,
+        message: form.message,
+      };
+      const result = await sendContactMessage({ data: payload });
+      let mailed = result.mailed;
+      if (!mailed) {
+        mailed = await sendInboxMailFromBrowser({
+          subject: `Contato beabsorventes · ${payload.topic}`,
+          replyTo: payload.email,
+          fields: {
+            Nome: payload.name,
+            Email: payload.email,
+            WhatsApp: payload.phone || "não informado",
+            Assunto: payload.topic,
+            Mensagem: payload.message,
+          },
+        });
+      }
+      if (!result.ok && !mailed) {
+        setError(result.message || "Não foi possível enviar agora. Tente de novo.");
         return;
       }
       setSent(true);
@@ -71,8 +85,9 @@ function Contato() {
           <div className="mt-10 rounded-xl bg-bg-warm p-6">
             <h2 className="font-display text-2xl italic">Mensagem enviada</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Recebemos sua mensagem no e-mail {CONTACT_EMAIL}. Também fica
-              registrada na administração.
+              Recebemos sua mensagem no e-mail {CONTACT_EMAIL}. Confira também
+              a caixa de spam. A primeira vez o FormSubmit pede para confirmar
+              o endereço — o e-mail de ativação chega nesse mesmo Gmail.
             </p>
             <button
               type="button"

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { isAdmin } from "@/lib/customers";
+import { sendInboxMail } from "@/lib/send-mail";
 
 export const CONTACT_EMAIL = "beabsorventes@gmail.com";
 export const CONTACT_PHONE_DISPLAY = "+55 11 99589-5103";
@@ -98,46 +99,22 @@ export const sendContactMessage = createServerFn({ method: "POST" })
       console.error("[contact] persist", error);
     }
 
-    const body = new FormData();
-    body.append("_subject", `Contato beabsorventes · ${data.topic}`);
-    body.append("_template", "box");
-    body.append("_captcha", "false");
-    body.append("_replyto", data.email);
-    body.append("Nome", data.name);
-    body.append("Email", data.email);
-    body.append("WhatsApp", data.phone || "não informado");
-    body.append("Assunto", data.topic);
-    body.append("Mensagem", data.message);
+    const mailed = await sendInboxMail({
+      subject: `Contato beabsorventes · ${data.topic}`,
+      replyTo: data.email,
+      fields: {
+        Nome: data.name,
+        Email: data.email,
+        WhatsApp: data.phone || "não informado",
+        Assunto: data.topic,
+        Mensagem: data.message,
+      },
+    });
 
-    try {
-      const res = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "User-Agent": `Beabsorventes (${CONTACT_EMAIL})`,
-        },
-        body,
-      });
-      const text = await res.text();
-      let success = res.ok;
-      try {
-        const parsed = JSON.parse(text) as { success?: boolean | string };
-        if (parsed.success === false || parsed.success === "false") success = false;
-        if (parsed.success === true || parsed.success === "true") success = true;
-      } catch {
-        /* text body */
-      }
-      if (!success) {
-        console.error("[contact] mail", res.status, text.slice(0, 400));
-      }
-    } catch (error) {
-      console.error("[contact] mail", error);
+    if (!saved && !mailed) {
+      return { ok: false as const, mailed: false, message: "Não foi possível enviar agora." };
     }
-
-    if (!saved) {
-      return { ok: false as const, message: "Não foi possível enviar agora." };
-    }
-    return { ok: true as const };
+    return { ok: true as const, mailed };
   });
 
 export const listContactMessages = createServerFn({ method: "GET" }).handler(async () => {
