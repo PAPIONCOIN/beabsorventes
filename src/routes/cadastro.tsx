@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
 import { registerCustomer } from "@/lib/customers";
+import { sendCustomerMail } from "@/lib/customer-mail";
 import { formatCep, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro")({ component: Cadastro });
@@ -26,18 +27,33 @@ function Cadastro() {
     event.preventDefault();
     setBusy(true);
     setError("");
+    const payload = {
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      cep: form.cep,
+      city: form.city,
+      state: form.state,
+      source: "cadastro" as const,
+    };
     try {
-      await registerCustomer({
-        data: {
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          cep: form.cep,
-          city: form.city,
-          state: form.state,
-          source: "cadastro",
-        },
-      });
+      let mailed = false;
+      try {
+        await sendCustomerMail(payload);
+        mailed = true;
+      } catch (error) {
+        console.error("[cadastro-mail]", error);
+      }
+      try {
+        await registerCustomer({ data: payload });
+        mailed = true;
+      } catch (error) {
+        console.error("[cadastro-db]", error);
+      }
+      if (!mailed) {
+        setError("Não foi possível concluir o cadastro. Tente de novo.");
+        return;
+      }
       setDone(true);
     } catch {
       setError("Não foi possível concluir o cadastro. Tente de novo.");

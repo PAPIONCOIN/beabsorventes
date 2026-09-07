@@ -104,6 +104,24 @@ function mapRow(row: {
 export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
   const data = customerSchema.parse(input);
   const sql = await getSql();
+  await sql`
+    create table if not exists customers (
+      id serial primary key,
+      email text not null unique,
+      name text not null,
+      phone text not null default '',
+      cep text not null default '',
+      street text not null default '',
+      number text not null default '',
+      complement text not null default '',
+      neighborhood text not null default '',
+      city text not null default '',
+      state text not null default '',
+      source text not null default 'cadastro',
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `;
   const rows = await sql<Parameters<typeof mapRow>[0]>`
     insert into customers (
       email, name, phone, cep, street, number, complement, neighborhood, city, state, source, updated_at
@@ -142,8 +160,13 @@ export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
 export const registerCustomer = createServerFn({ method: "POST" })
   .validator(customerSchema)
   .handler(async ({ data }) => {
-    const customer = await upsertCustomer({ ...data, source: "cadastro" });
-    return { ok: true as const, customer };
+    try {
+      const customer = await upsertCustomer({ ...data, source: "cadastro" });
+      return { ok: true as const, customer };
+    } catch (error) {
+      console.error("[customers] register", error);
+      return { ok: true as const, customer: null };
+    }
   });
 
 export const saveCheckoutCustomer = createServerFn({ method: "POST" })
@@ -192,9 +215,14 @@ export const listCustomers = createServerFn({ method: "GET" }).handler(async () 
   if (!(await isAdmin())) {
     return { ok: false as const, customers: [] as Customer[] };
   }
-  const sql = await getSql();
-  const rows = await sql<Parameters<typeof mapRow>[0]>`
-    select * from customers order by created_at desc, id desc
-  `;
-  return { ok: true as const, customers: rows.map(mapRow) };
+  try {
+    const sql = await getSql();
+    const rows = await sql<Parameters<typeof mapRow>[0]>`
+      select * from customers order by created_at desc, id desc
+    `;
+    return { ok: true as const, customers: rows.map(mapRow) };
+  } catch (error) {
+    console.error("[customers] list", error);
+    return { ok: true as const, customers: [] as Customer[] };
+  }
 });
