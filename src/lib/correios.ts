@@ -1,5 +1,6 @@
 import { quoteProducts, type ShippingQuote } from "@/lib/melhor-envio";
 import type { CartLine } from "@/lib/cart-store";
+import { ORIGIN_CEP } from "@/lib/origin-cep";
 
 type TokenCache = { token: string; expiresAt: number };
 
@@ -9,7 +10,7 @@ function fromCep() {
   return (
     process.env.CORREIOS_FROM_CEP ??
     process.env.MELHOR_ENVIO_FROM_CEP ??
-    ""
+    ORIGIN_CEP
   )
     .replace(/\D/g, "")
     .slice(0, 8);

@@ -1,13 +1,16 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { getProduct } from "@/lib/products";
 import {
   cartCount,
   cartTotals,
+  sanitizeLines,
   useCartStore,
 } from "@/lib/cart-store";
 import { formatBRL } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { QtyStepper } from "@/components/product/qty-stepper";
+import { FreightQuote } from "@/components/shipping/freight-quote";
 import {
   Sheet,
   SheetContent,
@@ -25,6 +28,7 @@ export function CartDrawer() {
   const remove = useCartStore((s) => s.remove);
   const totals = cartTotals(lines, "card");
   const count = cartCount(lines);
+  const [freight, setFreight] = useState(0);
 
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -99,14 +103,29 @@ export function CartDrawer() {
               })}
             </ul>
           )}
+          {lines.length > 0 ? (
+            <div className="mt-6">
+              <FreightQuote
+                inputId="sacola-cep"
+                items={sanitizeLines(lines)}
+                onQuoted={(_, quotes) => setFreight(quotes[0]?.payableCents ?? 0)}
+              />
+            </div>
+          ) : null}
         </div>
         <div className="border-t border-border p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <div className="flex justify-between text-sm">
             <span className="text-muted">Subtotal</span>
             <span className="tabular-nums">{formatBRL(totals.subtotal)}</span>
           </div>
+          {freight > 0 ? (
+            <div className="mt-1 flex justify-between text-sm">
+              <span className="text-muted">Frete</span>
+              <span className="tabular-nums">{formatBRL(freight)}</span>
+            </div>
+          ) : null}
           <p className="mt-2 text-xs text-muted">
-            Frete cotado no checkout pelos Correios. Grátis a partir de R$ 180.
+            Frete cotado pelo CEP antes de pagar. Grátis a partir de R$ 180.
             PIX com 5% de desconto.
           </p>
           <Button asChild className="mt-4 w-full" disabled={lines.length === 0}>

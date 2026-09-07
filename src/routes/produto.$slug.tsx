@@ -13,6 +13,7 @@ import {
   type SizeId,
 } from "@/lib/products";
 import { formatBRL } from "@/lib/utils";
+import { FreightQuote } from "@/components/shipping/freight-quote";
 
 export const Route = createFileRoute("/produto/$slug")({
   loader: ({ params }) => {
@@ -102,6 +103,20 @@ function ProductPage() {
           <p className="mt-5 max-w-md text-base leading-relaxed text-muted">
             {product.description}
           </p>
+
+          <div className="mt-8">
+            <FreightQuote
+              inputId="produto-cep"
+              items={[
+                {
+                  slug: product.slug,
+                  printId,
+                  size,
+                  qty,
+                },
+              ]}
+            />
+          </div>
 
           <div className="mt-8 hidden flex-wrap items-center gap-3 lg:flex">
             <QtyStepper value={qty} onChange={setQty} />

@@ -2,6 +2,7 @@ import { CONTACT_EMAIL } from "@/lib/contact";
 import { getProduct, shipBoxFor } from "@/lib/products";
 import { FREE_SHIPPING_FROM } from "@/lib/utils";
 import type { CartLine } from "@/lib/cart-store";
+import { ORIGIN_CEP } from "@/lib/origin-cep";
 export type ShippingQuote = {
   serviceId: number;
   name: string;
@@ -32,7 +33,7 @@ function meToken() {
 }
 
 function fromCep() {
-  return (process.env.MELHOR_ENVIO_FROM_CEP ?? "").replace(/\D/g, "").slice(0, 8);
+  return (process.env.MELHOR_ENVIO_FROM_CEP ?? ORIGIN_CEP).replace(/\D/g, "").slice(0, 8);
 }
 
 export function quoteProducts(items: CartLine[]) {

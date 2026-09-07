@@ -16,6 +16,7 @@ import { sendOrderMail } from "@/lib/order-mail";
 import { getProduct } from "@/lib/products";
 import { BrandMark } from "@/components/logo";
 import { digitsOnly, formatBRL, formatCep, formatPhone, FREE_SHIPPING_FROM } from "@/lib/utils";
+import { ORIGIN_CEP_LABEL, readSavedCep, saveCep } from "@/lib/origin-cep";
 
 export const Route = createFileRoute("/checkout")({ component: Checkout });
 
@@ -55,6 +56,11 @@ function Checkout() {
 
   useEffect(() => {
     void getMercadoPagoStatus().then((s) => setMpReady(s.ready));
+    const saved = readSavedCep();
+    if (saved.length === 8) {
+      setForm((prev) => ({ ...prev, cep: formatCep(saved) }));
+      void lookupCep(saved);
+    }
   }, []);
 
   async function loadQuotes(cep: string) {
@@ -217,6 +223,57 @@ function Checkout() {
           </p>
         ) : null}
         <Field
+          label="CEP"
+          inputMode="numeric"
+          autoComplete="postal-code"
+          value={form.cep}
+          onChange={(v) => {
+            const cep = formatCep(v);
+            setForm((prev) => ({ ...prev, cep }));
+            if (digitsOnly(cep).length === 8) {
+              saveCep(digitsOnly(cep));
+              void lookupCep(digitsOnly(cep));
+            }
+          }}
+        />
+        <fieldset>
+          <legend className="text-sm font-medium">Frete</legend>
+          <p className="mt-1 text-xs text-muted">
+            Postagem saindo de {ORIGIN_CEP_LABEL}. Frete grátis a partir de{" "}
+            {formatBRL(FREE_SHIPPING_FROM)}.
+          </p>
+          <div className="mt-3 space-y-2">
+            {quoting ? (
+              <p className="text-sm text-muted">Consultando prazos e valores…</p>
+            ) : null}
+            {quotes.map((quote) => {
+              const active = (selected?.serviceId ?? null) === quote.serviceId;
+              return (
+                <button
+                  key={quote.serviceId}
+                  type="button"
+                  onClick={() => setServiceId(quote.serviceId)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-md border px-4 py-3 text-left text-sm ${
+                    active ? "border-fg bg-fg text-bg" : "border-border bg-surface"
+                  }`}
+                >
+                  <span>
+                    <span className="block font-medium">
+                      {quote.company} {quote.name}
+                    </span>
+                    <span className={active ? "text-bg/80" : "text-muted"}>
+                      {quote.days} dia{quote.days === 1 ? "" : "s"} úteis
+                    </span>
+                  </span>
+                  <span className="shrink-0 tabular-nums">
+                    {quote.payableCents === 0 ? "Grátis" : formatBRL(quote.payableCents)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+        <Field
           label="Nome"
           value={form.name}
           onChange={(v) => setForm({ ...form, name: v })}
@@ -233,17 +290,6 @@ function Checkout() {
           autoComplete="tel"
           value={form.phone}
           onChange={(v) => setForm({ ...form, phone: formatPhone(v) })}
-        />
-        <Field
-          label="CEP"
-          inputMode="numeric"
-          autoComplete="postal-code"
-          value={form.cep}
-          onChange={(v) => {
-            const cep = formatCep(v);
-            setForm((prev) => ({ ...prev, cep }));
-            if (digitsOnly(cep).length === 8) void lookupCep(digitsOnly(cep));
-          }}
         />
         <Field
           label="Rua"
@@ -284,42 +330,6 @@ function Checkout() {
             }
           />
         </div>
-        <fieldset>
-          <legend className="text-sm font-medium">Frete</legend>
-          <p className="mt-1 text-xs text-muted">
-            Cotação pelos Correios. Frete grátis a partir de {formatBRL(FREE_SHIPPING_FROM)}.
-          </p>
-          <div className="mt-3 space-y-2">
-            {quoting ? (
-              <p className="text-sm text-muted">Consultando prazos e valores…</p>
-            ) : null}
-            {quotes.map((quote) => {
-              const active = (selected?.serviceId ?? null) === quote.serviceId;
-              return (
-                <button
-                  key={quote.serviceId}
-                  type="button"
-                  onClick={() => setServiceId(quote.serviceId)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-md border px-4 py-3 text-left text-sm ${
-                    active ? "border-fg bg-fg text-bg" : "border-border bg-surface"
-                  }`}
-                >
-                  <span>
-                    <span className="block font-medium">
-                      {quote.company} {quote.name}
-                    </span>
-                    <span className={active ? "text-bg/80" : "text-muted"}>
-                      {quote.days} dia{quote.days === 1 ? "" : "s"} úteis
-                    </span>
-                  </span>
-                  <span className="shrink-0 tabular-nums">
-                    {quote.payableCents === 0 ? "Grátis" : formatBRL(quote.payableCents)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
         <fieldset>
           <legend className="text-sm font-medium">Pagamento</legend>
           <div className="mt-2 flex gap-2">
