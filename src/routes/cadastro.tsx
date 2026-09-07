@@ -143,7 +143,15 @@ function Cadastro() {
         console.error("[cadastro-mail]", error);
       }
       try {
-        await registerCustomer({ data: payload });
+        const registered = await registerCustomer({ data: payload });
+        if (!registered.ok || !registered.customer) {
+          setError(
+            "message" in registered && registered.message
+              ? registered.message
+              : "Não foi possível concluir o cadastro. Tente de novo.",
+          );
+          return;
+        }
         try {
           await openAccount({ data: { email: payload.email, password: payload.password } });
           applyShopSession({ name: payload.name, email: payload.email });

@@ -20,15 +20,15 @@ const checkoutSchema = z.object({
   name: z.string().trim().min(2),
   email: z.string().trim().email(),
   cep: z.string().regex(/^\d{8}$/),
-  street: z.string().trim().min(2),
-  number: z.string().trim().min(1),
-  complement: z.string().trim(),
-  neighborhood: z.string().trim().min(2),
+  street: z.string().trim().optional().default(""),
+  number: z.string().trim().optional().default("s/n"),
+  complement: z.string().trim().optional().default(""),
+  neighborhood: z.string().trim().optional().default(""),
   city: z.string().trim().min(2),
   state: z.string().trim().min(2).max(2),
   payment: z.enum(["pix", "card"]),
   phone: z.string().trim().optional(),
-  document: z.string().trim().optional(),
+  document: z.string().regex(/^\d{11}$/),
   items: z.array(itemSchema).min(1),
   shippingServiceId: z.number().int().optional(),
 });
@@ -220,7 +220,20 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       shippingServiceId: shipping.serviceId,
       document: data.document ?? "",
     };
-    await persistOrder({ ...orderRecord, status: token ? "pending" : "demo" });
+    try {
+      await persistOrder({ ...orderRecord, status: token ? "pending" : "demo" });
+    } catch (error) {
+      console.error("[orders] checkout persist", error);
+      return {
+        ok: false as const,
+        reason: "gateway" as const,
+        orderId,
+        items: lines,
+        totals,
+        shippingLabel: shipping.label,
+        message: "Não foi possível gravar o pedido. Confira o banco Postgres na Vercel.",
+      };
+    }
 
     if (!token) {
       return {
@@ -254,6 +267,10 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       payer: {
         name: data.name,
         email: data.email,
+        identification: {
+          type: "CPF",
+          number: data.document ?? "",
+        },
         phone: data.phone
           ? { number: data.phone.replace(/\D/g, "") }
           : undefined,
@@ -270,6 +287,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         failure: `${origin}/checkout`,
       },
       auto_return: "approved",
+      binary_mode: true,
       statement_descriptor: "BEABSORVENTES",
       payment_methods:
         data.payment === "pix"

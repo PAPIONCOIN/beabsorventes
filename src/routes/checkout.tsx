@@ -336,12 +336,14 @@ function Checkout() {
         />
         <Field
           label="Rua"
+          required={false}
           value={form.street}
           onChange={(v) => setForm({ ...form, street: v })}
         />
         <div className="grid grid-cols-2 gap-4">
           <Field
             label="Número"
+            required={false}
             value={form.number}
             onChange={(v) => setForm({ ...form, number: v })}
           />
@@ -354,6 +356,7 @@ function Checkout() {
         </div>
         <Field
           label="Bairro"
+          required={false}
           value={form.neighborhood}
           onChange={(v) => setForm({ ...form, neighborhood: v })}
         />

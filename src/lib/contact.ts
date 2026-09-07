@@ -80,6 +80,7 @@ const contactSchema = z.object({
 export const sendContactMessage = createServerFn({ method: "POST" })
   .validator(contactSchema)
   .handler(async ({ data }) => {
+    let saved = false;
     try {
       const sql = await ensureContactTable();
       await sql`
@@ -92,6 +93,7 @@ export const sendContactMessage = createServerFn({ method: "POST" })
           ${data.message}
         )
       `;
+      saved = true;
     } catch (error) {
       console.error("[contact] persist", error);
     }
@@ -132,6 +134,9 @@ export const sendContactMessage = createServerFn({ method: "POST" })
       console.error("[contact] mail", error);
     }
 
+    if (!saved) {
+      return { ok: false as const, message: "Não foi possível enviar agora." };
+    }
     return { ok: true as const };
   });
 

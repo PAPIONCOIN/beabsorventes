@@ -45,7 +45,7 @@ function Contato() {
         },
       });
       if (!result.ok) {
-        setError("Não foi possível enviar agora. Tente de novo.");
+        setError("message" in result && result.message ? result.message : "Não foi possível enviar agora. Tente de novo.");
         return;
       }
       setSent(true);

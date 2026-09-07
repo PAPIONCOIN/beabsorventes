@@ -190,10 +190,13 @@ export const registerCustomer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     try {
       const customer = await upsertCustomer({ ...data, source: "cadastro" });
+      if (!customer) {
+        return { ok: false as const, customer: null, message: "Não foi possível gravar o cadastro." };
+      }
       return { ok: true as const, customer };
     } catch (error) {
       console.error("[customers] register", error);
-      return { ok: true as const, customer: null };
+      return { ok: false as const, customer: null, message: "Não foi possível gravar o cadastro." };
     }
   });
 

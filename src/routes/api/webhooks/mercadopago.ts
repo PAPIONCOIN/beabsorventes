@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sendOrderMail } from "@/lib/order-mail";
-import { sendPaidOrderToMelhorEnvio, updateOrderStatus } from "@/lib/shop-orders";
+import { getOrder, sendPaidOrderToMelhorEnvio, updateOrderStatus } from "@/lib/shop-orders";
 
 type MpPayment = {
   id?: number;
@@ -20,17 +20,28 @@ type MpPayment = {
 
 async function paymentIdFrom(request: Request) {
   const url = new URL(request.url);
-  const queryId = url.searchParams.get("data.id") || url.searchParams.get("id");
-  if (queryId) return queryId;
+  const topic = url.searchParams.get("topic") || url.searchParams.get("type");
+  if (topic === "merchant_order") return null;
+  const queryId =
+    (topic === "payment" ? url.searchParams.get("id") : null) ||
+    url.searchParams.get("data.id") ||
+    url.searchParams.get("id");
+
+  const raw = await request.text();
+  if (!raw) return queryId;
   try {
-    const body = (await request.json()) as {
+    const body = JSON.parse(raw) as {
       type?: string;
+      topic?: string;
       action?: string;
       data?: { id?: string };
     };
-    return body.data?.id ?? null;
+    if (body.type === "merchant_order" || body.topic === "merchant_order") {
+      return null;
+    }
+    return body.data?.id ?? queryId;
   } catch {
-    return null;
+    return queryId;
   }
 }
 
@@ -56,16 +67,27 @@ export const Route = createFileRoute("/api/webhooks/mercadopago")({
         }
         const payment = (await response.json()) as MpPayment;
         const orderId = payment.external_reference || payment.metadata?.orderId || "";
-        if (payment.status === "approved" && orderId) {
-          await updateOrderStatus(orderId, "paid");
+        if (payment.status !== "approved") {
+          return Response.json({ ok: true, status: payment.status });
+        }
+        if (!orderId) {
+          return Response.json({ ok: true, ignored: true });
+        }
+
+        const existing = await getOrder(orderId);
+        const alreadyPaid = existing?.status === "paid" || existing?.status === "posted" || existing?.status === "delivered";
+        await updateOrderStatus(orderId, alreadyPaid ? existing?.status || "paid" : "paid");
+
+        if (!alreadyPaid) {
           try {
             await sendPaidOrderToMelhorEnvio(orderId);
           } catch (error) {
             console.error("[mp-webhook] melhor-envio", error);
           }
         }
-        if (payment.status !== "approved") {
-          return Response.json({ ok: true, status: payment.status });
+
+        if (alreadyPaid) {
+          return Response.json({ ok: true, status: "approved", duplicate: true });
         }
 
         const meta = payment.metadata ?? {};
@@ -77,28 +99,36 @@ export const Route = createFileRoute("/api/webhooks/mercadopago")({
 
         try {
           await sendOrderMail({
-            orderId: payment.external_reference || meta.orderId || `MP-${payment.id}`,
+            orderId,
             status: "Pagamento aprovado",
             name:
               meta.name ||
+              existing?.name ||
               [payment.payer?.first_name, payment.payer?.last_name]
                 .filter(Boolean)
                 .join(" ") ||
               "Cliente",
-            email: meta.email || payment.payer?.email || "",
-            phone: meta.phone,
-            payment: (meta.payment as "pix" | "card") || payment.payment_type_id || "card",
-            items: meta.items
-              ? [{ name: meta.items, size: "", qty: 1, unitCents: total }]
-              : [{ name: "Pedido beabsorventes", size: "", qty: 1, unitCents: total }],
-            shippingLabel: meta.shipping || "Correios",
-            totals: {
+            email: meta.email || existing?.email || payment.payer?.email || "",
+            phone: meta.phone || existing?.phone,
+            payment: (meta.payment as "pix" | "card") || "card",
+            items: existing?.items?.length
+              ? existing.items.map((item) => ({
+                  name: item.name,
+                  size: item.size ?? "",
+                  qty: item.qty,
+                  unitCents: item.unitCents,
+                }))
+              : meta.items
+                ? [{ name: meta.items, size: "", qty: 1, unitCents: total }]
+                : [{ name: "Pedido beabsorventes", size: "", qty: 1, unitCents: total }],
+            shippingLabel: meta.shipping || existing?.shippingLabel || "Correios",
+            totals: existing?.totals ?? {
               subtotal: cents(meta.subtotal, total),
               discount: cents(meta.discount, 0),
               shipping: cents(meta.freight, 0),
               total: cents(meta.total, total),
             },
-            address: {
+            address: existing?.address ?? {
               cep: meta.cep || "",
               street: meta.street || "",
               number: meta.number || "",

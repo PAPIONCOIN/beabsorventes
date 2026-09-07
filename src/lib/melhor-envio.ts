@@ -423,6 +423,12 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
     (input.items.reduce((sum, item) => sum + item.unitCents * item.qty, 0) / 100).toFixed(2),
   );
   const recipientDocument = (input.document ?? "").replace(/\D/g, "");
+  if (recipientDocument.length !== 11 && recipientDocument.length !== 14) {
+    return {
+      ok: false as const,
+      message: "Cadastre o CPF do cliente para gerar a etiqueta.",
+    };
+  }
 
   const payload = {
     service: serviceId,

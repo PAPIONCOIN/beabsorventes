@@ -259,6 +259,21 @@ export async function persistOrder(input: PersistOrderInput) {
     `;
   } catch (error) {
     console.error("[orders] persist", error);
+    throw error;
+  }
+}
+
+export async function getOrder(orderId: string) {
+  if (!orderId) return null;
+  try {
+    const sql = await ensureOrdersTable();
+    const rows = await sql<Parameters<typeof mapOrder>[0]>`
+      select * from orders where order_id = ${orderId} limit 1
+    `;
+    return rows[0] ? mapOrder(rows[0]) : null;
+  } catch (error) {
+    console.error("[orders] get", error);
+    return null;
   }
 }
 
