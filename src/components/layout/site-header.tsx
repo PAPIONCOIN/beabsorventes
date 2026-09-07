@@ -16,6 +16,7 @@ const NAV = [
   { to: "/guia", label: "Guia" },
   { to: "/cuidados", label: "Cuidados" },
   { to: "/sobre", label: "Sobre" },
+  { to: "/contato", label: "Contato" },
 ] as const;
 
 export function SiteHeader() {
