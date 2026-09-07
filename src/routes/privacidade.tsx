@@ -34,7 +34,6 @@ function Privacidade() {
           </a>
           .
         </p>
-        <p>Titular: Bethania — CPF 306.465.818-21.</p>
       </div>
     </article>
   );

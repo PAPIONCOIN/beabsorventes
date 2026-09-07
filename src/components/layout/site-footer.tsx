@@ -57,8 +57,7 @@ export function SiteFooter() {
               WhatsApp {CONTACT_PHONE_DISPLAY}
             </a>
           </p>
-          <p className="mt-6 text-xs">Bethania — CPF 306.465.818-21</p>
-          <p className="mt-1 text-xs">© {new Date().getFullYear()} beabsorventes</p>
+          <p className="mt-6 text-xs">© {new Date().getFullYear()} beabsorventes</p>
         </div>
       </div>
     </footer>
