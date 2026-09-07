@@ -36,11 +36,8 @@ export function SiteFooter() {
           <Link to="/sobre" className="flex min-h-11 items-center text-muted hover:text-fg">
             Quem somos
           </Link>
-          <Link to="/cadastro" className="flex min-h-11 items-center text-muted hover:text-fg">
-            Cadastro
-          </Link>
           <Link to="/conta" className="flex min-h-11 items-center text-muted hover:text-fg">
-            Meus pedidos
+            Login
           </Link>
           <Link to="/admin" className="flex min-h-11 items-center text-muted hover:text-fg">
             Administração

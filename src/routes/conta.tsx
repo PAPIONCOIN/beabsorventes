@@ -162,7 +162,8 @@ function Conta() {
         </p>
         <h1 className="mt-3 font-display text-4xl italic">Meus pedidos</h1>
         <p className="mt-3 text-sm text-muted">
-          Entre com o e-mail e a senha do cadastro.
+          Entre com o e-mail e a senha. Novo por aqui? Crie o cadastro na mesma
+          tela, pelo link abaixo.
         </p>
         <form onSubmit={onLogin} className="mt-8 space-y-4">
           <Field
@@ -254,8 +255,8 @@ function Conta() {
         </Button>
       </div>
 
-      <section className="mt-10">
-        <h2 className="font-display text-2xl italic">Pedidos</h2>
+      <section id="pedidos" className="mt-10 scroll-mt-28">
+        <h2 className="font-display text-2xl italic">Meus pedidos</h2>
         {orders.length === 0 ? (
           <p className="mt-4 text-sm text-muted">
             Nenhum pedido neste e-mail ainda. Quando a compra for concluída, ela
@@ -314,8 +315,8 @@ function Conta() {
         )}
       </section>
 
-      <section className="mt-12">
-        <h2 className="font-display text-2xl italic">Meus dados</h2>
+      <section id="cadastro" className="mt-12 scroll-mt-28">
+        <h2 className="font-display text-2xl italic">Meu cadastro</h2>
         <form onSubmit={onSave} className="mt-5 grid gap-4 sm:grid-cols-2">
           <Field
             label="Nome"

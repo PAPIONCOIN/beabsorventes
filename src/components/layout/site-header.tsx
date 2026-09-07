@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingBag } from "lucide-react";
+import { ChevronDown, Menu, ShoppingBag } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cartCount, useCartStore } from "@/lib/cart-store";
+import { closeAccount } from "@/lib/shop-orders";
 import { useShopSession } from "@/lib/use-shop-session";
 
 const NAV = [
@@ -17,10 +18,81 @@ const NAV = [
   { to: "/guia", label: "Modelos" },
   { to: "/cuidados", label: "Como lavar" },
   { to: "/sobre", label: "Quem somos" },
-  { to: "/cadastro", label: "Cadastro" },
-  { to: "/conta", label: "Meus pedidos" },
   { to: "/contato", label: "Contato" },
 ] as const;
+
+function AccountMenu({
+  name,
+  onNavigate,
+}: {
+  name: string;
+  onNavigate?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClick(event: MouseEvent) {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const itemClass = "block px-3 py-2.5 text-sm hover:bg-bg-warm";
+
+  return (
+    <div ref={root} className="relative">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 text-base text-muted transition-colors hover:text-fg"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+      >
+        Olá, {name}
+        <ChevronDown className={`size-4 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open ? (
+        <div className="absolute right-0 z-50 mt-2 min-w-[12rem] rounded-lg border border-border bg-surface py-1 shadow-sm">
+          <Link
+            to="/conta"
+            hash="cadastro"
+            className={itemClass}
+            onClick={() => {
+              setOpen(false);
+              onNavigate?.();
+            }}
+          >
+            Meu cadastro
+          </Link>
+          <Link
+            to="/conta"
+            hash="pedidos"
+            className={itemClass}
+            onClick={() => {
+              setOpen(false);
+              onNavigate?.();
+            }}
+          >
+            Meus pedidos
+          </Link>
+          <button
+            type="button"
+            className={`${itemClass} w-full text-left`}
+            onClick={async () => {
+              await closeAccount();
+              setOpen(false);
+              onNavigate?.();
+              window.location.reload();
+            }}
+          >
+            Sair
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const [menu, setMenu] = useState(false);
@@ -50,16 +122,31 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
-          </nav>
-          <div className="flex items-center gap-1">
             {session.ok && session.firstName ? (
+              <AccountMenu name={session.firstName} />
+            ) : (
               <Link
                 to="/conta"
-                className="mr-1 hidden max-w-[9rem] truncate text-sm text-muted hover:text-fg sm:inline"
+                className="text-base text-muted transition-colors hover:text-fg"
+                activeProps={{ className: "text-fg" }}
               >
-                Olá, {session.firstName}
+                Login
               </Link>
-            ) : null}
+            )}
+          </nav>
+          <div className="flex items-center gap-1">
+            <div className="mr-1 lg:hidden">
+              {session.ok && session.firstName ? (
+                <AccountMenu name={session.firstName} />
+              ) : (
+                <Link
+                  to="/conta"
+                  className="px-2 text-sm text-muted hover:text-fg"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
             <Button
               type="button"
               variant="ghost"
@@ -107,8 +194,36 @@ export function SiteHeader() {
               </Link>
             ))}
             {session.ok && session.firstName ? (
-              <p className="px-2 pt-3 text-sm text-muted">Olá, {session.firstName}</p>
-            ) : null}
+              <>
+                <p className="px-2 pt-4 text-xs tracking-wide text-muted uppercase">
+                  Olá, {session.firstName}
+                </p>
+                <Link
+                  to="/conta"
+                  hash="cadastro"
+                  className="flex h-11 items-center px-2 text-base"
+                  onClick={() => setMenu(false)}
+                >
+                  Meu cadastro
+                </Link>
+                <Link
+                  to="/conta"
+                  hash="pedidos"
+                  className="flex h-11 items-center px-2 text-base"
+                  onClick={() => setMenu(false)}
+                >
+                  Meus pedidos
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/conta"
+                className="flex h-11 items-center px-2 text-base"
+                onClick={() => setMenu(false)}
+              >
+                Login
+              </Link>
+            )}
           </nav>
         </SheetContent>
       </Sheet>
