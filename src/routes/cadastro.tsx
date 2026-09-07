@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
 import { registerCustomer } from "@/lib/customers";
 import { sendCustomerMail } from "@/lib/customer-mail";
-import { formatCep, formatPhone } from "@/lib/utils";
+import { digitsOnly, formatCep, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro")({ component: Cadastro });
 
@@ -19,9 +19,37 @@ function Cadastro() {
     email: "",
     phone: "",
     cep: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
     city: "",
     state: "",
   });
+
+  async function lookupCep(cepDigits: string) {
+    if (cepDigits.length !== 8) return;
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+      const data = (await res.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        bairro?: string;
+        localidade?: string;
+        uf?: string;
+      };
+      if (data.erro) return;
+      setForm((prev) => ({
+        ...prev,
+        street: data.logradouro || prev.street,
+        neighborhood: data.bairro || prev.neighborhood,
+        city: data.localidade || prev.city,
+        state: data.uf || prev.state,
+      }));
+    } catch {
+      /* ignore */
+    }
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -32,6 +60,10 @@ function Cadastro() {
       email: form.email,
       phone: form.phone,
       cep: form.cep,
+      street: form.street,
+      number: form.number,
+      complement: form.complement,
+      neighborhood: form.neighborhood,
       city: form.city,
       state: form.state,
       source: "cadastro" as const,
@@ -113,8 +145,40 @@ function Cadastro() {
           label="CEP"
           required={false}
           inputMode="numeric"
+          autoComplete="postal-code"
           value={form.cep}
-          onChange={(value) => setForm({ ...form, cep: formatCep(value) })}
+          onChange={(value) => {
+            const cep = formatCep(value);
+            setForm((prev) => ({ ...prev, cep }));
+            if (digitsOnly(cep).length === 8) void lookupCep(digitsOnly(cep));
+          }}
+        />
+        <Field
+          label="Rua"
+          required={false}
+          autoComplete="address-line1"
+          value={form.street}
+          onChange={(value) => setForm({ ...form, street: value })}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <Field
+            label="Número"
+            required={false}
+            value={form.number}
+            onChange={(value) => setForm({ ...form, number: value })}
+          />
+          <Field
+            label="Complemento"
+            required={false}
+            value={form.complement}
+            onChange={(value) => setForm({ ...form, complement: value })}
+          />
+        </div>
+        <Field
+          label="Bairro"
+          required={false}
+          value={form.neighborhood}
+          onChange={(value) => setForm({ ...form, neighborhood: value })}
         />
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2">
@@ -150,6 +214,7 @@ function Field({
   type = "text",
   required = true,
   inputMode,
+  autoComplete,
 }: {
   label: string;
   value: string;
@@ -157,6 +222,7 @@ function Field({
   type?: string;
   required?: boolean;
   inputMode?: "numeric" | "tel" | "email";
+  autoComplete?: string;
 }) {
   const id = label.toLowerCase();
   return (
@@ -168,6 +234,7 @@ function Field({
         required={required}
         value={value}
         inputMode={inputMode}
+        autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
       />
     </div>

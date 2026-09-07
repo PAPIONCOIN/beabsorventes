@@ -27,6 +27,18 @@ function sourceLabel(source: string) {
   return source === "checkout" ? "Compra" : "Cadastro";
 }
 
+function addressLine(customer: Customer) {
+  return [
+    [customer.street, customer.number].filter(Boolean).join(", "),
+    customer.complement,
+    customer.neighborhood,
+    [customer.city, customer.state].filter(Boolean).join("/"),
+    customer.cep,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function Admin() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
@@ -55,7 +67,7 @@ function Admin() {
     const q = query.trim().toLowerCase();
     if (!q) return customers;
     return customers.filter((customer) =>
-      [customer.name, customer.email, customer.phone, customer.city, customer.state]
+      [customer.name, customer.email, customer.phone, customer.city, customer.state, customer.street, customer.cep]
         .join(" ")
         .toLowerCase()
         .includes(q),
@@ -164,7 +176,9 @@ function Admin() {
                 <p className="mt-2 text-xs text-muted">
                   {sourceLabel(customer.source)} · {formatDate(customer.createdAt)}
                 </p>
-                {customer.city ? (
+                {addressLine(customer) ? (
+                  <p className="mt-1 text-xs text-muted">{addressLine(customer)}</p>
+                ) : customer.city ? (
                   <p className="mt-1 text-xs text-muted">
                     {customer.city}/{customer.state}
                   </p>
@@ -180,7 +194,7 @@ function Admin() {
                   <th className="py-3 pr-4 font-medium">Nome</th>
                   <th className="py-3 pr-4 font-medium">E-mail</th>
                   <th className="py-3 pr-4 font-medium">WhatsApp</th>
-                  <th className="py-3 pr-4 font-medium">Cidade</th>
+                  <th className="py-3 pr-4 font-medium">Endereço</th>
                   <th className="py-3 pr-4 font-medium">Origem</th>
                   <th className="py-3 font-medium">Desde</th>
                 </tr>
@@ -192,9 +206,7 @@ function Admin() {
                     <td className="py-3 pr-4 break-all">{customer.email}</td>
                     <td className="py-3 pr-4 tabular-nums">{customer.phone || "—"}</td>
                     <td className="py-3 pr-4 text-muted">
-                      {customer.city
-                        ? `${customer.city}/${customer.state}`
-                        : "—"}
+                      {addressLine(customer) || "—"}
                     </td>
                     <td className="py-3 pr-4">{sourceLabel(customer.source)}</td>
                     <td className="py-3 text-muted">{formatDate(customer.createdAt)}</td>
