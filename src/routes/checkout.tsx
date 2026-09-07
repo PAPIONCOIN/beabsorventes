@@ -10,7 +10,7 @@ import {
 } from "@/lib/cart-store";
 import { createMpCheckout, getMercadoPagoStatus } from "@/lib/mercadopago";
 import { saveLastOrder } from "@/lib/orders";
-import { getProduct, PRINTS } from "@/lib/products";
+import { getProduct } from "@/lib/products";
 import { digitsOnly, formatBRL, formatCep } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkout")({ component: Checkout });
@@ -248,11 +248,10 @@ function Checkout() {
         <ul className="mt-4 space-y-3 text-sm">
           {lines.map((line) => {
             const product = getProduct(line.slug);
-            const print = PRINTS[line.printId as keyof typeof PRINTS];
             if (!product) return null;
             return (
               <li key={`${line.slug}-${line.printId}-${line.size}`}>
-                {line.qty}× {product.shortName} · {print?.name} · {line.size}
+                {line.qty}× {product.shortName}
               </li>
             );
           })}

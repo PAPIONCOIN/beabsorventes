@@ -6,20 +6,20 @@ const STEPS = [
   {
     title: "Enxágue frio",
     text: "Assim que tirar, passe água fria até sair o excesso. Água quente fixa o ferro no tecido.",
-    image: "/images/folding.jpg",
-    alt: "Absorvente de tecido sendo dobrado, mostrando os botões das asas",
+    image: "/images/products/ciclo-mini.jpg",
+    alt: "Ciclo Mini, absorvente de tecido beabsorventes",
   },
   {
-    title: "Lave com neutro",
-    text: "Sabão de coco ou detergente sem amaciante. Máquina no ciclo delicado, ou à mão. Sem alvejante.",
-    image: "/images/care.jpg",
-    alt: "Absorventes de tecido secando em um varal de madeira perto da janela",
+    title: "Pode ir à máquina",
+    text: "Lave com sabão neutro, ciclo delicado. Sem alvejante e sem amaciante. Não utilize secadora.",
+    image: "/images/products/ciclo-principal.jpg",
+    alt: "Ciclo Principal, absorvente de tecido beabsorventes",
   },
   {
     title: "Seque à sombra",
     text: "Varal ventilado. Sol forte e secadora endurecem o algodão e encurtam a vida da peça.",
-    image: "/images/layers.jpg",
-    alt: "Camadas de um absorvente de tecido: algodão, núcleo e barreira",
+    image: "/images/products/noturno-2.jpg",
+    alt: "Absorvente noturno de tecido beabsorventes",
   },
 ];
 
@@ -27,11 +27,12 @@ function Cuidados() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
-        Cuidados
+        Como lavar
       </p>
       <h1 className="mt-3 font-display text-4xl italic">Lavar, secar, repetir</h1>
       <p className="mt-4 max-w-xl text-muted">
-        A peça dura anos se o cuidado for simples. Três gestos, sempre iguais.
+        Pode ser lavado em máquina. Não utilizar secadora. Três gestos, sempre
+        iguais.
       </p>
       <div className="mt-12 space-y-16">
         {STEPS.map((step, index) => (

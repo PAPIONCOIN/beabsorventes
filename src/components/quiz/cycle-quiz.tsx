@@ -9,9 +9,9 @@ const STEPS = [
     key: "flow" as const,
     question: "Como é o seu fluxo no pico?",
     options: [
-      { label: "Leve", value: "leve" },
-      { label: "Médio", value: "medio" },
-      { label: "Intenso", value: "intenso" },
+      { label: "Leve", value: "leve" as const },
+      { label: "Moderado", value: "medio" as const },
+      { label: "Intenso", value: "intenso" as const },
     ],
   },
   {
@@ -22,24 +22,13 @@ const STEPS = [
       { label: "Não, só de dia", value: false },
     ],
   },
-  {
-    key: "postpartum" as const,
-    question: "É para o pós-parto?",
-    options: [
-      { label: "Sim", value: true },
-      { label: "Não", value: false },
-    ],
-  },
 ];
 
 export function CycleQuiz() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<QuizAnswers>>({});
   const current = STEPS[step];
-  const done =
-    answers.flow !== undefined &&
-    answers.night !== undefined &&
-    answers.postpartum !== undefined;
+  const done = answers.flow !== undefined && answers.night !== undefined;
 
   if (done) {
     const product = recommendFromQuiz(answers as QuizAnswers);
@@ -78,26 +67,23 @@ export function CycleQuiz() {
 
   return (
     <div className="rounded-xl bg-bg-warm p-6 sm:p-8">
-      <p className="text-xs font-medium tracking-wide text-muted uppercase">
-        {step + 1} de {STEPS.length}
+      <p className="text-xs text-muted">
+        {step + 1} / {STEPS.length}
       </p>
-      <h3 className="mt-3 font-display text-2xl italic sm:text-3xl">
-        {current.question}
-      </h3>
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <h3 className="mt-2 font-display text-2xl italic">{current.question}</h3>
+      <div className="mt-6 flex flex-col gap-2">
         {current.options.map((option) => (
-          <Button
-            key={String(option.value)}
+          <button
+            key={String(option.label)}
             type="button"
-            variant="outline"
-            className="justify-start bg-surface"
+            className="h-11 rounded-md border border-border bg-surface px-4 text-left text-sm hover:border-fg"
             onClick={() => {
               setAnswers((prev) => ({ ...prev, [current.key]: option.value }));
-              setStep((s) => s + 1);
+              setStep((n) => n + 1);
             }}
           >
             {option.label}
-          </Button>
+          </button>
         ))}
       </div>
     </div>

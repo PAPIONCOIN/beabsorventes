@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { getProduct, PRINTS } from "@/lib/products";
+import { getProduct } from "@/lib/products";
 import {
   cartCount,
   cartTotals,
@@ -39,16 +39,18 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {lines.length === 0 ? (
             <p className="text-sm text-muted">
-              Escolha um absorvente na loja. O kit iniciante é um bom começo.
+              Escolha um absorvente na loja. O kit de 4 peças é um bom começo.
             </p>
           ) : (
             <ul className="flex flex-col gap-5">
               {lines.map((line) => {
                 const product = getProduct(line.slug);
                 if (!product) return null;
-                const print = PRINTS[line.printId as keyof typeof PRINTS];
                 return (
-                  <li key={`${line.slug}-${line.printId}-${line.size}`} className="flex gap-3">
+                  <li
+                    key={`${line.slug}-${line.printId}-${line.size}`}
+                    className="flex gap-3"
+                  >
                     <img
                       src={product.image}
                       alt=""
@@ -56,9 +58,6 @@ export function CartDrawer() {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{product.shortName}</p>
-                      <p className="text-xs text-muted">
-                        {print?.name} · {line.size}
-                      </p>
                       <p className="mt-1 text-sm tabular-nums">
                         {formatBRL(product.priceCents * line.qty)}
                       </p>

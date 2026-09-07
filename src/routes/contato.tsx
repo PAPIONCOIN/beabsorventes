@@ -10,6 +10,7 @@ import {
   CONTACT_TOPICS,
   CONTACT_WHATSAPP,
   whatsappMessageUrl,
+  type ContactTopic,
 } from "@/lib/contact";
 import { formatPhone } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ function Contato() {
     name: "",
     email: "",
     phone: "",
-    topic: CONTACT_TOPICS[0],
+    topic: CONTACT_TOPICS[0] as ContactTopic,
     message: "",
   });
 
@@ -119,7 +120,7 @@ function Contato() {
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    topic: e.target.value as (typeof CONTACT_TOPICS)[number],
+                    topic: e.target.value as ContactTopic,
                   })
                 }
                 className="flex h-11 w-full rounded-md border border-border bg-surface px-3 text-base text-fg focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"

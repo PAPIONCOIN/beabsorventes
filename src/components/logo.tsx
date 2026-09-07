@@ -5,11 +5,14 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link
       to="/"
-      className={cn("flex items-baseline gap-0.5 text-fg", className)}
-      aria-label="Beabsorventes, página inicial"
+      className={cn("block shrink-0", className)}
+      aria-label="beabsorventes, página inicial"
     >
-      <span className="font-display text-2xl leading-none italic">Be</span>
-      <span className="text-sm font-medium tracking-wide">absorventes</span>
+      <img
+        src="/images/brand/logo.png"
+        alt="beabsorventes"
+        className="h-11 w-auto object-contain object-left outline-none sm:h-12"
+      />
     </Link>
   );
 }

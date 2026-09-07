@@ -25,7 +25,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         <p className="pt-5 text-sm tabular-nums">{formatBRL(product.priceCents)}</p>
       </div>
-      <p className="mt-1 text-sm text-muted">{product.shortName}</p>
+      <p className="mt-1 line-clamp-2 text-sm text-muted">{product.description}</p>
     </Link>
   );
 }

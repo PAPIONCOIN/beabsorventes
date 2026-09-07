@@ -5,14 +5,13 @@ import { ProductCard } from "@/components/product/product-card";
 import { QtyStepper } from "@/components/product/qty-stepper";
 import { useCartStore } from "@/lib/cart-store";
 import {
-  PRINTS,
   flowLabel,
   getProduct,
   relatedProducts,
   type PrintId,
   type SizeId,
 } from "@/lib/products";
-import { cn, formatBRL } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 
 export const Route = createFileRoute("/produto/$slug")({
   component: ProductPage,
@@ -30,10 +29,12 @@ function ProductPage() {
   if (!product) throw notFound();
 
   const add = useCartStore((s) => s.add);
-  const [size, setSize] = useState<SizeId>(product.sizes[0] ?? "M");
-  const [printId, setPrintId] = useState<PrintId>(product.prints[0] ?? "linho");
+  const [size] = useState<SizeId>(product.sizes[0] ?? "Único");
+  const [printId] = useState<PrintId>(product.prints[0] ?? "padrao");
   const [qty, setQty] = useState(1);
+  const [photo, setPhoto] = useState(product.image);
   const related = relatedProducts(product.slug);
+  const parcel = Math.round(product.priceCents / 3);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -45,12 +46,30 @@ function ProductPage() {
         {product.shortName}
       </p>
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-xl bg-bg-warm">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="aspect-photo w-full object-cover"
-          />
+        <div>
+          <div className="overflow-hidden rounded-xl bg-bg-warm">
+            <img
+              src={photo}
+              alt={product.name}
+              className="aspect-photo w-full object-cover"
+            />
+          </div>
+          {product.gallery.length > 1 ? (
+            <div className="mt-3 flex gap-2">
+              {product.gallery.map((src) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setPhoto(src)}
+                  className={`overflow-hidden rounded-md ${
+                    photo === src ? "ring-2 ring-fg" : "ring-1 ring-border"
+                  }`}
+                >
+                  <img src={src} alt="" className="size-16 object-cover" />
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div>
           <p className="text-xs font-medium tracking-wide text-primary uppercase">
@@ -59,64 +78,21 @@ function ProductPage() {
           </p>
           <h1 className="mt-2 font-display text-4xl italic">{product.name}</h1>
           <p className="mt-4 text-lg tabular-nums">{formatBRL(product.priceCents)}</p>
+          <p className="mt-1 text-sm text-muted">
+            até 3× de {formatBRL(parcel)} sem juros
+          </p>
           <p className="mt-4 max-w-md leading-relaxed text-muted">
             {product.description}
           </p>
-
-          <div className="mt-8">
-            <p className="text-sm font-medium">Tamanho</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {product.sizes.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setSize(item)}
-                  className={cn(
-                    "h-11 min-w-11 rounded-md border px-4 text-sm",
-                    size === item
-                      ? "border-fg bg-fg text-bg"
-                      : "border-border bg-surface hover:bg-bg-warm",
-                  )}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <p className="text-sm font-medium">Estampa</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {product.prints.map((id) => {
-                const print = PRINTS[id];
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setPrintId(id)}
-                    className={cn(
-                      "flex h-11 items-center gap-2 rounded-md border px-3 text-sm",
-                      printId === id ? "border-fg" : "border-border",
-                    )}
-                  >
-                    <span
-                      className={cn("size-4 rounded-full", print.swatch)}
-                      aria-hidden
-                    />
-                    {print.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <p className="mt-3 text-xs text-muted">
+            Código {product.sku} · sai em {product.leadDays} dias úteis
+          </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <QtyStepper value={qty} onChange={setQty} />
             <Button
               size="lg"
-              onClick={() =>
-                add({ slug: product.slug, printId, size, qty })
-              }
+              onClick={() => add({ slug: product.slug, printId, size, qty })}
             >
               Adicionar à sacola
             </Button>
@@ -129,7 +105,7 @@ function ProductPage() {
                 return (
                   <li key={item.slug}>
                     {item.qty}× {inner?.shortName ?? item.slug}
-                    {item.size ? ` · ${item.size}` : ""}
+                    {inner?.lengthCm ? ` · ${inner.lengthCm} cm` : ""}
                   </li>
                 );
               })}

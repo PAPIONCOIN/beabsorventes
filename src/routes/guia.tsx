@@ -11,14 +11,12 @@ function Guia() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
-        Guia
+        Modelos
       </p>
-      <h1 className="mt-3 font-display text-4xl italic">
-        Fluxo, tamanho, noite
-      </h1>
+      <h1 className="mt-3 font-display text-4xl italic">Tamanhos e modelos</h1>
       <p className="mt-4 max-w-xl text-muted">
-        O modelo segue o fluxo. O tamanho segue a calcinha. Se restar dúvida,
-        o quiz escolhe uma peça — não um kit.
+        Tecido ecológico 100% algodão orgânico e tingimento sustentável com
+        certificação internacional GOTS.
       </p>
 
       <div className="mt-12 overflow-x-auto">
@@ -28,7 +26,7 @@ function Guia() {
               <th className="py-3 font-medium">Peça</th>
               <th className="py-3 font-medium">Fluxo</th>
               <th className="py-3 font-medium">Comprimento</th>
-              <th className="py-3 font-medium">Tamanhos</th>
+              <th className="py-3 font-medium">Camadas</th>
               <th className="py-3 font-medium">Preço</th>
             </tr>
           </thead>
@@ -48,7 +46,9 @@ function Guia() {
                 <td className="py-3 tabular-nums text-muted">
                   {product.lengthCm ? `${product.lengthCm} cm` : "—"}
                 </td>
-                <td className="py-3 text-muted">{product.sizes.join(", ")}</td>
+                <td className="py-3 tabular-nums text-muted">
+                  {product.layers ?? "—"}
+                </td>
                 <td className="py-3 tabular-nums">
                   {formatBRL(product.priceCents)}
                 </td>
@@ -58,23 +58,38 @@ function Guia() {
         </table>
       </div>
 
+      <ul className="mt-10 max-w-2xl space-y-4 text-sm leading-relaxed text-muted">
+        <li>
+          <span className="font-medium text-fg">Ciclo Mini 16 cm</span> — tecido
+          impermeável e uma camada absorvente. Fluxo leve, como no final da
+          menstruação.
+        </li>
+        <li>
+          <span className="font-medium text-fg">Ciclo Íntimo 22 cm</span> — duas
+          camadas, parte de trás mais fina. Fluxo leve, qualquer período.
+        </li>
+        <li>
+          <span className="font-medium text-fg">Ciclo Principal 24 cm</span> —
+          duas camadas. Fluxos moderados, qualquer período.
+        </li>
+        <li>
+          <span className="font-medium text-fg">Ciclo Denso 28 cm</span> — três
+          camadas. Fluxos mais intensos, qualquer período.
+        </li>
+        <li>
+          <span className="font-medium text-fg">Noturno 30 cm</span> — quatro
+          camadas e parte de trás mais larga. Para dormir sem receio de
+          vazamentos.
+        </li>
+      </ul>
+
       <section className="mt-16 grid gap-10 lg:grid-cols-2">
         <div>
-          <h2 className="font-display text-3xl italic">Tamanho da calcinha</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted">
-            <li>
-              <span className="font-medium text-fg">P</span> — calcinhas menores,
-              cintura baixa, pouca cobertura nas laterais.
-            </li>
-            <li>
-              <span className="font-medium text-fg">M</span> — a maioria. Se a
-              sua calcinha é 38–42, comece aqui.
-            </li>
-            <li>
-              <span className="font-medium text-fg">G</span> — mais asa, mais
-              comprimento útil. Melhor para cintura média e alta.
-            </li>
-          </ul>
+          <h2 className="font-display text-3xl italic">Ainda em dúvida?</h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted">
+            O quiz escolhe um modelo — não um kit. O kit de 4 peças junta Mini,
+            Íntimo, Principal e Denso.
+          </p>
         </div>
         <CycleQuiz />
       </section>

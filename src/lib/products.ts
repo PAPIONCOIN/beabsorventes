@@ -1,20 +1,7 @@
-export type Category = "pad" | "kit" | "bag";
-export type FlowId =
-  | "leve"
-  | "medio"
-  | "intenso"
-  | "noturno"
-  | "posparto"
-  | "kit"
-  | "bag";
-export type SizeId = "P" | "M" | "G" | "Único";
-export type PrintId =
-  | "linho"
-  | "terra"
-  | "flores"
-  | "noite"
-  | "misto"
-  | "argila";
+export type Category = "pad" | "kit" | "liner";
+export type FlowId = "leve" | "medio" | "intenso" | "noturno" | "kit" | "diario";
+export type SizeId = "Único";
+export type PrintId = "padrao";
 
 export type Print = {
   id: PrintId;
@@ -23,15 +10,8 @@ export type Print = {
 };
 
 export const PRINTS: Record<PrintId, Print> = {
-  linho: { id: "linho", name: "Linho", swatch: "bg-print-linho" },
-  terra: { id: "terra", name: "Terra", swatch: "bg-print-terra" },
-  flores: { id: "flores", name: "Flores", swatch: "bg-print-flores" },
-  noite: { id: "noite", name: "Noite", swatch: "bg-print-noite" },
-  misto: { id: "misto", name: "Misto", swatch: "bg-print-misto" },
-  argila: { id: "argila", name: "Argila", swatch: "bg-print-argila" },
+  padrao: { id: "padrao", name: "Algodão orgânico", swatch: "bg-print-linho" },
 };
-
-export const PAD_PRINTS: PrintId[] = ["linho", "terra", "flores", "noite"];
 
 export type KitContent = {
   slug: string;
@@ -41,209 +21,234 @@ export type KitContent = {
 
 export type Product = {
   slug: string;
+  sku: string;
   name: string;
   shortName: string;
   priceCents: number;
   flow: FlowId;
   lengthCm: number | null;
+  layers: number | null;
   sizes: SizeId[];
   prints: PrintId[];
   image: string;
+  gallery: string[];
   category: Category;
   featured?: boolean;
+  leadDays: number;
   contents?: KitContent[];
   description: string;
   details: string[];
 };
 
+const GOTS =
+  "Tecido ecológico 100% algodão orgânico e tingimento sustentável com certificação internacional GOTS. Um produto que gera menor impacto ao planeta.";
+
 export const PRODUCTS: Product[] = [
   {
-    slug: "protetor",
-    name: "Protetor diário",
-    shortName: "Protetor",
-    priceCents: 3200,
+    slug: "ciclo-mini",
+    sku: "7P3N8UPPJ",
+    name: "Ciclo Mini",
+    shortName: "Ciclo Mini",
+    priceCents: 1800,
     flow: "leve",
-    lengthCm: 18,
+    lengthCm: 16,
+    layers: 1,
     sizes: ["Único"],
-    prints: PAD_PRINTS,
-    image: "/images/products/protetor.jpg",
+    prints: ["padrao"],
+    image: "/images/products/ciclo-mini.jpg",
+    gallery: ["/images/products/ciclo-mini.jpg", "/images/products/pad-2.jpg"],
     category: "pad",
+    featured: true,
+    leadDays: 5,
     description:
-      "Uma linha fina para o começo e o fim do ciclo, ou para os dias em que o corpo pede pouco. Dezoito centímetros, algodão orgânico, costura firme.",
+      "16 cm. Tecido impermeável e uma camada absorvente. Indicado para quando o fluxo está leve, como no final da menstruação.",
     details: [
-      "18 cm, tamanho único",
-      "Camada de algodão orgânico contra a pele",
-      "Asas com botão de pressão",
-      "Seca rápido no varal",
+      "16 cm",
+      "1 camada absorvente + tecido impermeável",
+      "Algodão orgânico com tingimento GOTS",
+      "Fluxo leve · final do ciclo",
+      "Disponibilidade: 5 dias úteis",
     ],
   },
   {
-    slug: "diurno",
-    name: "Absorvente diurno",
-    shortName: "Diurno",
-    priceCents: 4200,
+    slug: "ciclo-intimo",
+    sku: "CLFNR78LK",
+    name: "Ciclo Íntimo",
+    shortName: "Ciclo Íntimo",
+    priceCents: 3000,
+    flow: "leve",
+    lengthCm: 22,
+    layers: 2,
+    sizes: ["Único"],
+    prints: ["padrao"],
+    image: "/images/products/ciclo-intimo.jpg",
+    gallery: ["/images/products/ciclo-intimo.jpg", "/images/products/pad-3.jpg"],
+    category: "pad",
+    featured: true,
+    leadDays: 5,
+    description:
+      "22 cm. Tecido impermeável e duas camadas absorventes. A parte de trás é mais fina, para se sentir mais confortável na roupa. Indicado para fluxo leve, em qualquer período da menstruação.",
+    details: [
+      "22 cm",
+      "2 camadas absorventes + tecido impermeável",
+      "Parte de trás mais fina",
+      "Fluxo leve · qualquer período",
+      "Disponibilidade: 5 dias úteis",
+    ],
+  },
+  {
+    slug: "ciclo-principal",
+    sku: "BDUCJ9QFQ",
+    name: "Ciclo Principal",
+    shortName: "Ciclo Principal",
+    priceCents: 3200,
     flow: "medio",
     lengthCm: 24,
-    sizes: ["P", "M", "G"],
-    prints: PAD_PRINTS,
-    image: "/images/products/diurno.jpg",
+    layers: 2,
+    sizes: ["Único"],
+    prints: ["padrao"],
+    image: "/images/products/ciclo-principal.jpg",
+    gallery: [
+      "/images/products/ciclo-principal.jpg",
+      "/images/products/hero-pad.jpg",
+    ],
     category: "pad",
     featured: true,
+    leadDays: 5,
     description:
-      "O absorvente do dia. Corpo de 24 cm, absorção média, asas que acompanham a calcinha sem marcar. Feito para o trabalho, a casa, a rua.",
+      "24 cm. Tecido impermeável e duas camadas absorventes. Indicado para fluxos moderados em qualquer período da menstruação.",
     details: [
-      "24 cm, tamanhos P, M e G",
-      "Núcleo de algodão e flanela",
-      "Barreira posterior respirável",
-      "Troca a cada 3 a 5 horas, conforme o fluxo",
+      "24 cm",
+      "2 camadas absorventes + tecido impermeável",
+      "Fluxo moderado · qualquer período",
+      "Algodão orgânico com tingimento GOTS",
+      "Disponibilidade: 5 dias úteis",
     ],
   },
   {
-    slug: "super",
-    name: "Absorvente super",
-    shortName: "Super",
-    priceCents: 4900,
+    slug: "ciclo-denso",
+    sku: "2B2MTQ7LC",
+    name: "Ciclo Denso",
+    shortName: "Ciclo Denso",
+    priceCents: 3400,
     flow: "intenso",
     lengthCm: 28,
-    sizes: ["M", "G"],
-    prints: PAD_PRINTS,
-    image: "/images/products/super.jpg",
+    layers: 3,
+    sizes: ["Único"],
+    prints: ["padrao"],
+    image: "/images/products/ciclo-denso.jpg",
+    gallery: [
+      "/images/products/ciclo-denso.jpg",
+      "/images/products/ciclo-denso-2.jpg",
+      "/images/products/ciclo-denso-3.jpg",
+    ],
     category: "pad",
     featured: true,
+    leadDays: 5,
     description:
-      "Para os dias de fluxo intenso. Vinte e oito centímetros, núcleo mais denso, a mesma suavidade do algodão. Fica no lugar.",
+      "28 cm. Tecido impermeável e três camadas absorventes. Indicado para fluxos mais intensos em qualquer período da menstruação.",
     details: [
-      "28 cm, tamanhos M e G",
-      "Núcleo reforçado em camadas",
-      "Asas largas com dois botões",
-      "Indicado para a primeira metade do ciclo",
+      "28 cm",
+      "3 camadas absorventes + tecido impermeável",
+      "Fluxo intenso · qualquer período",
+      "Algodão orgânico com tingimento GOTS",
+      "Disponibilidade: 5 dias úteis",
     ],
   },
   {
     slug: "noturno",
-    name: "Absorvente noturno",
+    sku: "P7MNVL8RM",
+    name: "Noturno",
     shortName: "Noturno",
-    priceCents: 5600,
+    priceCents: 4200,
     flow: "noturno",
-    lengthCm: 32,
-    sizes: ["M", "G"],
-    prints: PAD_PRINTS,
+    lengthCm: 30,
+    layers: 4,
+    sizes: ["Único"],
+    prints: ["padrao"],
     image: "/images/products/noturno.jpg",
+    gallery: [
+      "/images/products/noturno.jpg",
+      "/images/products/noturno-2.jpg",
+      "/images/products/noturno-3.jpg",
+    ],
     category: "pad",
     featured: true,
+    leadDays: 5,
     description:
-      "Trinta e dois centímetros para dormir sem se preocupar. O comprimento cobre a calcinha inteira; o núcleo aguenta a noite.",
+      "30 cm. Tecido impermeável, quatro camadas absorventes e a parte de trás mais larga. Indicado para dormir tranquila, sem receio de vazamentos.",
     details: [
-      "32 cm, tamanhos M e G",
-      "Cauda alongada",
-      "Absorção para 8 a 10 horas",
-      "Também serve em dias longos fora de casa",
+      "30 cm",
+      "4 camadas absorventes + tecido impermeável",
+      "Parte de trás mais larga",
+      "Noite inteira, sem vazamento",
+      "Disponibilidade: 5 dias úteis",
     ],
   },
   {
-    slug: "posparto",
-    name: "Absorvente pós-parto",
-    shortName: "Pós-parto",
-    priceCents: 6200,
-    flow: "posparto",
-    lengthCm: 35,
+    slug: "protetor-diario",
+    sku: "ECSWVT8XQ",
+    name: "Protetor diário",
+    shortName: "Protetor diário",
+    priceCents: 1000,
+    flow: "diario",
+    lengthCm: null,
+    layers: null,
     sizes: ["Único"],
-    prints: PAD_PRINTS,
-    image: "/images/products/posparto.jpg",
-    category: "pad",
+    prints: ["padrao"],
+    image: "/images/products/protetor.jpg",
+    gallery: ["/images/products/protetor.jpg"],
+    category: "liner",
+    leadDays: 5,
     description:
-      "Peça extra longa, pensada para as semanas depois do parto. Tecido macio, sem plástico, para um corpo que ainda se recupera.",
+      "Protetor diário de tecido 100% algodão. Uma linha fina para o dia a dia e os intervalos do ciclo.",
     details: [
-      "35 cm, tamanho único",
-      "Volume generoso, toque suave",
-      "Costura achatada nas bordas",
-      "Uso também em fluxos muito intensos",
+      "100% algodão",
+      "Uso diário",
+      "Disponibilidade: 5 dias úteis",
     ],
   },
   {
-    slug: "kit-iniciante",
-    name: "Kit iniciante",
-    shortName: "Kit iniciante",
-    priceCents: 15900,
+    slug: "kit-4",
+    sku: "N2WRX248D",
+    name: "Kit 4 absorventes",
+    shortName: "Kit 4",
+    priceCents: 10500,
     flow: "kit",
     lengthCm: null,
-    sizes: ["M"],
-    prints: ["misto"],
-    image: "/images/products/kit-iniciante.jpg",
+    layers: null,
+    sizes: ["Único"],
+    prints: ["padrao"],
+    image: "/images/products/kit-4.jpg",
+    gallery: ["/images/products/kit-4.jpg"],
     category: "kit",
     featured: true,
+    leadDays: 5,
     contents: [
-      { slug: "protetor", qty: 1, size: "Único" },
-      { slug: "diurno", qty: 1, size: "M" },
-      { slug: "super", qty: 1, size: "M" },
-      { slug: "noturno", qty: 1, size: "M" },
+      { slug: "ciclo-mini", qty: 1 },
+      { slug: "ciclo-intimo", qty: 1 },
+      { slug: "ciclo-principal", qty: 1 },
+      { slug: "ciclo-denso", qty: 1 },
     ],
     description:
-      "Quatro peças para conhecer o tecido no próprio ciclo: um protetor, um diurno, um super e um noturno, todos no tamanho M.",
+      "Quatro peças para um ciclo inteiro: Mini 16 cm, Íntimo 22 cm, Principal 24 cm e Denso 28 cm. Algodão orgânico com tingimento GOTS. Pode ser lavado em máquina. Não utilizar secadora.",
     details: [
-      "1 protetor, 1 diurno, 1 super, 1 noturno",
-      "Tamanho M",
-      "Estampas mistas do ateliê",
-      "O caminho mais simples para começar",
-    ],
-  },
-  {
-    slug: "kit-completo",
-    name: "Kit completo",
-    shortName: "Kit completo",
-    priceCents: 32900,
-    flow: "kit",
-    lengthCm: null,
-    sizes: ["M", "G"],
-    prints: ["misto"],
-    image: "/images/products/kit-completo.jpg",
-    category: "kit",
-    contents: [
-      { slug: "protetor", qty: 2, size: "Único" },
-      { slug: "diurno", qty: 2 },
-      { slug: "super", qty: 2 },
-      { slug: "noturno", qty: 2 },
-      { slug: "necessaire", qty: 1, size: "Único" },
-    ],
-    description:
-      "Duas de cada peça, mais a necessaire de argila. Suficiente para um ciclo inteiro sem lavar no meio — e para guardar tudo no mesmo lugar.",
-    details: [
-      "2 protetores, 2 diurnos, 2 super, 2 noturnos",
-      "Necessaire de lona argila",
-      "Tamanhos M ou G",
-      "Frete grátis neste valor",
-    ],
-  },
-  {
-    slug: "necessaire",
-    name: "Necessaire",
-    shortName: "Necessaire",
-    priceCents: 4800,
-    flow: "bag",
-    lengthCm: null,
-    sizes: ["Único"],
-    prints: ["argila"],
-    image: "/images/products/necessaire.jpg",
-    category: "bag",
-    description:
-      "Bolsa de lona no tom argila, forrada, para levar as peças limpas e as usadas. Cabe na bolsa, cabe na gaveta.",
-    details: [
-      "Tamanho único",
-      "Lona de algodão, forro impermeável leve",
-      "Zíper curto, fácil de abrir com uma mão",
-      "Pode ir à máquina, ciclo delicado",
+      "1× Ciclo Mini 16 cm",
+      "1× Ciclo Íntimo 22 cm",
+      "1× Ciclo Principal 24 cm",
+      "1× Ciclo Denso 28 cm",
+      "Lavável em máquina · sem secadora",
     ],
   },
 ];
 
 const FLOW_LABELS: Record<FlowId, string> = {
   leve: "Fluxo leve",
-  medio: "Fluxo médio",
+  medio: "Fluxo moderado",
   intenso: "Fluxo intenso",
   noturno: "Noite",
-  posparto: "Pós-parto",
   kit: "Kit",
-  bag: "Necessaire",
+  diario: "Uso diário",
 };
 
 export function flowLabel(flow: FlowId) {
@@ -275,61 +280,43 @@ export function relatedProducts(slug: string, limit = 3) {
   return [...same, ...rest].slice(0, limit);
 }
 
+export const GOTS_LINE = GOTS;
+
 export const FAQS = [
   {
     q: "Como lavo o absorvente?",
-    a: "Enxágue em água fria logo após o uso, até a água sair clara. Depois, lave com sabão neutro à mão ou na máquina, em ciclo delicado, junto com roupas da mesma cor. Seque à sombra.",
+    a: "Pode ser lavado em máquina, ciclo delicado. Enxágue em água fria logo após o uso. Não utilize secadora. Seque à sombra.",
   },
   {
     q: "Quantas peças eu preciso?",
-    a: "Para um ciclo comum, quatro a seis peças bastam se você puder lavar no meio. O kit iniciante cobre os tipos de fluxo; o kit completo aguenta o mês inteiro.",
+    a: "O kit de 4 peças cobre Mini, Íntimo, Principal e Denso — um ciclo completo. Para a noite, some o Noturno de 30 cm.",
   },
   {
-    q: "Vaza?",
-    a: "Cada modelo tem um fluxo indicado. Use o tamanho certo da calcinha, feche os botões das asas e troque no tempo do seu corpo. A barreira posterior segura o excesso, mas não substitui a troca.",
+    q: "Qual modelo é o meu?",
+    a: "Mini 16 cm no fluxo leve do fim do ciclo. Íntimo 22 cm no leve de qualquer dia. Principal 24 cm no moderado. Denso 28 cm no intenso. Noturno 30 cm para dormir.",
   },
   {
-    q: "Posso usar para dormir?",
-    a: "O noturno foi feito para isso: 32 cm, núcleo denso, cauda alongada. Em fluxos muito intensos, combine com uma calcinha de cintura mais alta.",
+    q: "O tecido é certificado?",
+    a: "Sim. Algodão orgânico com tingimento sustentável e certificação internacional GOTS.",
   },
   {
-    q: "Demora para secar?",
-    a: "Em varal ventilado, o protetor seca em algumas horas; o noturno, de um dia para o outro. Evite secadora e sol forte, que endurecem o algodão.",
+    q: "Demora para chegar?",
+    a: "As peças saem em até 5 dias úteis, mais o prazo dos Correios.",
   },
   {
-    q: "Serve no pós-parto?",
-    a: "Sim. O modelo pós-parto tem 35 cm e volume extra. O tecido é o mesmo algodão orgânico das outras peças — sem perfume, sem plástico contra a pele.",
-  },
-];
-
-export const TESTIMONIALS = [
-  {
-    name: "Marina S.",
-    city: "São Paulo",
-    text: "Troquei no segundo ciclo. O diurno no tamanho M ficou no lugar o dia inteiro, e a lavagem entrou na rotina da roupa de cama.",
-  },
-  {
-    name: "Helena P.",
-    city: "Belo Horizonte",
-    text: "Comprei o kit iniciante por receio de errar o fluxo. Usei as quatro peças no mesmo mês. Nada de odor, nada de plástico.",
-  },
-  {
-    name: "Luísa R.",
-    city: "Porto Alegre",
-    text: "O noturno foi o que me convenceu. Durmo de lado e acordo seca. Dois anos com as mesmas peças.",
+    q: "Posso parcelar?",
+    a: "Sim, em até 3 vezes sem juros no cartão, pelo Mercado Pago.",
   },
 ];
 
 export type QuizAnswers = {
   flow: "leve" | "medio" | "intenso";
   night: boolean;
-  postpartum: boolean;
 };
 
 export function recommendFromQuiz(answers: QuizAnswers): Product {
-  if (answers.postpartum) return getProduct("posparto")!;
   if (answers.night) return getProduct("noturno")!;
-  if (answers.flow === "intenso") return getProduct("super")!;
-  if (answers.flow === "medio") return getProduct("diurno")!;
-  return getProduct("protetor")!;
+  if (answers.flow === "intenso") return getProduct("ciclo-denso")!;
+  if (answers.flow === "medio") return getProduct("ciclo-principal")!;
+  return getProduct("ciclo-mini")!;
 }

@@ -11,10 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CuidadosRouteImport } from './routes/cuidados'
 import { Route as GuiaRouteImport } from './routes/guia'
 import { Route as LojaRouteImport } from './routes/loja'
 import { Route as PedidoRouteImport } from './routes/pedido'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 
@@ -26,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CuidadosRoute = CuidadosRouteImport.update({
@@ -48,6 +55,11 @@ const PedidoRoute = PedidoRouteImport.update({
   path: '/pedido',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreRoute = SobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
@@ -62,20 +74,24 @@ const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
   '/guia': typeof GuiaRoute
   '/loja': typeof LojaRoute
   '/pedido': typeof PedidoRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
   '/guia': typeof GuiaRoute
   '/loja': typeof LojaRoute
   '/pedido': typeof PedidoRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
@@ -83,10 +99,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
   '/guia': typeof GuiaRoute
   '/loja': typeof LojaRoute
   '/pedido': typeof PedidoRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
@@ -95,30 +113,36 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/checkout'
+    | '/contato'
     | '/cuidados'
     | '/guia'
     | '/loja'
     | '/pedido'
+    | '/privacidade'
     | '/sobre'
     | '/produto/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/checkout'
+    | '/contato'
     | '/cuidados'
     | '/guia'
     | '/loja'
     | '/pedido'
+    | '/privacidade'
     | '/sobre'
     | '/produto/$slug'
   id:
     | '__root__'
     | '/'
     | '/checkout'
+    | '/contato'
     | '/cuidados'
     | '/guia'
     | '/loja'
     | '/pedido'
+    | '/privacidade'
     | '/sobre'
     | '/produto/$slug'
   fileRoutesById: FileRoutesById
@@ -126,10 +150,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckoutRoute: typeof CheckoutRoute
+  ContatoRoute: typeof ContatoRoute
   CuidadosRoute: typeof CuidadosRoute
   GuiaRoute: typeof GuiaRoute
   LojaRoute: typeof LojaRoute
   PedidoRoute: typeof PedidoRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
 }
@@ -148,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cuidados': {
@@ -178,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PedidoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sobre': {
       id: '/sobre'
       path: '/sobre'
@@ -198,10 +238,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckoutRoute: CheckoutRoute,
+  ContatoRoute: ContatoRoute,
   CuidadosRoute: CuidadosRoute,
   GuiaRoute: GuiaRoute,
   LojaRoute: LojaRoute,
   PedidoRoute: PedidoRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
 }

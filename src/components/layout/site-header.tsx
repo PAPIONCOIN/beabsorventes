@@ -13,10 +13,10 @@ import { cartCount, useCartStore } from "@/lib/cart-store";
 
 const NAV = [
   { to: "/loja", label: "Loja" },
-  { to: "/guia", label: "Guia" },
-  { to: "/cuidados", label: "Cuidados" },
-  { to: "/sobre", label: "Sobre" },
-  { to: "/contato", label: "Contato" },
+  { to: "/guia", label: "Modelos" },
+  { to: "/cuidados", label: "Como lavar" },
+  { to: "/sobre", label: "Quem somos" },
+  { to: "/contato", label: "Fale conosco" },
 ] as const;
 
 export function SiteHeader() {
@@ -26,9 +26,9 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-7 lg:flex">
           {NAV.map((item) => (
             <Link
               key={item.to}
@@ -60,7 +60,7 @@ export function SiteHeader() {
             type="button"
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setMenu(true)}
             aria-label="Abrir menu"
           >

@@ -20,12 +20,13 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content: "Absorventes reutilizáveis de tecido em algodão orgânico.",
+        content:
+          "Absorventes ecológicos reutilizáveis de tecido 100% algodão orgânico. Feito girassol, conecte-se com seu ciclo e seja seu Sol.",
       },
       { name: "theme-color", content: "#a05243" },
     ],
     links: [
-      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "icon", type: "image/png", href: "/images/brand/favicon.png" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
