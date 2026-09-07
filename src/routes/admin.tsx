@@ -23,6 +23,7 @@ import {
   orderStatusLabel,
   type ShopOrder,
 } from "@/lib/shop-orders";
+import { listContactMessages, type ContactMessage } from "@/lib/contact";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -74,6 +75,7 @@ function Admin() {
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<ShopOrder[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [postgres, setPostgres] = useState<boolean | null>(null);
   const [melhor, setMelhor] = useState<{ ready: boolean; name: string; email: string } | null>(
     null,
@@ -96,6 +98,8 @@ function Admin() {
     }
     const purchases = await listAdminOrders();
     if (purchases.ok) setOrders(purchases.orders);
+    const inbox = await listContactMessages();
+    if (inbox.ok) setMessages(inbox.messages);
   }
 
   function startEdit(customer: Customer) {
@@ -262,6 +266,7 @@ function Admin() {
             setAuthed(false);
             setCustomers([]);
             setOrders([]);
+            setMessages([]);
           }}
         >
           Sair
@@ -418,6 +423,37 @@ function Admin() {
                 {shipError ? (
                   <p className="mt-2 text-sm text-primary">{shipError}</p>
                 ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-12">
+        <h2 className="font-display text-3xl italic">Mensagens do contato</h2>
+        {messages.length === 0 ? (
+          <p className="mt-4 text-sm text-muted">Nenhuma mensagem ainda.</p>
+        ) : (
+          <ul className="mt-6 space-y-3">
+            {messages.map((item) => (
+              <li
+                key={item.id}
+                className="rounded-xl border border-border bg-surface p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{item.name}</p>
+                    <p className="mt-1 break-all text-sm text-muted">{item.email}</p>
+                    {item.phone ? (
+                      <p className="mt-1 text-sm">{item.phone}</p>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-muted">{formatDate(item.createdAt)}</p>
+                </div>
+                <p className="mt-3 text-xs tracking-wide text-muted uppercase">
+                  {item.topic}
+                </p>
+                <p className="mt-2 whitespace-pre-wrap text-sm">{item.message}</p>
               </li>
             ))}
           </ul>

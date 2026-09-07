@@ -10,6 +10,7 @@ import {
   CONTACT_TOPICS,
   CONTACT_WHATSAPP,
   mailToUrl,
+  sendContactMessage,
   type ContactTopic,
 } from "@/lib/contact";
 import { formatPhone } from "@/lib/utils";
@@ -34,32 +35,22 @@ function Contato() {
     setBusy(true);
     setError("");
     try {
-      const res = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
+      const result = await sendContactMessage({
+        data: {
           name: form.name,
           email: form.email,
-          phone: form.phone || "não informado",
+          phone: form.phone,
           topic: form.topic,
           message: form.message,
-          _subject: `Contato beabsorventes · ${form.topic}`,
-          _template: "box",
-          _captcha: "false",
-          _replyto: form.email,
-        }),
+        },
       });
-      if (!res.ok) {
-        throw new Error("formsubmit");
+      if (!result.ok) {
+        setError("Não foi possível enviar agora. Tente de novo.");
+        return;
       }
       setSent(true);
     } catch {
-      setError(
-        "Não foi possível enviar agora. Use o e-mail ao lado ou tente de novo.",
-      );
+      setError("Não foi possível enviar agora. Tente de novo.");
     } finally {
       setBusy(false);
     }
@@ -80,7 +71,8 @@ function Contato() {
           <div className="mt-10 rounded-xl bg-bg-warm p-6">
             <h2 className="font-display text-2xl italic">Mensagem enviada</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Recebemos no e-mail {CONTACT_EMAIL}. Respondemos em horário comercial.
+              Recebemos sua mensagem no e-mail {CONTACT_EMAIL}. Também fica
+              registrada na administração.
             </p>
             <button
               type="button"
