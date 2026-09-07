@@ -138,3 +138,255 @@ export function shippingPayable(subtotalCents: number, quoteCents: number) {
   if (subtotalCents >= FREE_SHIPPING_FROM) return 0;
   return quoteCents;
 }
+
+type MeAddress = {
+  label?: string;
+  postal_code?: string;
+  address?: string;
+  number?: string;
+  complement?: string;
+  district?: string;
+  city?: string;
+  state_abbr?: string;
+};
+
+type MeProfile = {
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  document?: string;
+  phone?: { phone?: string };
+};
+
+function meHeaders() {
+  return {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${meToken()}`,
+    "User-Agent": `Beabsorventes (${CONTACT_EMAIL})`,
+  };
+}
+
+async function meFetch(path: string, init?: RequestInit) {
+  const token = meToken();
+  if (!token) {
+    return { ok: false as const, status: 401, data: null as unknown };
+  }
+  const response = await fetch(`${meBase()}${path}`, {
+    ...init,
+    headers: { ...meHeaders(), ...(init?.headers as Record<string, string>) },
+  });
+  const text = await response.text();
+  let data: unknown = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+  if (!response.ok) {
+    console.error("[melhor-envio]", path, response.status, text.slice(0, 800));
+  }
+  return { ok: response.ok, status: response.status, data };
+}
+
+function packedBox(products: ReturnType<typeof quoteProducts>) {
+  let length = 16;
+  let width = 11;
+  let height = 2;
+  let weight = 0;
+  for (const product of products) {
+    length = Math.max(length, product.length);
+    width = Math.max(width, product.width);
+    height += product.height * product.quantity;
+    weight += product.weight * product.quantity;
+  }
+  return {
+    height: Math.max(2, Math.round(Math.min(height, 40))),
+    width: Math.max(11, Math.round(width)),
+    length: Math.max(16, Math.round(length)),
+    weight: Math.max(0.1, Number(weight.toFixed(3))),
+  };
+}
+
+async function senderFromAccount() {
+  const profileRes = await meFetch("/me");
+  const profile = (profileRes.ok ? profileRes.data : {}) as MeProfile;
+  const addressRes = await meFetch("/me/addresses");
+  const addresses = Array.isArray(addressRes.data) ? (addressRes.data as MeAddress[]) : [];
+  const origin = fromCep();
+  const address =
+    addresses.find((item) => (item.postal_code ?? "").replace(/\D/g, "") === origin) ??
+    addresses[0] ??
+    {};
+  const name =
+    [profile.firstname, profile.lastname].filter(Boolean).join(" ").trim() ||
+    process.env.MELHOR_ENVIO_FROM_NAME?.trim() ||
+    "Beabsorventes";
+  return {
+    name,
+    email: profile.email || CONTACT_EMAIL,
+    phone: (profile.phone?.phone || process.env.MELHOR_ENVIO_FROM_PHONE || "11995895103").replace(
+      /\D/g,
+      "",
+    ),
+    document: (profile.document || process.env.MELHOR_ENVIO_FROM_DOCUMENT || "").replace(/\D/g, ""),
+    address: address.address || process.env.MELHOR_ENVIO_FROM_STREET || "Ateliê",
+    complement: address.complement || "",
+    number: address.number || process.env.MELHOR_ENVIO_FROM_NUMBER || "1",
+    district: address.district || process.env.MELHOR_ENVIO_FROM_DISTRICT || "Centro",
+    city: address.city || process.env.MELHOR_ENVIO_FROM_CITY || "Praia Grande",
+    state_abbr: address.state_abbr || process.env.MELHOR_ENVIO_FROM_STATE || "SP",
+    postal_code: (address.postal_code || origin).replace(/\D/g, "").slice(0, 8),
+  };
+}
+
+export async function getMelhorEnvioAccount() {
+  if (!meToken()) {
+    return { ready: false as const, name: "", email: "" };
+  }
+  const result = await meFetch("/me");
+  if (!result.ok || !result.data || typeof result.data !== "object") {
+    return { ready: false as const, name: "", email: "" };
+  }
+  const profile = result.data as MeProfile;
+  return {
+    ready: true as const,
+    name: [profile.firstname, profile.lastname].filter(Boolean).join(" ").trim(),
+    email: profile.email ?? "",
+  };
+}
+
+export type MelhorEnvioOrderInput = {
+  orderId: string;
+  serviceId?: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
+  items: Array<{ slug?: string; name: string; qty: number; unitCents: number }>;
+};
+
+export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
+  if (!meToken()) {
+    return { ok: false as const, message: "MELHOR_ENVIO_TOKEN não está na Vercel." };
+  }
+
+  const cartLines = input.items
+    .filter((item) => item.slug)
+    .map((item) => ({
+      slug: item.slug as string,
+      printId: "padrao",
+      size: "Único",
+      qty: item.qty,
+    }));
+  const products = cartLines.length ? quoteProducts(cartLines) : [];
+  const volume = products.length
+    ? packedBox(products)
+    : { height: 4, width: 16, length: 22, weight: 0.3 };
+
+  let serviceId = input.serviceId && input.serviceId > 0 ? input.serviceId : 0;
+  if (!serviceId) {
+    const quotes = await fetchMelhorEnvioQuotes(input.address.cep, cartLines);
+    serviceId = quotes[0]?.serviceId ?? 1;
+  }
+
+  const from = await senderFromAccount();
+  const insurance = Number(
+    (input.items.reduce((sum, item) => sum + item.unitCents * item.qty, 0) / 100).toFixed(2),
+  );
+
+  const payload = {
+    service: serviceId,
+    from,
+    to: {
+      name: input.name,
+      email: input.email,
+      phone: input.phone.replace(/\D/g, ""),
+      document: "",
+      address: input.address.street,
+      complement: input.address.complement || "",
+      number: input.address.number || "s/n",
+      district: input.address.neighborhood,
+      city: input.address.city,
+      state_abbr: input.address.state,
+      postal_code: input.address.cep.replace(/\D/g, "").slice(0, 8),
+      country_id: "BR",
+    },
+    products: input.items.map((item) => ({
+      name: item.name.slice(0, 80),
+      quantity: item.qty,
+      unitary_value: Number((item.unitCents / 100).toFixed(2)),
+    })),
+    volumes: [volume],
+    options: {
+      insurance_value: insurance,
+      receipt: false,
+      own_hand: false,
+      reverse: false,
+      non_commercial: true,
+      platform: "Beabsorventes",
+      reminder: `Pedido ${input.orderId}`,
+      tags: [{ tag: input.orderId, url: "https://beabsorventes.com.br/conta" }],
+    },
+  };
+
+  const cart = await meFetch("/me/cart", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  if (!cart.ok || !cart.data || typeof cart.data !== "object") {
+    return {
+      ok: false as const,
+      message: "O Melhor Envio não aceitou a etiqueta. Confira o endereço e o token.",
+    };
+  }
+  const created = cart.data as {
+    id?: string;
+    protocol?: string;
+    tracking?: string;
+    status?: string;
+  };
+  const uuid = created.id ?? "";
+  if (!uuid) {
+    return { ok: false as const, message: "O Melhor Envio não devolveu o id da etiqueta." };
+  }
+
+  let tracking = created.tracking ?? "";
+  let status = created.status ?? "pending";
+
+  if (process.env.MELHOR_ENVIO_AUTO_CHECKOUT === "true") {
+    await meFetch("/me/shipment/checkout", {
+      method: "POST",
+      body: JSON.stringify({ orders: [uuid] }),
+    });
+    await meFetch("/me/shipment/generate", {
+      method: "POST",
+      body: JSON.stringify({ orders: [uuid] }),
+    });
+    const info = await meFetch(`/me/orders/${uuid}`);
+    if (info.ok && info.data && typeof info.data === "object") {
+      const order = info.data as { tracking?: string; status?: string };
+      tracking = order.tracking || tracking;
+      status = order.status || status;
+    }
+  }
+
+  return {
+    ok: true as const,
+    uuid,
+    protocol: created.protocol ?? "",
+    tracking,
+    trackingUrl: tracking
+      ? `https://www.melhorrastreio.com.br/rastreio/${tracking}`
+      : "",
+    status,
+  };
+}

@@ -10,6 +10,7 @@ import {
 } from "@/lib/customers";
 import { digitsOnly } from "@/lib/utils";
 import { getPasswordHash, setPasswordForEmail, verifyPassword } from "@/lib/customer-auth";
+import { createMelhorEnvioShipment, getMelhorEnvioAccount } from "@/lib/melhor-envio";
 
 const COOKIE = "bea_conta";
 
@@ -20,7 +21,7 @@ export type ShopOrder = {
   phone: string;
   status: string;
   payment: string;
-  items: Array<{ name: string; size?: string; qty: number; unitCents: number }>;
+  items: Array<{ slug?: string; name: string; size?: string; qty: number; unitCents: number }>;
   totals: { subtotal: number; discount: number; shipping: number; total: number };
   address: {
     cep: string;
@@ -34,6 +35,8 @@ export type ShopOrder = {
   shippingLabel: string;
   tracking: string;
   trackingUrl: string;
+  shippingServiceId: number;
+  meUuid: string;
   createdAt: string;
 };
 
@@ -48,6 +51,7 @@ export type PersistOrderInput = {
   totals: ShopOrder["totals"];
   address: ShopOrder["address"];
   shippingLabel?: string;
+  shippingServiceId?: number;
 };
 
 const profileSchema = z.object({
@@ -112,10 +116,14 @@ async function ensureOrdersTable() {
       shipping_label text not null default '',
       tracking text not null default '',
       tracking_url text not null default '',
+      shipping_service_id integer not null default 0,
+      me_uuid text not null default '',
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
     )
   `;
+  await sql`alter table orders add column if not exists shipping_service_id integer not null default 0`;
+  await sql`alter table orders add column if not exists me_uuid text not null default ''`;
   return sql;
 }
 
@@ -144,6 +152,8 @@ function mapOrder(row: {
   shipping_label: string;
   tracking: string;
   tracking_url: string;
+  shipping_service_id?: number;
+  me_uuid?: string;
   created_at: string | Date;
 }): ShopOrder {
   return {
@@ -166,6 +176,8 @@ function mapOrder(row: {
     shippingLabel: row.shipping_label,
     tracking: row.tracking,
     trackingUrl: row.tracking_url,
+    shippingServiceId: row.shipping_service_id ?? 0,
+    meUuid: row.me_uuid ?? "",
     createdAt: typeof row.created_at === "string" ? row.created_at : row.created_at.toISOString(),
   };
 }
@@ -201,7 +213,7 @@ export async function persistOrder(input: PersistOrderInput) {
     const sql = await ensureOrdersTable();
     await sql`
       insert into orders (
-        order_id, email, name, phone, status, payment, items, totals, address, shipping_label, updated_at
+        order_id, email, name, phone, status, payment, items, totals, address, shipping_label, shipping_service_id, updated_at
       ) values (
         ${input.orderId},
         ${input.email.trim().toLowerCase()},
@@ -213,6 +225,7 @@ export async function persistOrder(input: PersistOrderInput) {
         ${JSON.stringify(input.totals)}::jsonb,
         ${JSON.stringify(input.address)}::jsonb,
         ${input.shippingLabel ?? ""},
+        ${input.shippingServiceId ?? 0},
         now()
       )
       on conflict (order_id) do update set
@@ -224,6 +237,7 @@ export async function persistOrder(input: PersistOrderInput) {
         totals = excluded.totals,
         address = excluded.address,
         shipping_label = case when excluded.shipping_label = '' then orders.shipping_label else excluded.shipping_label end,
+        shipping_service_id = case when excluded.shipping_service_id = 0 then orders.shipping_service_id else excluded.shipping_service_id end,
         updated_at = now()
     `;
   } catch (error) {
@@ -466,3 +480,51 @@ export const listAdminOrders = createServerFn({ method: "GET" }).handler(async (
     return { ok: true as const, orders: [] as ShopOrder[] };
   }
 });
+
+export async function sendPaidOrderToMelhorEnvio(orderId: string) {
+  try {
+    const sql = await ensureOrdersTable();
+    const rows = await sql<Parameters<typeof mapOrder>[0]>`
+      select * from orders where order_id = ${orderId} limit 1
+    `;
+    const order = rows[0] ? mapOrder(rows[0]) : null;
+    if (!order) return { ok: false as const, message: "Pedido não encontrado." };
+    if (order.meUuid) return { ok: true as const, uuid: order.meUuid };
+    const result = await createMelhorEnvioShipment({
+      orderId: order.orderId,
+      serviceId: order.shippingServiceId,
+      name: order.name,
+      email: order.email,
+      phone: order.phone,
+      address: order.address,
+      items: order.items,
+    });
+    if (!result.ok) return result;
+    await sql`
+      update orders set
+        me_uuid = ${result.uuid},
+        tracking = case when ${result.tracking} = '' then tracking else ${result.tracking} end,
+        tracking_url = case when ${result.trackingUrl} = '' then tracking_url else ${result.trackingUrl} end,
+        updated_at = now()
+      where order_id = ${orderId}
+    `;
+    return result;
+  } catch (error) {
+    console.error("[orders] melhor-envio", error);
+    return { ok: false as const, message: "Não foi possível enviar ao Melhor Envio." };
+  }
+}
+
+export const getMelhorEnvioStatus = createServerFn({ method: "GET" }).handler(async () => {
+  if (!(await isAdmin())) return { ready: false, name: "", email: "" };
+  return getMelhorEnvioAccount();
+});
+
+export const adminSendToMelhorEnvio = createServerFn({ method: "POST" })
+  .validator(z.object({ orderId: z.string().min(3) }))
+  .handler(async ({ data }) => {
+    if (!(await isAdmin())) {
+      return { ok: false as const, message: "Entre de novo." };
+    }
+    return sendPaidOrderToMelhorEnvio(data.orderId);
+  });

@@ -15,6 +15,8 @@ import {
 } from "@/lib/customers";
 import { formatCep, formatPhone, formatBRL } from "@/lib/utils";
 import {
+  adminSendToMelhorEnvio,
+  getMelhorEnvioStatus,
   listAdminOrders,
   orderStatusLabel,
   type ShopOrder,
@@ -57,6 +59,10 @@ function Admin() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [postgres, setPostgres] = useState<boolean | null>(null);
+  const [melhor, setMelhor] = useState<{ ready: boolean; name: string; email: string } | null>(
+    null,
+  );
+  const [sending, setSending] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [newCustomer, setNewCustomer] = useState({
@@ -87,6 +93,7 @@ function Admin() {
       if (session.ok) {
         void load(true);
         void getCustomerStoreStatus().then((status) => setPostgres(status.postgres));
+        void getMelhorEnvioStatus().then(setMelhor);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -137,6 +144,7 @@ function Admin() {
     setAuthed(true);
     await load(true);
     void getCustomerStoreStatus().then((status) => setPostgres(status.postgres));
+    void getMelhorEnvioStatus().then(setMelhor);
   }
 
   if (!ready) {
@@ -215,6 +223,14 @@ function Admin() {
           Sair
         </Button>
       </div>
+
+      {melhor ? (
+        <p className={`mt-6 text-sm ${melhor.ready ? "text-muted" : "text-primary"}`}>
+          {melhor.ready
+            ? `Melhor Envio ligado${melhor.email ? ` · ${melhor.email}` : ""}.`
+            : "Melhor Envio sem token. Cadastre MELHOR_ENVIO_TOKEN na Vercel."}
+        </p>
+      ) : null}
 
       <Input
         className="mt-8 max-w-md"
@@ -313,6 +329,33 @@ function Admin() {
                     )}
                   </p>
                 ) : null}
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={sending === order.orderId}
+                    onClick={async () => {
+                      setSending(order.orderId);
+                      const result = await adminSendToMelhorEnvio({
+                        data: { orderId: order.orderId },
+                      });
+                      setSending(null);
+                      if (!result.ok) {
+                        setError(result.message);
+                        return;
+                      }
+                      setError("");
+                      await load(true);
+                    }}
+                  >
+                    {order.meUuid
+                      ? "Etiqueta no Melhor Envio"
+                      : sending === order.orderId
+                        ? "Enviando…"
+                        : "Gerar envio no Melhor Envio"}
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

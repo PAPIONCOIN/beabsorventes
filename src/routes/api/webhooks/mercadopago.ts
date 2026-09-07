@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sendOrderMail } from "@/lib/order-mail";
-import { updateOrderStatus } from "@/lib/shop-orders";
+import { sendPaidOrderToMelhorEnvio, updateOrderStatus } from "@/lib/shop-orders";
 
 type MpPayment = {
   id?: number;
@@ -58,6 +58,11 @@ export const Route = createFileRoute("/api/webhooks/mercadopago")({
         const orderId = payment.external_reference || payment.metadata?.orderId || "";
         if (payment.status === "approved" && orderId) {
           await updateOrderStatus(orderId, "paid");
+          try {
+            await sendPaidOrderToMelhorEnvio(orderId);
+          } catch (error) {
+            console.error("[mp-webhook] melhor-envio", error);
+          }
         }
         if (payment.status !== "approved") {
           return Response.json({ ok: true, status: payment.status });

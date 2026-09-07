@@ -93,6 +93,7 @@ async function resolveShipping(
       return {
         cents: shippingPayable(subtotal, chosen.priceCents),
         label: `${chosen.company} ${chosen.name} · ${chosen.days} dia${chosen.days === 1 ? "" : "s"} úteis`,
+        serviceId: chosen.serviceId,
       };
     }
   } catch (error) {
@@ -101,6 +102,7 @@ async function resolveShipping(
   return {
     cents: shippingFor(subtotal),
     label: "Correios PAC",
+    serviceId: 1,
   };
 }
 
@@ -204,6 +206,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       phone: data.phone ?? "",
       payment: data.payment,
       items: lines.map((item) => ({
+        slug: item.slug,
         name: item.name,
         size: item.size,
         qty: item.qty,
@@ -212,6 +215,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       totals,
       address,
       shippingLabel: shipping.label,
+      shippingServiceId: shipping.serviceId,
     };
     await persistOrder({ ...orderRecord, status: token ? "pending" : "demo" });
 
