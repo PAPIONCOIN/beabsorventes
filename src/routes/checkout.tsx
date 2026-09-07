@@ -156,9 +156,9 @@ function Checkout() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_22rem]">
+    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:gap-12 sm:px-6 sm:py-12 lg:grid-cols-[1fr_22rem]">
       <form onSubmit={onSubmit} className="space-y-5">
-        <h1 className="font-display text-4xl italic">Checkout</h1>
+        <h1 className="font-display text-[2rem] italic sm:text-4xl">Checkout</h1>
         {mpReady === false ? (
           <p className="rounded-md bg-bg-warm px-4 py-3 text-sm text-muted">
             Mercado Pago ainda sem token. O pedido será registrado aqui para você
@@ -229,7 +229,7 @@ function Checkout() {
                 key={method}
                 type="button"
                 onClick={() => setPayment(method)}
-                className={`h-11 rounded-md border px-4 text-sm ${
+                className={`h-11 flex-1 rounded-md border px-4 text-sm sm:flex-none ${
                   payment === method
                     ? "border-fg bg-fg text-bg"
                     : "border-border bg-surface"
@@ -244,7 +244,7 @@ function Checkout() {
           {busy ? "Enviando…" : `Pagar ${formatBRL(totals.total)}`}
         </Button>
       </form>
-      <aside className="h-fit rounded-xl bg-bg-warm p-6">
+      <aside className="order-first h-fit rounded-xl bg-bg-warm p-5 sm:p-6 lg:order-last">
         <BrandMark className="mb-4 size-16" />
         <h2 className="font-display text-2xl italic">Pedido</h2>
         <ul className="mt-4 space-y-3 text-sm">

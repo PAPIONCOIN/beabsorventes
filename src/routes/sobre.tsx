@@ -10,11 +10,11 @@ function Sobre() {
     <div>
       <section className="mx-auto grid max-w-6xl items-start gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2">
         <div>
-          <BrandMark className="mb-6 size-24" />
+          <BrandMark className="mb-5 size-20 sm:mb-6 sm:size-24" />
           <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
             Quem somos
           </p>
-          <h1 className="mt-3 font-display text-4xl italic">
+          <h1 className="mt-3 font-display text-[2rem] italic sm:text-4xl">
             Seja bem-vinde ao beabsorventes.
           </h1>
           <p className="mt-5 leading-relaxed text-muted">

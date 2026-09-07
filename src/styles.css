@@ -37,6 +37,7 @@
     color: var(--color-fg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
   }
 
   body {
@@ -44,6 +45,7 @@
     color: var(--color-fg);
     font-family: var(--font-sans);
     line-height: 1.55;
+    overflow-x: clip;
   }
 
   button:not(:disabled),
@@ -58,6 +60,7 @@
 
   img {
     outline: none;
+    max-width: 100%;
   }
 }
 

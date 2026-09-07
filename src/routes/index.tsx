@@ -25,38 +25,38 @@ function Home() {
     <div>
       <section className="border-b border-border">
         <div className="mx-auto grid max-w-6xl lg:grid-cols-2">
-          <div className="flex flex-col justify-center px-4 py-16 sm:px-6 sm:py-20 lg:min-h-[34rem] lg:py-24">
-            <BrandMark className="mb-5 size-16 sm:size-20" />
-            <p className="text-[11px] font-medium tracking-[0.2em] text-primary uppercase">
+          <div className="flex flex-col justify-center px-4 py-10 sm:px-6 sm:py-20 lg:min-h-[34rem] lg:py-24">
+            <BrandMark className="mb-4 size-14 sm:mb-5 sm:size-20" />
+            <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase sm:tracking-[0.2em]">
               Algodão orgânico · certificado GOTS
             </p>
-            <h1 className="mt-4 font-display text-[2.75rem] leading-[1.05] italic sm:text-6xl">
+            <h1 className="mt-3 font-display text-[2.15rem] leading-[1.08] italic sm:mt-4 sm:text-5xl lg:text-6xl">
               O ciclo, com outro cuidado.
             </h1>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-muted">
+            <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed text-muted sm:mt-5 sm:text-base">
               Absorventes reutilizáveis de tecido. Cinco modelos, camadas
               certas, zero descarte a cada mês.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+              <Button asChild size="lg" className="w-full sm:w-auto">
                 <Link to="/loja">
                   Ver a loja
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
                 <Link to="/guia">Escolher o modelo</Link>
               </Button>
             </div>
           </div>
-          <div className="relative min-h-80 bg-bg-warm lg:min-h-0">
+          <div className="relative order-first min-h-64 bg-bg-warm sm:min-h-80 lg:order-last lg:min-h-0">
             <ProductPhoto
               src="/images/products/hero-pad.jpg"
               alt="Absorvente reutilizável de tecido beabsorventes"
-              className="h-full min-h-80"
-              imgClassName="p-10 sm:p-16"
+              className="h-full min-h-64 sm:min-h-80"
+              imgClassName="p-8 sm:p-16"
             />
-            <BrandMark className="absolute right-5 bottom-5 size-24 drop-shadow-md sm:right-8 sm:bottom-8 sm:size-32" />
+            <BrandMark className="absolute right-4 bottom-4 hidden size-24 drop-shadow-md sm:block sm:right-8 sm:bottom-8 sm:size-32" />
           </div>
         </div>
       </section>
@@ -93,19 +93,19 @@ function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
               Tamanhos e modelos
             </p>
-            <h2 className="mt-2 font-display text-3xl italic">As peças</h2>
+            <h2 className="mt-2 font-display text-[1.75rem] italic sm:text-3xl">As peças</h2>
           </div>
-          <Link to="/loja" className="text-sm text-primary hover:underline">
+          <Link to="/loja" className="shrink-0 text-sm text-primary hover:underline">
             Ver todas
           </Link>
         </div>
-        <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
@@ -131,7 +131,7 @@ function Home() {
               <p className="mt-4 text-lg tabular-nums">
                 {formatBRL(kit.priceCents)}
               </p>
-              <Button asChild className="mt-6" size="lg">
+              <Button asChild className="mt-6 w-full sm:w-auto" size="lg">
                 <Link to="/produto/$slug" params={{ slug: kit.slug }}>
                   Comprar o kit
                 </Link>
@@ -145,14 +145,14 @@ function Home() {
         <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
           Guia
         </p>
-        <h2 className="mt-2 font-display text-3xl italic">Do Mini ao Noturno</h2>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <h2 className="mt-2 font-display text-[1.75rem] italic sm:text-3xl">Do Mini ao Noturno</h2>
+        <div className="-mx-4 mt-8 flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0">
           {pads.map((product) => (
             <Link
               key={product.slug}
               to="/produto/$slug"
               params={{ slug: product.slug }}
-              className="group text-center"
+              className="w-[42%] shrink-0 snap-start text-center sm:w-auto"
             >
               <ProductPhoto
                 src={product.image}

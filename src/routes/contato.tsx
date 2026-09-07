@@ -59,12 +59,12 @@ function Contato() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_22rem]">
+    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:gap-12 sm:px-6 sm:py-12 lg:grid-cols-[1fr_22rem]">
       <div>
         <p className="text-xs font-medium tracking-wide text-primary uppercase">
           Contato
         </p>
-        <h1 className="mt-3 font-display text-4xl italic">Fala com a gente</h1>
+        <h1 className="mt-3 font-display text-[2rem] italic sm:text-4xl">Fala com a gente</h1>
         <p className="mt-4 max-w-xl text-muted">
           Dúvida de fluxo, pedido ou troca — responde no WhatsApp e no e-mail,
           em horário comercial.

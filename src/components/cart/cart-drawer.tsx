@@ -100,7 +100,7 @@ export function CartDrawer() {
             </ul>
           )}
         </div>
-        <div className="border-t border-border p-6">
+        <div className="border-t border-border p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <div className="flex justify-between text-sm">
             <span className="text-muted">Subtotal</span>
             <span className="tabular-nums">{formatBRL(totals.subtotal)}</span>

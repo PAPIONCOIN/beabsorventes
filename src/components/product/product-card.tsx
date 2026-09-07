@@ -16,17 +16,19 @@ export function ProductCard({ product }: { product: Product }) {
         className="aspect-square rounded-lg"
         imgClassName="transition-transform duration-500 ease-out group-hover:scale-[1.04]"
       />
-      <div className="mt-3 flex items-baseline justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
-            {flowLabel(product.flow)}
-            {product.lengthCm ? ` · ${product.lengthCm} cm` : ""}
-          </p>
-          <h3 className="mt-1 font-display text-xl italic leading-tight">
+      <div className="mt-3 min-w-0">
+        <p className="text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
+          {flowLabel(product.flow)}
+          {product.lengthCm ? ` · ${product.lengthCm} cm` : ""}
+        </p>
+        <div className="mt-1 flex items-baseline justify-between gap-3">
+          <h3 className="min-w-0 font-display text-lg italic leading-tight sm:text-xl">
             {product.name}
           </h3>
+          <p className="shrink-0 text-sm tabular-nums">
+            {formatBRL(product.priceCents)}
+          </p>
         </div>
-        <p className="shrink-0 text-sm tabular-nums">{formatBRL(product.priceCents)}</p>
       </div>
     </Link>
   );

@@ -36,14 +36,14 @@ function SheetContent({
       <SheetOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex h-full w-full max-w-md flex-col bg-surface shadow-soft",
+          "fixed z-50 flex h-full w-full max-w-md flex-col bg-surface shadow-soft max-sm:max-w-full",
           side === "right" ? "inset-y-0 right-0" : "inset-y-0 left-0",
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute top-4 right-4 rounded-sm text-muted hover:text-fg">
+        <DialogPrimitive.Close className="absolute top-3 right-3 flex size-11 items-center justify-center rounded-sm text-muted hover:text-fg">
           <X className="size-5" />
           <span className="sr-only">Fechar</span>
         </DialogPrimitive.Close>

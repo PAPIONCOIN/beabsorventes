@@ -8,10 +8,10 @@ import {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-surface">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
+    <footer className="border-t border-border bg-surface pb-[max(5rem,env(safe-area-inset-bottom))] sm:pb-0">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-14 md:grid-cols-4">
         <div className="md:col-span-2">
-          <Logo withName={false} markClassName="size-24" />
+          <Logo withName={false} markClassName="size-20 sm:size-24" />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted">
             Absorventes ecológicos reutilizáveis de tecido 100% algodão
             orgânico, com tingimento GOTS. Feito artesanalmente.
@@ -24,16 +24,16 @@ export function SiteFooter() {
           <p className="mb-1 text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
             Loja
           </p>
-          <Link to="/loja" className="text-muted hover:text-fg">
+          <Link to="/loja" className="flex min-h-11 items-center text-muted hover:text-fg">
             Peças
           </Link>
-          <Link to="/guia" className="text-muted hover:text-fg">
+          <Link to="/guia" className="flex min-h-11 items-center text-muted hover:text-fg">
             Modelos
           </Link>
-          <Link to="/cuidados" className="text-muted hover:text-fg">
+          <Link to="/cuidados" className="flex min-h-11 items-center text-muted hover:text-fg">
             Como lavar
           </Link>
-          <Link to="/sobre" className="text-muted hover:text-fg">
+          <Link to="/sobre" className="flex min-h-11 items-center text-muted hover:text-fg">
             Quem somos
           </Link>
         </div>
@@ -44,7 +44,7 @@ export function SiteFooter() {
           <p className="text-muted">Envios para todo o Brasil.</p>
           <p className="mt-1 text-muted">Peças saem em até 5 dias úteis.</p>
           <p className="mt-4">
-            <a className="text-muted hover:text-fg" href={`mailto:${CONTACT_EMAIL}`}>
+            <a className="break-all text-muted hover:text-fg" href={`mailto:${CONTACT_EMAIL}`}>
               {CONTACT_EMAIL}
             </a>
           </p>

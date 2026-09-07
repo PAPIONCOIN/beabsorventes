@@ -54,7 +54,7 @@ function ProductPage() {
             className="aspect-square rounded-lg"
           />
           {product.gallery.length > 1 ? (
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {product.gallery.map((src) => (
                 <button
                   key={src}
@@ -80,7 +80,7 @@ function ProductPage() {
             {flowLabel(product.flow)}
             {product.lengthCm ? ` · ${product.lengthCm} cm` : ""}
           </p>
-          <h1 className="mt-2 font-display text-4xl italic">{product.name}</h1>
+          <h1 className="mt-2 font-display text-[2rem] italic sm:text-4xl">{product.name}</h1>
           <p className="mt-4 text-2xl tabular-nums">
             {formatBRL(product.priceCents)}
           </p>
@@ -91,11 +91,11 @@ function ProductPage() {
             {product.description}
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8 hidden flex-wrap items-center gap-3 lg:flex">
             <QtyStepper value={qty} onChange={setQty} />
             <Button
               size="lg"
-              className="min-w-44 flex-1 sm:flex-none"
+              className="min-w-44"
               onClick={() => add({ slug: product.slug, printId, size, qty })}
             >
               Adicionar à sacola
@@ -155,6 +155,23 @@ function ProductPage() {
           </div>
         </section>
       ) : null}
+
+      <div className="h-20 lg:hidden" />
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur-sm lg:hidden"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
+          <p className="min-w-0 flex-1 text-sm tabular-nums">
+            {formatBRL(product.priceCents)}
+          </p>
+          <QtyStepper value={qty} onChange={setQty} />
+          <Button
+            onClick={() => add({ slug: product.slug, printId, size, qty })}
+          >
+            Adicionar
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

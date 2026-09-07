@@ -25,13 +25,16 @@ export function SiteHeader() {
   const count = useCartStore((s) => cartCount(s.lines));
 
   return (
-    <header className="sticky top-0 z-40">
-      <p className="bg-primary px-4 py-2 text-center text-[11px] font-medium tracking-[0.12em] text-primary-fg uppercase">
-        PIX 5% · até 3× sem juros · envio em 5 dias úteis
+    <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
+      <p className="bg-primary px-3 py-2 text-center text-[10px] font-medium tracking-[0.08em] text-primary-fg uppercase sm:px-4 sm:text-[11px] sm:tracking-[0.12em]">
+        <span className="sm:hidden">PIX 5% · 3× sem juros · 5 dias úteis</span>
+        <span className="hidden sm:inline">
+          PIX 5% · até 3× sem juros · envio em 5 dias úteis
+        </span>
       </p>
       <div className="border-b border-border bg-bg/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Logo />
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-[4.25rem] sm:px-6">
+          <Logo className="min-w-0" />
           <nav className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) => (
               <Link

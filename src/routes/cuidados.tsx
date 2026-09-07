@@ -25,11 +25,11 @@ const STEPS = [
 
 function Cuidados() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Como lavar
       </p>
-      <h1 className="mt-3 font-display text-4xl italic">Lavar, secar, repetir</h1>
+      <h1 className="mt-3 font-display text-[2rem] italic sm:text-4xl">Lavar, secar, repetir</h1>
       <p className="mt-4 max-w-xl text-muted">
         Pode ser lavado em máquina. Não utilizar secadora. Três gestos, sempre
         iguais.
@@ -43,7 +43,7 @@ function Cuidados() {
             <img
               src={step.image}
               alt={step.alt}
-              className={`aspect-square w-full rounded-lg bg-surface object-contain p-8 ${index % 2 ? "lg:order-2" : ""}`}
+              className={`aspect-square w-full rounded-lg bg-surface object-contain p-6 sm:p-8 ${index % 2 ? "lg:order-2" : ""}`}
             />
             <div>
               <p className="text-xs tabular-nums text-muted">0{index + 1}</p>

@@ -13,13 +13,35 @@ function Guia() {
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Modelos
       </p>
-      <h1 className="mt-3 font-display text-4xl italic">Tamanhos e modelos</h1>
+      <h1 className="mt-3 font-display text-[2rem] italic sm:text-4xl">Tamanhos e modelos</h1>
       <p className="mt-4 max-w-xl text-muted">
         Tecido ecológico 100% algodão orgânico e tingimento sustentável com
         certificação internacional GOTS.
       </p>
 
-      <div className="mt-12 overflow-x-auto">
+      <ul className="mt-10 space-y-3 md:hidden">
+        {pads.map((product) => (
+          <li key={product.slug}>
+            <Link
+              to="/produto/$slug"
+              params={{ slug: product.slug }}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3"
+            >
+              <span>
+                <span className="block font-medium">{product.shortName}</span>
+                <span className="text-xs text-muted">
+                  {product.lengthCm} cm · {product.layers} camadas
+                </span>
+              </span>
+              <span className="shrink-0 text-sm tabular-nums">
+                {formatBRL(product.priceCents)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-12 hidden overflow-x-auto md:block">
         <table className="w-full min-w-lg text-left text-sm">
           <thead>
             <tr className="border-b border-border text-muted">

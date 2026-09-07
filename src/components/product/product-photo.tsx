@@ -17,7 +17,7 @@ export function ProductPhoto({
         src={src}
         alt={alt}
         className={cn(
-          "h-full w-full object-contain p-5 sm:p-7",
+          "h-full w-full object-contain p-4 sm:p-7",
           imgClassName,
         )}
       />
