@@ -8,9 +8,12 @@ import {
   adminLogin,
   adminLogout,
   getAdminSession,
+  getCustomerStoreStatus,
   listCustomers,
+  registerCustomer,
   type Customer,
 } from "@/lib/customers";
+import { formatCep, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -46,6 +49,17 @@ function Admin() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [postgres, setPostgres] = useState<boolean | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [newCustomer, setNewCustomer] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cep: "",
+    city: "",
+    state: "",
+  });
 
   async function load(sessionOk = authed) {
     if (!sessionOk) return;
@@ -58,7 +72,10 @@ function Admin() {
     void getAdminSession().then((session) => {
       setAuthed(session.ok);
       setReady(true);
-      if (session.ok) void load(true);
+      if (session.ok) {
+        void load(true);
+        void getCustomerStoreStatus().then((status) => setPostgres(status.postgres));
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -85,6 +102,7 @@ function Admin() {
     setPassword("");
     setAuthed(true);
     await load(true);
+    void getCustomerStoreStatus().then((status) => setPostgres(status.postgres));
   }
 
   if (!ready) {
@@ -157,6 +175,110 @@ function Admin() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
+
+      {postgres === false ? (
+        <div className="mt-8 rounded-xl border border-primary/20 bg-bg-warm p-5 text-sm leading-relaxed">
+          <p className="font-medium">Os cadastros ainda não ficam guardados.</p>
+          <p className="mt-2 text-muted">
+            A loja no ar precisa de um banco na Vercel. Sem isso, cada visita
+            começa zerada — por isso a lista aparece vazia.
+          </p>
+          <ol className="mt-4 list-decimal space-y-2 pl-5">
+            <li>Abra o projeto beabsorventes na Vercel</li>
+            <li>Clique em <strong>Storage</strong></li>
+            <li>Clique em <strong>Create Database</strong> e escolha <strong>Postgres</strong> (Neon)</li>
+            <li>Confirme a criação — a variável DATABASE_URL entra sozinha</li>
+            <li>Vá em <strong>Deployments</strong> → ⋯ → <strong>Redeploy</strong></li>
+          </ol>
+          <p className="mt-4 text-muted">
+            Os cadastros e as compras feitos depois do Redeploy aparecem aqui.
+            Os anteriores estão no e-mail beabsorventes@gmail.com — você pode
+            lançá-los no formulário abaixo.
+          </p>
+        </div>
+      ) : null}
+
+      <form
+        className="mt-8 grid gap-3 rounded-xl border border-border bg-surface p-5 sm:grid-cols-2"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setAdding(true);
+          setAddError("");
+          try {
+            const result = await registerCustomer({
+              data: {
+                ...newCustomer,
+                source: "cadastro",
+              },
+            });
+            if (!result.customer) {
+              setAddError("Não gravou. Ligue o banco Postgres na Vercel e faça o Redeploy.");
+              return;
+            }
+            setNewCustomer({
+              name: "",
+              email: "",
+              phone: "",
+              cep: "",
+              city: "",
+              state: "",
+            });
+            await load(true);
+          } catch {
+            setAddError("Não foi possível salvar este cliente.");
+          } finally {
+            setAdding(false);
+          }
+        }}
+      >
+        <p className="font-medium sm:col-span-2">Adicionar cliente</p>
+        <Input
+          required
+          placeholder="Nome"
+          value={newCustomer.name}
+          onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+        />
+        <Input
+          required
+          type="email"
+          placeholder="E-mail"
+          value={newCustomer.email}
+          onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+        />
+        <Input
+          placeholder="WhatsApp"
+          value={newCustomer.phone}
+          onChange={(e) =>
+            setNewCustomer({ ...newCustomer, phone: formatPhone(e.target.value) })
+          }
+        />
+        <Input
+          placeholder="CEP"
+          value={newCustomer.cep}
+          onChange={(e) =>
+            setNewCustomer({ ...newCustomer, cep: formatCep(e.target.value) })
+          }
+        />
+        <Input
+          placeholder="Cidade"
+          value={newCustomer.city}
+          onChange={(e) => setNewCustomer({ ...newCustomer, city: e.target.value })}
+        />
+        <Input
+          placeholder="UF"
+          value={newCustomer.state}
+          onChange={(e) =>
+            setNewCustomer({
+              ...newCustomer,
+              state: e.target.value.toUpperCase().slice(0, 2),
+            })
+          }
+        />
+        {addError ? <p className="text-sm text-primary sm:col-span-2">{addError}</p> : null}
+        <Button type="submit" className="sm:col-span-2" disabled={adding}>
+          {adding ? "Salvando…" : "Salvar cliente"}
+        </Button>
+      </form>
 
       {filtered.length === 0 ? (
         <p className="mt-10 text-muted">Nenhum cliente encontrado.</p>

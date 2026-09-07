@@ -226,3 +226,9 @@ export const listCustomers = createServerFn({ method: "GET" }).handler(async () 
     return { ok: true as const, customers: [] as Customer[] };
   }
 });
+
+export const getCustomerStoreStatus = createServerFn({ method: "GET" }).handler(
+  async () => ({
+    postgres: Boolean(process.env.DATABASE_URL?.trim()),
+  }),
+);
