@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
 import {
+  adminDeleteCustomer,
   adminLogin,
   adminLogout,
+  adminUpdateCustomer,
   getAdminSession,
   getCustomerStoreStatus,
   listCustomers,
@@ -36,6 +38,20 @@ function formatDate(value: string) {
 function sourceLabel(source: string) {
   return source === "checkout" ? "Compra" : "Cadastro";
 }
+
+const EMPTY_CUSTOMER = {
+  name: "",
+  email: "",
+  phone: "",
+  document: "",
+  cep: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+};
 
 function addressLine(customer: Customer) {
   return [
@@ -67,15 +83,8 @@ function Admin() {
   const [shipDoc, setShipDoc] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
-  const [newCustomer, setNewCustomer] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    document: "",
-    cep: "",
-    city: "",
-    state: "",
-  });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newCustomer, setNewCustomer] = useState(EMPTY_CUSTOMER);
 
   async function load(sessionOk = authed) {
     if (!sessionOk) return;
@@ -87,6 +96,38 @@ function Admin() {
     }
     const purchases = await listAdminOrders();
     if (purchases.ok) setOrders(purchases.orders);
+  }
+
+  function startEdit(customer: Customer) {
+    setEditingId(customer.id);
+    setAddError("");
+    setNewCustomer({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone ? formatPhone(customer.phone) : "",
+      document: customer.document ? formatCpf(customer.document) : "",
+      cep: customer.cep ? formatCep(customer.cep) : "",
+      street: customer.street,
+      number: customer.number,
+      complement: customer.complement,
+      neighborhood: customer.neighborhood,
+      city: customer.city,
+      state: customer.state,
+    });
+  }
+
+  async function removeCustomer(customer: Customer) {
+    if (!window.confirm(`Excluir o cadastro de ${customer.name}?`)) return;
+    const result = await adminDeleteCustomer({ data: { id: customer.id } });
+    if (!result.ok) {
+      setAddError(result.message);
+      return;
+    }
+    if (editingId === customer.id) {
+      setEditingId(null);
+      setNewCustomer(EMPTY_CUSTOMER);
+    }
+    await load(true);
   }
 
   useEffect(() => {
@@ -390,25 +431,25 @@ function Admin() {
           setAdding(true);
           setAddError("");
           try {
-            const result = await registerCustomer({
-              data: {
-                ...newCustomer,
-                source: "cadastro",
-              },
-            });
-            if (!result.customer) {
-              setAddError("Não gravou. Ligue o banco Postgres na Vercel e faça o Redeploy.");
-              return;
+            if (editingId) {
+              const result = await adminUpdateCustomer({
+                data: { id: editingId, ...newCustomer, source: "cadastro" },
+              });
+              if (!result.ok) {
+                setAddError(result.message);
+                return;
+              }
+            } else {
+              const result = await registerCustomer({
+                data: { ...newCustomer, source: "cadastro" },
+              });
+              if (!result.customer) {
+                setAddError("Não gravou. Ligue o banco Postgres na Vercel e faça o Redeploy.");
+                return;
+              }
             }
-            setNewCustomer({
-              name: "",
-              email: "",
-              phone: "",
-              document: "",
-              cep: "",
-              city: "",
-              state: "",
-            });
+            setEditingId(null);
+            setNewCustomer(EMPTY_CUSTOMER);
             await load(true);
           } catch {
             setAddError("Não foi possível salvar este cliente.");
@@ -417,7 +458,9 @@ function Admin() {
           }
         }}
       >
-        <p className="font-medium sm:col-span-2">Adicionar cliente</p>
+        <p className="font-medium sm:col-span-2">
+          {editingId ? "Editar cliente" : "Adicionar cliente"}
+        </p>
         <Input
           required
           placeholder="Nome"
@@ -453,6 +496,30 @@ function Admin() {
           }
         />
         <Input
+          placeholder="Rua"
+          value={newCustomer.street}
+          onChange={(e) => setNewCustomer({ ...newCustomer, street: e.target.value })}
+        />
+        <Input
+          placeholder="Número"
+          value={newCustomer.number}
+          onChange={(e) => setNewCustomer({ ...newCustomer, number: e.target.value })}
+        />
+        <Input
+          placeholder="Complemento"
+          value={newCustomer.complement}
+          onChange={(e) =>
+            setNewCustomer({ ...newCustomer, complement: e.target.value })
+          }
+        />
+        <Input
+          placeholder="Bairro"
+          value={newCustomer.neighborhood}
+          onChange={(e) =>
+            setNewCustomer({ ...newCustomer, neighborhood: e.target.value })
+          }
+        />
+        <Input
           placeholder="Cidade"
           value={newCustomer.city}
           onChange={(e) => setNewCustomer({ ...newCustomer, city: e.target.value })}
@@ -468,9 +535,24 @@ function Admin() {
           }
         />
         {addError ? <p className="text-sm text-primary sm:col-span-2">{addError}</p> : null}
-        <Button type="submit" className="sm:col-span-2" disabled={adding}>
-          {adding ? "Salvando…" : "Salvar cliente"}
-        </Button>
+        <div className="flex flex-wrap gap-2 sm:col-span-2">
+          <Button type="submit" disabled={adding}>
+            {adding ? "Salvando…" : editingId ? "Salvar alterações" : "Salvar cliente"}
+          </Button>
+          {editingId ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setEditingId(null);
+                setNewCustomer(EMPTY_CUSTOMER);
+                setAddError("");
+              }}
+            >
+              Cancelar
+            </Button>
+          ) : null}
+        </div>
       </form>
 
       <h2 className="mt-12 font-display text-3xl italic">Clientes</h2>
@@ -503,6 +585,19 @@ function Admin() {
                     {customer.city}/{customer.state}
                   </p>
                 ) : null}
+                <div className="mt-3 flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => startEdit(customer)}>
+                    Editar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void removeCustomer(customer)}
+                  >
+                    Excluir
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
@@ -517,7 +612,8 @@ function Admin() {
                   <th className="py-3 pr-4 font-medium">CPF</th>
                   <th className="py-3 pr-4 font-medium">Endereço</th>
                   <th className="py-3 pr-4 font-medium">Origem</th>
-                  <th className="py-3 font-medium">Desde</th>
+                  <th className="py-3 pr-4 font-medium">Desde</th>
+                  <th className="py-3 font-medium">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -533,7 +629,27 @@ function Admin() {
                       {addressLine(customer) || "—"}
                     </td>
                     <td className="py-3 pr-4">{sourceLabel(customer.source)}</td>
-                    <td className="py-3 text-muted">{formatDate(customer.createdAt)}</td>
+                    <td className="py-3 pr-4 text-muted">{formatDate(customer.createdAt)}</td>
+                    <td className="py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => startEdit(customer)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void removeCustomer(customer)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

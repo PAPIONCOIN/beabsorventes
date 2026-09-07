@@ -259,6 +259,67 @@ export const listCustomers = createServerFn({ method: "GET" }).handler(async () 
   }
 });
 
+export const adminUpdateCustomer = createServerFn({ method: "POST" })
+  .validator(
+    customerSchema.extend({
+      id: z.number().int().positive(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    if (!(await isAdmin())) {
+      return { ok: false as const, message: "Entre de novo." };
+    }
+    try {
+      const sql = await getSql();
+      const email = data.email.trim().toLowerCase();
+      const taken = await sql<{ id: number }>`
+        select id from customers where email = ${email} and id <> ${data.id} limit 1
+      `;
+      if (taken[0]) {
+        return { ok: false as const, message: "Este e-mail já está em outro cadastro." };
+      }
+      const rows = await sql<Parameters<typeof mapRow>[0]>`
+        update customers set
+          name = ${data.name},
+          email = ${email},
+          phone = ${data.phone},
+          document = ${data.document.replace(/\D/g, "").slice(0, 11)},
+          cep = ${data.cep.replace(/\D/g, "").slice(0, 8)},
+          street = ${data.street},
+          number = ${data.number},
+          complement = ${data.complement},
+          neighborhood = ${data.neighborhood},
+          city = ${data.city},
+          state = ${data.state.toUpperCase().slice(0, 2)},
+          updated_at = now()
+        where id = ${data.id}
+        returning *
+      `;
+      const row = rows[0];
+      if (!row) return { ok: false as const, message: "Cliente não encontrado." };
+      return { ok: true as const, customer: mapRow(row) };
+    } catch (error) {
+      console.error("[customers] update", error);
+      return { ok: false as const, message: "Não foi possível salvar este cadastro." };
+    }
+  });
+
+export const adminDeleteCustomer = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.number().int().positive() }))
+  .handler(async ({ data }) => {
+    if (!(await isAdmin())) {
+      return { ok: false as const, message: "Entre de novo." };
+    }
+    try {
+      const sql = await getSql();
+      await sql`delete from customers where id = ${data.id}`;
+      return { ok: true as const };
+    } catch (error) {
+      console.error("[customers] delete", error);
+      return { ok: false as const, message: "Não foi possível excluir este cadastro." };
+    }
+  });
+
 export const getCustomerStoreStatus = createServerFn({ method: "GET" }).handler(
   async () => ({
     postgres: Boolean(process.env.DATABASE_URL?.trim()),
