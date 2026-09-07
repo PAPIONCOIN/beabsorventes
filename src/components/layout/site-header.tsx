@@ -55,8 +55,7 @@ function AccountMenu({
       {open ? (
         <div className="absolute right-0 z-50 mt-2 min-w-[12rem] rounded-lg border border-border bg-surface py-1 shadow-sm">
           <Link
-            to="/conta"
-            hash="cadastro"
+            to="/cadastro"
             className={itemClass}
             onClick={() => {
               setOpen(false);
@@ -66,15 +65,14 @@ function AccountMenu({
             Meu cadastro
           </Link>
           <Link
-            to="/conta"
-            hash="pedidos"
+            to="/compras"
             className={itemClass}
             onClick={() => {
               setOpen(false);
               onNavigate?.();
             }}
           >
-            Meus pedidos
+            Compras
           </Link>
           <button
             type="button"
@@ -199,20 +197,18 @@ export function SiteHeader() {
                   Olá, {session.firstName}
                 </p>
                 <Link
-                  to="/conta"
-                  hash="cadastro"
+                  to="/cadastro"
                   className="flex h-11 items-center px-2 text-base"
                   onClick={() => setMenu(false)}
                 >
                   Meu cadastro
                 </Link>
                 <Link
-                  to="/conta"
-                  hash="pedidos"
+                  to="/compras"
                   className="flex h-11 items-center px-2 text-base"
                   onClick={() => setMenu(false)}
                 >
-                  Meus pedidos
+                  Compras
                 </Link>
               </>
             ) : (

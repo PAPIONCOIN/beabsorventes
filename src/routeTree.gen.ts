@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ComprasRouteImport } from './routes/compras'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CuidadosRouteImport } from './routes/cuidados'
@@ -45,6 +46,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComprasRoute = ComprasRouteImport.update({
+  id: '/compras',
+  path: '/compras',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContaRoute = ContaRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/cadastro': typeof CadastroRoute
   '/checkout': typeof CheckoutRoute
+  '/compras': typeof ComprasRoute
   '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/cadastro': typeof CadastroRoute
   '/checkout': typeof CheckoutRoute
+  '/compras': typeof ComprasRoute
   '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/cadastro': typeof CadastroRoute
   '/checkout': typeof CheckoutRoute
+  '/compras': typeof ComprasRoute
   '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cadastro'
     | '/checkout'
+    | '/compras'
     | '/conta'
     | '/contato'
     | '/cuidados'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cadastro'
     | '/checkout'
+    | '/compras'
     | '/conta'
     | '/contato'
     | '/cuidados'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cadastro'
     | '/checkout'
+    | '/compras'
     | '/conta'
     | '/contato'
     | '/cuidados'
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CadastroRoute: typeof CadastroRoute
   CheckoutRoute: typeof CheckoutRoute
+  ComprasRoute: typeof ComprasRoute
   ContaRoute: typeof ContaRouteWithChildren
   ContatoRoute: typeof ContatoRoute
   CuidadosRoute: typeof CuidadosRoute
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compras': {
+      id: '/compras'
+      path: '/compras'
+      fullPath: '/compras'
+      preLoaderRoute: typeof ComprasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conta': {
@@ -390,6 +410,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CadastroRoute: CadastroRoute,
   CheckoutRoute: CheckoutRoute,
+  ComprasRoute: ComprasRoute,
   ContaRoute: ContaRouteWithChildren,
   ContatoRoute: ContatoRoute,
   CuidadosRoute: CuidadosRoute,

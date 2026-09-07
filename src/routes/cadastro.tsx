@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +6,19 @@ import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
 import { registerCustomer } from "@/lib/customers";
 import { sendCustomerMail } from "@/lib/customer-mail";
-import { openAccount } from "@/lib/shop-orders";
+import {
+  changeAccountPassword,
+  getAccount,
+  openAccount,
+  updateAccount,
+} from "@/lib/shop-orders";
 import { digitsOnly, formatCep, formatCpf, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro")({ component: Cadastro });
 
 function Cadastro() {
+  const [ready, setReady] = useState(false);
+  const [logged, setLogged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -30,6 +37,30 @@ function Cadastro() {
     password: "",
     confirm: "",
   });
+
+  useEffect(() => {
+    void getAccount().then((result) => {
+      if (result.ok && result.customer) {
+        const customer = result.customer;
+        setLogged(true);
+        setForm((prev) => ({
+          ...prev,
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone ? formatPhone(customer.phone) : "",
+          document: customer.document ? formatCpf(customer.document) : "",
+          cep: customer.cep ? formatCep(customer.cep) : "",
+          street: customer.street,
+          number: customer.number,
+          complement: customer.complement,
+          neighborhood: customer.neighborhood,
+          city: customer.city,
+          state: customer.state,
+        }));
+      }
+      setReady(true);
+    });
+  }, []);
 
   async function lookupCep(cepDigits: string) {
     if (cepDigits.length !== 8) return;
@@ -131,6 +162,24 @@ function Cadastro() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!ready) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-20 text-center text-muted">
+        Carregando…
+      </div>
+    );
+  }
+
+  if (logged) {
+    return (
+      <CadastroLogado
+        form={form}
+        setForm={setForm}
+        lookupCep={lookupCep}
+      />
+    );
   }
 
   if (done) {
@@ -257,6 +306,205 @@ function Cadastro() {
         {error ? <p className="text-sm text-primary">{error}</p> : null}
         <Button type="submit" size="lg" className="w-full" disabled={busy}>
           {busy ? "Salvando…" : "Cadastrar"}
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+type CadastroForm = {
+  name: string;
+  email: string;
+  phone: string;
+  document: string;
+  cep: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  password: string;
+  confirm: string;
+};
+
+function CadastroLogado({
+  form,
+  setForm,
+  lookupCep,
+}: {
+  form: CadastroForm;
+  setForm: React.Dispatch<React.SetStateAction<CadastroForm>>;
+  lookupCep: (cep: string) => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  return (
+    <div className="mx-auto max-w-lg px-4 py-10 sm:px-6 sm:py-12">
+      <p className="text-xs font-medium tracking-wide text-primary uppercase">
+        Minha conta
+      </p>
+      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Meu cadastro</h1>
+      <p className="mt-4 text-muted">Atualize endereço, CPF e senha.</p>
+      <form
+        className="mt-10 space-y-5"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setBusy(true);
+          setError("");
+          setSaved("");
+          try {
+            const result = await updateAccount({
+              data: {
+                name: form.name,
+                phone: form.phone,
+                document: form.document,
+                cep: form.cep,
+                street: form.street,
+                number: form.number,
+                complement: form.complement,
+                neighborhood: form.neighborhood,
+                city: form.city,
+                state: form.state,
+              },
+            });
+            if (!result.ok) {
+              setError(result.message);
+              return;
+            }
+            setSaved("Cadastro atualizado.");
+          } catch {
+            setError("Não foi possível salvar agora.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <Field label="Nome" value={form.name} onChange={(value) => setForm({ ...form, name: value })} />
+        <Field
+          label="CPF"
+          inputMode="numeric"
+          value={form.document}
+          onChange={(value) => setForm({ ...form, document: formatCpf(value) })}
+        />
+        <Field
+          label="WhatsApp"
+          required={false}
+          inputMode="tel"
+          value={form.phone}
+          onChange={(value) => setForm({ ...form, phone: formatPhone(value) })}
+        />
+        <Field
+          label="CEP"
+          required={false}
+          inputMode="numeric"
+          value={form.cep}
+          onChange={(value) => {
+            const cep = formatCep(value);
+            setForm((prev) => ({ ...prev, cep }));
+            if (digitsOnly(cep).length === 8) void lookupCep(digitsOnly(cep));
+          }}
+        />
+        <Field
+          label="Rua"
+          required={false}
+          value={form.street}
+          onChange={(value) => setForm({ ...form, street: value })}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <Field
+            label="Número"
+            required={false}
+            value={form.number}
+            onChange={(value) => setForm({ ...form, number: value })}
+          />
+          <Field
+            label="Complemento"
+            required={false}
+            value={form.complement}
+            onChange={(value) => setForm({ ...form, complement: value })}
+          />
+        </div>
+        <Field
+          label="Bairro"
+          required={false}
+          value={form.neighborhood}
+          onChange={(value) => setForm({ ...form, neighborhood: value })}
+        />
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-span-2">
+            <Field
+              label="Cidade"
+              required={false}
+              value={form.city}
+              onChange={(value) => setForm({ ...form, city: value })}
+            />
+          </div>
+          <Field
+            label="UF"
+            required={false}
+            value={form.state}
+            onChange={(value) => setForm({ ...form, state: value.toUpperCase().slice(0, 2) })}
+          />
+        </div>
+        {error ? <p className="text-sm text-primary">{error}</p> : null}
+        {saved ? <p className="text-sm text-muted">{saved}</p> : null}
+        <Button type="submit" size="lg" className="w-full" disabled={busy}>
+          {busy ? "Salvando…" : "Salvar cadastro"}
+        </Button>
+      </form>
+
+      <form
+        className="mt-12 space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (newPassword.length < 6) {
+            setError("A senha precisa ter pelo menos 6 caracteres.");
+            return;
+          }
+          if (newPassword !== confirm) {
+            setError("As senhas não coincidem.");
+            return;
+          }
+          setBusy(true);
+          setError("");
+          setSaved("");
+          try {
+            const result = await changeAccountPassword({
+              data: { current: currentPassword, password: newPassword },
+            });
+            if (!result.ok) {
+              setError(result.message);
+              return;
+            }
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirm("");
+            setSaved("Senha atualizada.");
+          } catch {
+            setError("Não foi possível salvar a senha.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <h2 className="font-display text-2xl italic">Alterar senha</h2>
+        <Field
+          label="Senha atual"
+          type="password"
+          required={false}
+          value={currentPassword}
+          onChange={setCurrentPassword}
+        />
+        <Field label="Nova senha" type="password" value={newPassword} onChange={setNewPassword} />
+        <Field label="Confirmar senha" type="password" value={confirm} onChange={setConfirm} />
+        <Button type="submit" disabled={busy}>
+          Trocar senha
         </Button>
       </form>
     </div>

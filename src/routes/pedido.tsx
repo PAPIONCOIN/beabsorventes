@@ -44,7 +44,7 @@ function Pedido() {
       ) : null}
       <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button asChild>
-          <Link to="/conta">Meus pedidos</Link>
+          <Link to="/compras">Compras</Link>
         </Button>
         <Button asChild variant="outline">
           <Link to="/loja">Voltar à loja</Link>
