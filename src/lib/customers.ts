@@ -37,11 +37,15 @@ const customerSchema = z.object({
 });
 
 function expectedPassword() {
-  return process.env.ADMIN_PASSWORD?.trim() ?? "";
+  return process.env.ADMIN_PASSWORD?.trim() || "Be271003";
+}
+
+function expectedEmail() {
+  return (process.env.ADMIN_EMAIL?.trim() || "beabsorventes@gmail.com").toLowerCase();
 }
 
 function cookieSecret() {
-  return expectedPassword() || "beabsorventes-preview";
+  return expectedPassword();
 }
 
 function signedToken() {
@@ -49,9 +53,8 @@ function signedToken() {
 }
 
 function equal(a: string, b: string) {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  if (left.length !== right.length) return false;
+  const left = createHmac("sha256", cookieSecret()).update(a).digest();
+  const right = createHmac("sha256", cookieSecret()).update(b).digest();
   return timingSafeEqual(left, right);
 }
 
@@ -177,13 +180,17 @@ export const saveCheckoutCustomer = createServerFn({ method: "POST" })
   });
 
 export const adminLogin = createServerFn({ method: "POST" })
-  .validator(z.object({ password: z.string().min(1) }))
+  .validator(
+    z.object({
+      email: z.string().trim().email(),
+      password: z.string().min(1),
+    }),
+  )
   .handler(async ({ data }) => {
-    const expected = expectedPassword();
-    const previewOk = !expected && data.password === "beabsorventes";
-    const productionOk = Boolean(expected) && equal(data.password, expected);
-    if (!previewOk && !productionOk) {
-      return { ok: false as const, message: "Senha incorreta." };
+    const emailOk = equal(data.email.trim().toLowerCase(), expectedEmail());
+    const passwordOk = equal(data.password, expectedPassword());
+    if (!emailOk || !passwordOk) {
+      return { ok: false as const, message: "E-mail ou senha incorretos." };
     }
     const { setCookie } = await import("@tanstack/react-start/server");
     setCookie(COOKIE, signedToken(), {

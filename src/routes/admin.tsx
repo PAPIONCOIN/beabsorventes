@@ -46,6 +46,7 @@ function Admin() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -94,12 +95,13 @@ function Admin() {
   async function onLogin(event: React.FormEvent) {
     event.preventDefault();
     setError("");
-    const result = await adminLogin({ data: { password } });
+    const result = await adminLogin({ data: { email, password } });
     if (!result.ok) {
       setError(result.message);
       return;
     }
     setPassword("");
+    setEmail("");
     setAuthed(true);
     await load(true);
     void getCustomerStoreStatus().then((status) => setPostgres(status.postgres));
@@ -122,14 +124,26 @@ function Admin() {
         </p>
         <h1 className="mt-3 font-display text-4xl italic">Clientes da loja</h1>
         <p className="mt-3 text-sm text-muted">
-          Área restrita. Use a senha definida em ADMIN_PASSWORD.
+          Entre com o e-mail e a senha da loja.
         </p>
         <form onSubmit={onLogin} className="mt-8 space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email-admin">E-mail</Label>
+            <Input
+              id="email-admin"
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="senha">Senha</Label>
             <Input
               id="senha"
               type="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
