@@ -26,9 +26,9 @@ export function Logo({
       className={cn("flex items-center gap-2.5", className)}
       aria-label="Beabsorventes, página inicial"
     >
-      <BrandMark className={cn("size-12 shrink-0 sm:size-14", markClassName)} />
+      <BrandMark className={cn("size-10 shrink-0 sm:size-12", markClassName)} />
       {withName ? (
-        <span className="truncate font-display text-xl italic leading-none sm:text-2xl">
+        <span className="whitespace-nowrap font-display text-lg italic leading-none sm:text-2xl">
           beabsorventes
         </span>
       ) : null}

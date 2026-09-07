@@ -36,7 +36,7 @@ function SheetContent({
       <SheetOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex h-full w-full max-w-md flex-col bg-surface shadow-soft max-sm:max-w-full",
+          "fixed z-50 flex h-dvh max-h-dvh min-h-0 w-full max-w-md flex-col bg-surface shadow-soft max-sm:max-w-full",
           side === "right" ? "inset-y-0 right-0" : "inset-y-0 left-0",
           className,
         )}

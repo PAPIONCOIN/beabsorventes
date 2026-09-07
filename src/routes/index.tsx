@@ -23,23 +23,23 @@ function Home() {
 
   return (
     <div>
-      <section className="relative overflow-hidden border-b border-border">
+      <section className="overflow-hidden border-b border-border lg:relative">
         <img
           src="/images/brand/banner.jpg"
           alt="Kit de absorventes reutilizáveis de tecido beabsorventes"
-          className="h-[32rem] w-full object-cover object-[78%_center] sm:h-[36rem] lg:h-[42rem] lg:object-[70%_center]"
+          className="h-52 w-full object-cover object-[78%_center] sm:h-72 lg:absolute lg:inset-0 lg:h-[36rem]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/85 to-bg/35 sm:bg-gradient-to-r sm:from-bg sm:via-bg/88 sm:to-bg/10" />
-        <div className="absolute inset-0 flex items-end sm:items-center">
-          <div className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-0">
-            <BrandMark className="mb-4 size-24 sm:mb-6 sm:size-32 lg:size-40" />
-            <p className="text-xs font-medium tracking-[0.14em] text-primary uppercase sm:text-sm sm:tracking-[0.18em]">
+        <div className="bg-bg px-4 py-8 sm:px-6 sm:py-10 lg:relative lg:flex lg:h-[36rem] lg:items-center lg:bg-transparent lg:py-0">
+          <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-bg from-15% via-bg/85 to-transparent lg:block" />
+          <div className="relative mx-auto w-full max-w-6xl">
+            <BrandMark className="mb-4 size-16 sm:size-20 lg:size-24" />
+            <p className="text-xs font-medium tracking-[0.14em] text-primary uppercase sm:text-sm sm:tracking-[0.16em]">
               Algodão orgânico · certificado GOTS
             </p>
-            <h1 className="mt-3 max-w-xl font-display text-4xl leading-[1.08] italic sm:mt-4 sm:text-5xl lg:text-7xl">
+            <h1 className="mt-3 max-w-xl font-display text-[1.85rem] leading-[1.12] italic sm:mt-4 sm:text-5xl lg:text-6xl">
               Seu ciclo, com outro cuidado.
             </h1>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-fg/80 sm:mt-5 sm:text-lg">
+            <p className="mt-4 max-w-md text-base leading-relaxed text-muted sm:mt-5 sm:text-lg">
               Kit 4 absorventes — Mini, Íntimo, Principal e Denso. Camadas
               certas para o ciclo inteiro.
             </p>
@@ -138,7 +138,8 @@ function Home() {
         </section>
       ) : null}
 
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section className="overflow-x-clip">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
           Guia
         </p>
@@ -165,6 +166,7 @@ function Home() {
               </p>
             </Link>
           ))}
+        </div>
         </div>
       </section>
 

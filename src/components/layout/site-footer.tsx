@@ -11,7 +11,7 @@ export function SiteFooter() {
     <footer className="border-t border-border bg-surface pb-[max(5rem,env(safe-area-inset-bottom))] sm:pb-0">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-14 md:grid-cols-4">
         <div className="md:col-span-2">
-          <Logo withName={false} markClassName="size-28 sm:size-32" />
+          <Logo withName={false} markClassName="size-20 sm:size-28" />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted">
             Absorventes ecológicos reutilizáveis de tecido 100% algodão
             orgânico, com tingimento GOTS. Feito artesanalmente.

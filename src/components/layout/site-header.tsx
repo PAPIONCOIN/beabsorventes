@@ -33,8 +33,8 @@ export function SiteHeader() {
         </span>
       </p>
       <div className="border-b border-border bg-bg/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:h-[4.75rem] sm:px-6">
-          <Logo className="min-w-0" />
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:h-[4.5rem] sm:gap-3 sm:px-6">
+          <Logo className="shrink-0" />
           <nav className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) => (
               <Link
