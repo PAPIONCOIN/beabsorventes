@@ -7,7 +7,7 @@ import {
   shippingPayable,
   type ShippingQuote,
 } from "@/lib/melhor-envio";
-import { FREE_SHIPPING_FROM, SHIPPING_CENTS, shippingFor } from "@/lib/utils";
+import { FREE_SHIPPING_FROM } from "@/lib/utils";
 
 const itemSchema = z.object({
   slug: z.string().min(1),
@@ -23,17 +23,17 @@ export async function fetchShippingQuotes(
   items: z.infer<typeof itemSchema>[],
 ): Promise<{ ready: boolean; quotes: ShippingQuote[] }> {
   try {
-    const correios = await fetchCorreiosQuotes(cep, items);
-    if (correios.length > 0) return { ready: true, quotes: correios };
-  } catch (error) {
-    console.error("[shipping] correios", error);
-  }
-
-  try {
     const melhor = await fetchMelhorEnvioQuotes(cep, items);
     if (melhor.length > 0) return { ready: true, quotes: melhor };
   } catch (error) {
     console.error("[shipping] melhor-envio", error);
+  }
+
+  try {
+    const correios = await fetchCorreiosQuotes(cep, items);
+    if (correios.length > 0) return { ready: false, quotes: correios };
+  } catch (error) {
+    console.error("[shipping] correios", error);
   }
 
   return { ready: false, quotes: [] };
@@ -53,29 +53,12 @@ export const quoteShipping = createServerFn({ method: "POST" })
     }, 0);
 
     const { ready, quotes } = await fetchShippingQuotes(data.cep, data.items);
-    if (quotes.length > 0) {
-      return {
-        ready,
-        quotes: quotes.map((quote) => ({
-          ...quote,
-          payableCents: shippingPayable(subtotal, quote.priceCents),
-        })),
-      };
-    }
-
-    const fallback = shippingFor(subtotal);
     return {
-      ready: false,
-      quotes: [
-        {
-          serviceId: 0,
-          name: "PAC",
-          company: "Correios",
-          priceCents: fallback || SHIPPING_CENTS,
-          days: 8,
-          payableCents: fallback,
-        },
-      ],
+      ready,
+      quotes: quotes.map((quote) => ({
+        ...quote,
+        payableCents: shippingPayable(subtotal, quote.priceCents),
+      })),
     };
   });
 

@@ -52,7 +52,7 @@ export function FreightQuote({
     <div className="rounded-xl border border-border bg-surface p-4">
       <p className="text-sm font-medium">Calcular frete</p>
       <p className="mt-1 text-xs text-muted">
-        Postagem saindo de {ORIGIN_CEP_LABEL}
+        Postagem saindo de {ORIGIN_CEP_LABEL}, com valores do Melhor Envio
       </p>
       <div className="mt-3 space-y-1.5">
         <Label htmlFor={inputId}>CEP</Label>
@@ -76,7 +76,7 @@ export function FreightQuote({
       {items.length === 0 ? (
         <p className="mt-3 text-xs text-muted">Escolha uma peça para cotar o envio.</p>
       ) : quoting ? (
-        <p className="mt-3 text-sm text-muted">Consultando Correios…</p>
+        <p className="mt-3 text-sm text-muted">Consultando Melhor Envio…</p>
       ) : quotes.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {quotes.map((quote) => {
@@ -110,7 +110,9 @@ export function FreightQuote({
           })}
         </ul>
       ) : digitsOnly(cep).length === 8 ? (
-        <p className="mt-3 text-xs text-muted">Não foi possível cotar agora. Tente outro CEP.</p>
+        <p className="mt-3 text-xs text-muted">
+          Não foi possível cotar neste CEP. Confira o número ou tente de novo.
+        </p>
       ) : null}
     </div>
   );

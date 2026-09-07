@@ -239,8 +239,8 @@ function Checkout() {
         <fieldset>
           <legend className="text-sm font-medium">Frete</legend>
           <p className="mt-1 text-xs text-muted">
-            Postagem saindo de {ORIGIN_CEP_LABEL}. Frete grátis a partir de{" "}
-            {formatBRL(FREE_SHIPPING_FROM)}.
+            Postagem saindo de {ORIGIN_CEP_LABEL}, com valores do Melhor Envio.
+            Frete grátis a partir de {formatBRL(FREE_SHIPPING_FROM)}.
           </p>
           <div className="mt-3 space-y-2">
             {quoting ? (

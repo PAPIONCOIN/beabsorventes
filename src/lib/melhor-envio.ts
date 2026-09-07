@@ -114,9 +114,16 @@ export async function fetchMelhorEnvioQuotes(
     },
     body: JSON.stringify({
       from: { postal_code: origin },
-      to: { postal_code: destinationCep },
+      to: { postal_code: destinationCep.replace(/\D/g, "").slice(0, 8) },
       products,
-      options: { receipt: false, own_hand: false },
+      options: {
+        receipt: false,
+        own_hand: false,
+        insurance_value: products.reduce(
+          (sum, item) => sum + item.insurance_value * item.quantity,
+          0,
+        ),
+      },
     }),
   });
 
