@@ -128,6 +128,7 @@ async function ensureOrdersTable() {
   await sql`alter table orders add column if not exists shipping_service_id integer not null default 0`;
   await sql`alter table orders add column if not exists me_uuid text not null default ''`;
   await sql`alter table orders add column if not exists document text not null default ''`;
+  await sql`alter table customers add column if not exists document text not null default ''`;
   return sql;
 }
 
@@ -465,7 +466,13 @@ export const getShopSession = createServerFn({ method: "GET" }).handler(async ()
 
 export const closeAccount = createServerFn({ method: "POST" }).handler(async () => {
   const { setCookie } = await import("@tanstack/react-start/server");
-  setCookie(COOKIE, "", { path: "/", httpOnly: true, sameSite: "lax", maxAge: 0 });
+  setCookie(COOKIE, "", {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+  });
   return { ok: true as const };
 });
 

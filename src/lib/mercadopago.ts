@@ -5,7 +5,6 @@ import { getProduct, PRINTS } from "@/lib/products";
 import { cartTotals, type CartLine } from "@/lib/cart-store";
 import { fetchShippingQuotes } from "@/lib/shipping";
 import { shippingPayable } from "@/lib/melhor-envio";
-import { shippingFor } from "@/lib/utils";
 import { upsertCustomer } from "@/lib/customers";
 import { persistOrder } from "@/lib/shop-orders";
 
@@ -27,10 +26,10 @@ const checkoutSchema = z.object({
   city: z.string().trim().min(2),
   state: z.string().trim().min(2).max(2),
   payment: z.enum(["pix", "card"]),
-  phone: z.string().trim().optional(),
+  phone: z.string().regex(/^\d{10,11}$/),
   document: z.string().regex(/^\d{11}$/),
   items: z.array(itemSchema).min(1),
-  shippingServiceId: z.number().int().optional(),
+  shippingServiceId: z.number().int().positive(),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
@@ -38,10 +37,21 @@ export type CheckoutInput = z.infer<typeof checkoutSchema>;
 function newOrderId() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let suffix = "";
-  for (let i = 0; i < 4; i += 1) {
+  for (let i = 0; i < 8; i += 1) {
     suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
   }
   return `BEA-${suffix}`;
+}
+
+function mpPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 10) return undefined;
+  return { area_code: digits.slice(0, 2), number: digits.slice(2) };
+}
+
+function mpStreetNumber(value: string) {
+  const n = Number.parseInt(value.replace(/\D/g, ""), 10);
+  return Number.isFinite(n) ? n : undefined;
 }
 
 async function requestOrigin() {
@@ -86,24 +96,14 @@ async function resolveShipping(
   serviceId: number | undefined,
 ) {
   const subtotal = cartTotals(items, "card", 0).subtotal;
-  try {
-    const { quotes } = await fetchShippingQuotes(cep, items);
-    const chosen =
-      quotes.find((quote) => quote.serviceId === serviceId) ?? quotes[0];
-    if (chosen) {
-      return {
-        cents: shippingPayable(subtotal, chosen.priceCents),
-        label: `${chosen.company} ${chosen.name} · ${chosen.days} dia${chosen.days === 1 ? "" : "s"} úteis`,
-        serviceId: chosen.serviceId,
-      };
-    }
-  } catch (error) {
-    console.error("[shipping]", error);
-  }
+  const { quotes } = await fetchShippingQuotes(cep, items);
+  const chosen =
+    quotes.find((quote) => quote.serviceId === serviceId) ?? quotes[0];
+  if (!chosen) return null;
   return {
-    cents: shippingFor(subtotal),
-    label: "Correios PAC",
-    serviceId: 1,
+    cents: shippingPayable(subtotal, chosen.priceCents),
+    label: `${chosen.company} ${chosen.name} · ${chosen.days} dia${chosen.days === 1 ? "" : "s"} úteis`,
+    serviceId: chosen.serviceId,
   };
 }
 
@@ -170,6 +170,16 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       data.cep,
       data.shippingServiceId,
     );
+    if (!shipping) {
+      return {
+        ok: false as const,
+        reason: "gateway" as const,
+        orderId: newOrderId(),
+        items: lines,
+        totals: cartTotals(data.items, data.payment, 0),
+        message: "Não foi possível cotar o frete para este CEP. Confira o número e tente de novo.",
+      };
+    }
     const totals = cartTotals(data.items, data.payment, shipping.cents);
     const orderId = newOrderId();
     const address = {
@@ -269,15 +279,13 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         email: data.email,
         identification: {
           type: "CPF",
-          number: data.document ?? "",
+          number: data.document,
         },
-        phone: data.phone
-          ? { number: data.phone.replace(/\D/g, "") }
-          : undefined,
+        phone: mpPhone(data.phone),
         address: {
           zip_code: data.cep.replace(/\D/g, ""),
-          street_name: data.street,
-          street_number: data.number,
+          street_name: [data.street, data.number].filter(Boolean).join(", "),
+          street_number: mpStreetNumber(data.number),
         },
       },
       notification_url: `${origin}/api/webhooks/mercadopago`,

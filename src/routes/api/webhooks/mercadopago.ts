@@ -48,8 +48,13 @@ async function paymentIdFrom(request: Request) {
 export const Route = createFileRoute("/api/webhooks/mercadopago")({
   server: {
     handlers: {
-      GET: async () => Response.json({ ok: true, service: "beabsorventes-mp" }),
-      POST: async ({ request }) => {
+      GET: async ({ request }) => handleMercadoPago(request),
+      POST: async ({ request }) => handleMercadoPago(request),
+    },
+  },
+});
+
+async function handleMercadoPago(request: Request) {
         const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
         if (!token) {
           return Response.json({ ok: false, error: "no_token" }, { status: 503 });
@@ -147,7 +152,4 @@ export const Route = createFileRoute("/api/webhooks/mercadopago")({
         }
 
         return Response.json({ ok: true, status: "approved" });
-      },
-    },
-  },
-});
+}

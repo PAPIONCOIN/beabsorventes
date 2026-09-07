@@ -639,14 +639,30 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
     };
   }
 
+  const fromDoc = from.document.replace(/\D/g, "");
+  const fromPayload: Record<string, unknown> = {
+    name: from.name,
+    email: from.email,
+    phone: from.phone,
+    address: from.address,
+    complement: from.complement,
+    number: from.number,
+    district: from.district,
+    city: from.city,
+    state_abbr: from.state_abbr,
+    postal_code: from.postal_code,
+    country_id: "BR",
+  };
+  if (fromDoc.length === 14) {
+    fromPayload.company_document = fromDoc;
+    fromPayload.state_register = "ISENTO";
+  } else if (fromDoc.length === 11) {
+    fromPayload.document = fromDoc;
+  }
+
   const payload = {
     service: serviceId,
-    from: {
-      ...from,
-      company_document: from.document.length > 11 ? from.document : "",
-      document: from.document.length <= 11 ? from.document : "",
-      state_register: "ISENTO",
-    },
+    from: fromPayload,
     to: {
       name: asText(input.name, "Cliente"),
       email: asText(input.email),

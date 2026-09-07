@@ -150,7 +150,7 @@ function Checkout() {
           document: digitsOnly(form.document),
           payment,
           items: sanitizeLines(lines),
-          shippingServiceId: serviceId ?? undefined,
+          shippingServiceId: selected.serviceId,
         },
       });
       const items = result.items.map((item) => ({
@@ -193,15 +193,6 @@ function Checkout() {
           createdAt: new Date().toISOString(),
           status: "pending",
         });
-        try {
-          await sendOrderMail({
-            ...mailPayload,
-            status: "Aguardando pagamento",
-          });
-        } catch (error) {
-          console.error("[order-mail]", error);
-        }
-        clear();
         window.location.href = result.url;
         return;
       }

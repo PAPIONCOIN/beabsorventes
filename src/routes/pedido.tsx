@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/logo";
+import { useCartStore } from "@/lib/cart-store";
 import { readLastOrder } from "@/lib/orders";
 import { formatBRL } from "@/lib/utils";
 
@@ -14,6 +16,11 @@ export const Route = createFileRoute("/pedido")({
 function Pedido() {
   const { status } = Route.useSearch();
   const order = typeof window === "undefined" ? null : readLastOrder();
+  const clear = useCartStore((s) => s.clear);
+
+  useEffect(() => {
+    if (status === "success" || status === "demo") clear();
+  }, [status, clear]);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">

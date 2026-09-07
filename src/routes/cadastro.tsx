@@ -153,8 +153,12 @@ function Cadastro() {
           return;
         }
         try {
-          await openAccount({ data: { email: payload.email, password: payload.password } });
-          applyShopSession({ name: payload.name, email: payload.email });
+          const session = await openAccount({
+            data: { email: payload.email, password: payload.password },
+          });
+          if (session.ok) {
+            applyShopSession({ name: payload.name, email: payload.email });
+          }
         } catch {
           /* login happens on /conta if this fails */
         }
