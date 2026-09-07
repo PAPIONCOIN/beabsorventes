@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { CONTACT_EMAIL } from "@/lib/contact";
 import { getProduct, PRINTS } from "@/lib/products";
 import { cartTotals, type CartLine } from "@/lib/cart-store";
 
@@ -33,6 +34,13 @@ function newOrderId() {
     suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
   }
   return `BEA-${suffix}`;
+}
+
+function money(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 }
 
 async function requestOrigin() {
@@ -69,6 +77,75 @@ function pricedItems(items: CartLine[]) {
   return lines;
 }
 
+type PricedLine = ReturnType<typeof pricedItems>[number];
+
+async function notifyMerchant(input: {
+  orderId: string;
+  name: string;
+  email: string;
+  payment: "pix" | "card";
+  items: PricedLine[];
+  totals: ReturnType<typeof cartTotals>;
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    complement: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
+  status: "pago_pendente" | "demonstracao";
+}) {
+  const itemsText = input.items
+    .map(
+      (item) =>
+        `${item.qty}× ${item.name} (${item.size}) — ${money(item.unitCents * item.qty)}`,
+    )
+    .join("\n");
+  const cep = input.address.cep.replace(/^(\d{5})(\d{3})$/, "$1-$2");
+  const address = [
+    `${input.address.street}, ${input.address.number}`,
+    input.address.complement,
+    input.address.neighborhood,
+    `${input.address.city} / ${input.address.state}`,
+    `CEP ${cep}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  try {
+    const res = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        _subject: `Novo pedido ${input.orderId} — beabsorventes`,
+        _template: "box",
+        _captcha: "false",
+        Pedido: input.orderId,
+        Status: input.status === "demonstracao" ? "Teste (sem Mercado Pago)" : "Aguardando pagamento",
+        Cliente: input.name,
+        Email: input.email,
+        Pagamento: input.payment === "pix" ? "PIX (5% de desconto)" : "Cartão em até 3×",
+        Endereco: address,
+        Itens: itemsText,
+        Subtotal: money(input.totals.subtotal),
+        Desconto: money(input.totals.discount),
+        Frete: input.totals.shipping === 0 ? "Grátis" : money(input.totals.shipping),
+        Total: money(input.totals.total),
+      }),
+    });
+    if (!res.ok) {
+      console.error("[order-notify] formsubmit", res.status, await res.text());
+    }
+  } catch (error) {
+    console.error("[order-notify]", error);
+  }
+}
+
 export const getMercadoPagoStatus = createServerFn({ method: "GET" }).handler(
   async () => {
     return { ready: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN) };
@@ -91,9 +168,28 @@ export const createMpCheckout = createServerFn({ method: "POST" })
     }
     const totals = cartTotals(data.items, data.payment);
     const orderId = newOrderId();
+    const address = {
+      cep: data.cep,
+      street: data.street,
+      number: data.number,
+      complement: data.complement,
+      neighborhood: data.neighborhood,
+      city: data.city,
+      state: data.state,
+    };
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
     if (!token) {
+      await notifyMerchant({
+        orderId,
+        name: data.name,
+        email: data.email,
+        payment: data.payment,
+        items: lines,
+        totals,
+        address,
+        status: "demonstracao",
+      });
       return {
         ok: false as const,
         reason: "missing_token" as const,
@@ -106,12 +202,16 @@ export const createMpCheckout = createServerFn({ method: "POST" })
     }
 
     const origin = await requestOrigin();
+    const itemSummary = lines
+      .map((item) => `${item.qty}× ${item.name}`)
+      .join(", ");
     const preference = {
       external_reference: orderId,
       items: [
         {
           id: orderId,
           title: `Pedido Beabsorventes ${orderId}`,
+          description: itemSummary.slice(0, 250),
           quantity: 1,
           currency_id: "BRL",
           unit_price: Number((totals.total / 100).toFixed(2)),
@@ -149,6 +249,8 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       metadata: {
         orderId,
         payment: data.payment,
+        items: itemSummary,
+        address: `${data.street}, ${data.number} — ${data.neighborhood}, ${data.city}/${data.state} CEP ${data.cep}`,
       },
     };
 
@@ -193,6 +295,17 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         message: "O Mercado Pago não devolveu um endereço de pagamento.",
       };
     }
+
+    await notifyMerchant({
+      orderId,
+      name: data.name,
+      email: data.email,
+      payment: data.payment,
+      items: lines,
+      totals,
+      address,
+      status: "pago_pendente",
+    });
 
     return {
       ok: true as const,
