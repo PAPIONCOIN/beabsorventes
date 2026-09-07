@@ -4,11 +4,11 @@ export const CONTACT_PHONE_E164 = "5511995895103";
 export const CONTACT_WHATSAPP = `https://wa.me/${CONTACT_PHONE_E164}`;
 
 export const CONTACT_TOPICS = [
-  "Dúvida sobre peças",
-  "Pedido",
+  "Dúvida sobre modelos",
+  "Acompanhar pedido",
   "Troca ou ajuste",
   "Atacado",
-  "Outro",
+  "Outro assunto",
 ] as const;
 
 export type ContactTopic = (typeof CONTACT_TOPICS)[number];

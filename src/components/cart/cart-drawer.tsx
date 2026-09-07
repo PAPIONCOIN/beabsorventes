@@ -42,7 +42,7 @@ export function CartDrawer() {
             <div className="flex flex-col items-center py-8 text-center">
               <BrandMark className="size-28" />
               <p className="mt-4 text-sm text-muted">
-                Escolha um absorvente na loja. O kit de 4 peças é um bom começo.
+                Escolha um modelo na loja. O kit de quatro peças é um bom ponto de partida.
               </p>
             </div>
           ) : (

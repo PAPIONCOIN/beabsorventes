@@ -64,18 +64,18 @@ function Contato() {
         <p className="text-xs font-medium tracking-wide text-primary uppercase">
           Contato
         </p>
-        <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Fala com a gente</h1>
+        <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Fale conosco</h1>
         <p className="mt-4 max-w-xl text-muted">
-          Dúvida de fluxo, pedido ou troca — responde no WhatsApp e no e-mail,
-          em horário comercial.
+          Dúvidas sobre modelos, pedidos ou trocas. Respondemos pelo WhatsApp e
+          pelo e-mail, em horário comercial.
         </p>
 
         {sent ? (
           <div className="mt-10 rounded-xl bg-bg-warm p-6">
-            <h2 className="font-display text-2xl italic">Mensagem pronta</h2>
+            <h2 className="font-display text-2xl italic">Mensagem enviada</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Abrimos o WhatsApp com o que você escreveu. Se a janela não
-              apareceu, toque no botão abaixo.
+              Abrimos o WhatsApp com o texto que você escreveu. Se a janela não
+              aparecer, use o botão abaixo.
             </p>
             <Button asChild className="mt-6">
               <a href={whatsUrl} target="_blank" rel="noreferrer">
@@ -90,7 +90,7 @@ function Contato() {
                 setForm((prev) => ({ ...prev, message: "" }));
               }}
             >
-              Escrever outra mensagem
+              Escrever nova mensagem
             </button>
           </div>
         ) : (
@@ -152,7 +152,7 @@ function Contato() {
 
       <aside className="h-fit rounded-xl bg-bg-warm p-6">
         <BrandMark className="mb-4 size-28" />
-        <h2 className="font-display text-2xl italic">Ateliê</h2>
+        <h2 className="font-display text-2xl italic">Atendimento</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Segunda a sexta, das 9h às 18h.
         </p>

@@ -4,20 +4,20 @@ export const Route = createFileRoute("/cuidados")({ component: Cuidados });
 
 const STEPS = [
   {
-    title: "Enxágue frio",
-    text: "Assim que tirar, passe água fria até sair o excesso. Água quente fixa o ferro no tecido.",
+    title: "Enxágue em água fria",
+    text: "Assim que retirar a peça, enxágue em água fria até eliminar o excesso. Água quente fixa o ferro no tecido.",
     image: "/images/products/ciclo-mini.jpg",
     alt: "Ciclo Mini, absorvente de tecido beabsorventes",
   },
   {
-    title: "Pode ir à máquina",
-    text: "Lave com sabão neutro, ciclo delicado. Sem alvejante e sem amaciante. Não utilize secadora.",
+    title: "Lave na máquina",
+    text: "Use sabão neutro e ciclo delicado. Evite alvejante e amaciante. Não utilize secadora.",
     image: "/images/products/ciclo-principal.jpg",
     alt: "Ciclo Principal, absorvente de tecido beabsorventes",
   },
   {
     title: "Seque à sombra",
-    text: "Varal ventilado. Sol forte e secadora endurecem o algodão e encurtam a vida da peça.",
+    text: "Prefira um varal ventilado. Sol intenso e secadora ressecam o algodão e reduzem a durabilidade da peça.",
     image: "/images/products/noturno-2.jpg",
     alt: "Absorvente noturno de tecido beabsorventes",
   },
@@ -29,10 +29,10 @@ function Cuidados() {
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Como lavar
       </p>
-      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Lavar, secar, repetir</h1>
+      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Conservação das peças</h1>
       <p className="mt-4 max-w-xl text-muted">
-        Pode ser lavado em máquina. Não utilizar secadora. Três gestos, sempre
-        iguais.
+        As peças são laváveis em máquina. Não utilize secadora. Três etapas,
+        sempre na mesma ordem.
       </p>
       <div className="mt-12 space-y-16">
         {STEPS.map((step, index) => (

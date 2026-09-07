@@ -7,7 +7,7 @@ import { formatBRL } from "@/lib/utils";
 const STEPS = [
   {
     key: "flow" as const,
-    question: "Como é o seu fluxo no pico?",
+    question: "Como é o seu fluxo no auge do ciclo?",
     options: [
       { label: "Leve", value: "leve" as const },
       { label: "Moderado", value: "medio" as const },
@@ -36,7 +36,7 @@ export function CycleQuiz() {
     return (
       <div className="rounded-xl bg-bg-warm p-6 sm:p-8">
         <p className="text-xs font-medium tracking-wide text-primary uppercase">
-          A peça certa
+          A recomendação
         </p>
         <h3 className="mt-2 font-display text-3xl italic">{product.name}</h3>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-muted">
@@ -46,7 +46,7 @@ export function CycleQuiz() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Button asChild>
             <Link to="/produto/$slug" params={{ slug: product.slug }}>
-              Ver essa peça
+              Ver o modelo
             </Link>
           </Button>
           <Button
@@ -56,7 +56,7 @@ export function CycleQuiz() {
               setAnswers({});
             }}
           >
-            Refazer
+            Refazer o questionário
           </Button>
         </div>
       </div>

@@ -30,7 +30,7 @@ function Pedido() {
       </h1>
       <p className="mt-4 leading-relaxed text-muted">
         {status === "demo"
-          ? "O Mercado Pago ainda não está ligado nesta hospedagem. Guardamos o pedido aqui para você conferir o fluxo completo."
+          ? "O Mercado Pago ainda não está ligado nesta hospedagem. Registramos o pedido para que você possa conferir o fluxo completo."
           : "Enviamos um e-mail com o resumo. As peças saem do ateliê em até 5 dias úteis."}
       </p>
       {order ? (

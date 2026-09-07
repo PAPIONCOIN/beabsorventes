@@ -97,7 +97,7 @@ function ProductPage() {
             {formatBRL(product.priceCents)}
           </p>
           <p className="mt-1 text-base text-muted">
-            ou 3× de {formatBRL(parcel)} sem juros
+            ou 3 vezes de {formatBRL(parcel)} sem juros
           </p>
           <p className="mt-5 max-w-md text-base leading-relaxed text-muted">
             {product.description}
@@ -117,7 +117,7 @@ function ProductPage() {
           <dl className="mt-8 grid gap-2 border-t border-border pt-6 text-sm text-muted">
             <div className="flex justify-between gap-4">
               <dt>Envio</dt>
-              <dd>até {product.leadDays} dias úteis</dd>
+              <dd>em até {product.leadDays} dias úteis</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>Tecido</dt>
@@ -159,7 +159,7 @@ function ProductPage() {
 
       {related.length > 0 ? (
         <section className="mt-20">
-          <h2 className="font-display text-3xl italic">Também na loja</h2>
+          <h2 className="font-display text-3xl italic">Outros modelos</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-3">
             {related.map((item) => (
               <ProductCard key={item.slug} product={item} />

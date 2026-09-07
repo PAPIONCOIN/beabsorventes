@@ -22,10 +22,10 @@ function Loja() {
       <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
         Loja
       </p>
-      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">As peças</h1>
+      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">A loja</h1>
       <p className="mt-3 max-w-lg text-muted">
-        Absorventes ecológicos reutilizáveis de tecido 100% algodão orgânico.
-        Até 3× sem juros.
+        Absorventes reutilizáveis de algodão orgânico certificado GOTS.
+        Parcelamento em até 3 vezes sem juros.
       </p>
       <div className="mt-8 flex flex-wrap gap-2">
         {FILTERS.map((item) => (

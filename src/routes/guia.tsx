@@ -13,10 +13,10 @@ function Guia() {
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Modelos
       </p>
-      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Tamanhos e modelos</h1>
+      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Guia de modelos</h1>
       <p className="mt-4 max-w-xl text-muted">
-        Tecido ecológico 100% algodão orgânico e tingimento sustentável com
-        certificação internacional GOTS.
+        Algodão orgânico certificado GOTS. Escolha o comprimento e o número de
+        camadas de acordo com o seu fluxo.
       </p>
 
       <ul className="mt-10 space-y-3 md:hidden">
@@ -82,26 +82,26 @@ function Guia() {
 
       <ul className="mt-10 max-w-2xl space-y-4 text-sm leading-relaxed text-muted">
         <li>
-          <span className="font-medium text-fg">Ciclo Mini 16 cm</span> — tecido
-          impermeável e uma camada absorvente. Fluxo leve, como no final da
-          menstruação.
+          <span className="font-medium text-fg">Ciclo Mini 16 cm</span> — uma
+          camada absorvente e tecido impermeável. Indicado para o fluxo leve,
+          especialmente no final da menstruação.
         </li>
         <li>
           <span className="font-medium text-fg">Ciclo Íntimo 22 cm</span> — duas
-          camadas, parte de trás mais fina. Fluxo leve, qualquer período.
+          camadas, com a parte posterior mais fina. Indicado para fluxo leve,
+          em qualquer período.
         </li>
         <li>
           <span className="font-medium text-fg">Ciclo Principal 24 cm</span> —
-          duas camadas. Fluxos moderados, qualquer período.
+          duas camadas. Indicado para fluxos moderados, em qualquer período.
         </li>
         <li>
           <span className="font-medium text-fg">Ciclo Denso 28 cm</span> — três
-          camadas. Fluxos mais intensos, qualquer período.
+          camadas. Indicado para fluxos intensos, em qualquer período.
         </li>
         <li>
           <span className="font-medium text-fg">Noturno 30 cm</span> — quatro
-          camadas e parte de trás mais larga. Para dormir sem receio de
-          vazamentos.
+          camadas e parte posterior mais larga. Indicado para o uso noturno.
         </li>
       </ul>
 
@@ -109,8 +109,8 @@ function Guia() {
         <div>
           <h2 className="font-display text-3xl italic">Ainda em dúvida?</h2>
           <p className="mt-4 text-sm leading-relaxed text-muted">
-            O quiz escolhe um modelo — não um kit. O kit de 4 peças junta Mini,
-            Íntimo, Principal e Denso.
+            O questionário indica um modelo, não um kit. O kit de quatro peças
+            reúne Mini, Íntimo, Principal e Denso.
           </p>
         </div>
         <CycleQuiz />

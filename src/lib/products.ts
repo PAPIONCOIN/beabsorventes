@@ -41,7 +41,7 @@ export type Product = {
 };
 
 const GOTS =
-  "Tecido ecológico 100% algodão orgânico e tingimento sustentável com certificação internacional GOTS. Um produto que gera menor impacto ao planeta.";
+  "Algodão orgânico certificado GOTS, com tingimento sustentável — da fibra à costura.";
 
 export const PRODUCTS: Product[] = [
   {
@@ -61,13 +61,13 @@ export const PRODUCTS: Product[] = [
     featured: true,
     leadDays: 5,
     description:
-      "16 cm. Tecido impermeável e uma camada absorvente. Indicado para quando o fluxo está leve, como no final da menstruação.",
+      "Absorvente de 16 cm, com uma camada absorvente e tecido impermeável. Indicado para o fluxo leve, em especial no final da menstruação.",
     details: [
       "16 cm",
-      "1 camada absorvente + tecido impermeável",
+      "1 camada absorvente e tecido impermeável",
       "Algodão orgânico com tingimento GOTS",
-      "Fluxo leve · final do ciclo",
-      "Disponibilidade: 5 dias úteis",
+      "Fluxo leve, final do ciclo",
+      "Produção e envio em até 5 dias úteis",
     ],
   },
   {
@@ -87,13 +87,13 @@ export const PRODUCTS: Product[] = [
     featured: true,
     leadDays: 5,
     description:
-      "22 cm. Tecido impermeável e duas camadas absorventes. A parte de trás é mais fina, para se sentir mais confortável na roupa. Indicado para fluxo leve, em qualquer período da menstruação.",
+      "Absorvente de 22 cm, com duas camadas absorventes. A parte posterior é mais fina, para acompanhar a roupa com discrição. Indicado para fluxo leve, em qualquer dia do ciclo.",
     details: [
       "22 cm",
-      "2 camadas absorventes + tecido impermeável",
-      "Parte de trás mais fina",
-      "Fluxo leve · qualquer período",
-      "Disponibilidade: 5 dias úteis",
+      "2 camadas absorventes e tecido impermeável",
+      "Parte posterior mais fina",
+      "Fluxo leve, qualquer período",
+      "Produção e envio em até 5 dias úteis",
     ],
   },
   {
@@ -116,13 +116,13 @@ export const PRODUCTS: Product[] = [
     featured: true,
     leadDays: 5,
     description:
-      "24 cm. Tecido impermeável e duas camadas absorventes. Indicado para fluxos moderados em qualquer período da menstruação.",
+      "Absorvente de 24 cm, com duas camadas absorventes e tecido impermeável. Indicado para fluxos moderados, em qualquer período da menstruação.",
     details: [
       "24 cm",
-      "2 camadas absorventes + tecido impermeável",
-      "Fluxo moderado · qualquer período",
+      "2 camadas absorventes e tecido impermeável",
+      "Fluxo moderado, qualquer período",
       "Algodão orgânico com tingimento GOTS",
-      "Disponibilidade: 5 dias úteis",
+      "Produção e envio em até 5 dias úteis",
     ],
   },
   {
@@ -146,13 +146,13 @@ export const PRODUCTS: Product[] = [
     featured: true,
     leadDays: 5,
     description:
-      "28 cm. Tecido impermeável e três camadas absorventes. Indicado para fluxos mais intensos em qualquer período da menstruação.",
+      "Absorvente de 28 cm, com três camadas absorventes e tecido impermeável. Indicado para fluxos intensos, em qualquer período da menstruação.",
     details: [
       "28 cm",
-      "3 camadas absorventes + tecido impermeável",
-      "Fluxo intenso · qualquer período",
+      "3 camadas absorventes e tecido impermeável",
+      "Fluxo intenso, qualquer período",
       "Algodão orgânico com tingimento GOTS",
-      "Disponibilidade: 5 dias úteis",
+      "Produção e envio em até 5 dias úteis",
     ],
   },
   {
@@ -176,13 +176,13 @@ export const PRODUCTS: Product[] = [
     featured: true,
     leadDays: 5,
     description:
-      "30 cm. Tecido impermeável, quatro camadas absorventes e a parte de trás mais larga. Indicado para dormir tranquila, sem receio de vazamentos.",
+      "Absorvente de 30 cm, com quatro camadas absorventes e parte posterior mais larga. Indicado para a noite, com proteção contínua até o despertar.",
     details: [
       "30 cm",
-      "4 camadas absorventes + tecido impermeável",
-      "Parte de trás mais larga",
-      "Noite inteira, sem vazamento",
-      "Disponibilidade: 5 dias úteis",
+      "4 camadas absorventes e tecido impermeável",
+      "Parte posterior mais larga",
+      "Uso noturno",
+      "Produção e envio em até 5 dias úteis",
     ],
   },
   {
@@ -201,11 +201,11 @@ export const PRODUCTS: Product[] = [
     category: "liner",
     leadDays: 5,
     description:
-      "Protetor diário de tecido 100% algodão. Uma linha fina para o dia a dia e os intervalos do ciclo.",
+      "Protetor diário de algodão, de perfil fino. Indicado para o dia a dia e para os intervalos do ciclo.",
     details: [
       "100% algodão",
       "Uso diário",
-      "Disponibilidade: 5 dias úteis",
+      "Produção e envio em até 5 dias úteis",
     ],
   },
   {
@@ -231,7 +231,7 @@ export const PRODUCTS: Product[] = [
       { slug: "ciclo-denso", qty: 1 },
     ],
     description:
-      "Quatro peças para um ciclo inteiro: Mini 16 cm, Íntimo 22 cm, Principal 24 cm e Denso 28 cm. Algodão orgânico com tingimento GOTS. Pode ser lavado em máquina. Não utilizar secadora.",
+      "Quatro peças para acompanhar o ciclo completo: Mini 16 cm, Íntimo 22 cm, Principal 24 cm e Denso 28 cm. Algodão orgânico com tingimento GOTS. Lavável em máquina; não utilizar secadora.",
     details: [
       "1× Ciclo Mini 16 cm",
       "1× Ciclo Íntimo 22 cm",
@@ -284,28 +284,28 @@ export const GOTS_LINE = GOTS;
 
 export const FAQS = [
   {
-    q: "Como lavo o absorvente?",
-    a: "Pode ser lavado em máquina, ciclo delicado. Enxágue em água fria logo após o uso. Não utilize secadora. Seque à sombra.",
+    q: "Como lavar o absorvente?",
+    a: "Enxágue em água fria logo após o uso. Em seguida, lave em máquina, no ciclo delicado, com sabão neutro. Não utilize secadora. Seque à sombra, em local ventilado.",
   },
   {
-    q: "Quantas peças eu preciso?",
-    a: "O kit de 4 peças cobre Mini, Íntimo, Principal e Denso — um ciclo completo. Para a noite, some o Noturno de 30 cm.",
+    q: "Quantas peças são necessárias?",
+    a: "O kit de quatro peças reúne Mini, Íntimo, Principal e Denso e cobre um ciclo completo. Para a noite, acrescente o Noturno de 30 cm.",
   },
   {
-    q: "Qual modelo é o meu?",
-    a: "Mini 16 cm no fluxo leve do fim do ciclo. Íntimo 22 cm no leve de qualquer dia. Principal 24 cm no moderado. Denso 28 cm no intenso. Noturno 30 cm para dormir.",
+    q: "Qual modelo escolher?",
+    a: "Ciclo Mini (16 cm) para o fluxo leve do final do ciclo. Ciclo Íntimo (22 cm) para fluxo leve em qualquer dia. Ciclo Principal (24 cm) para fluxo moderado. Ciclo Denso (28 cm) para fluxo intenso. Noturno (30 cm) para dormir.",
   },
   {
     q: "O tecido é certificado?",
-    a: "Sim. Algodão orgânico com tingimento sustentável e certificação internacional GOTS.",
+    a: "Sim. Utilizamos algodão orgânico com tingimento sustentável e certificação internacional GOTS.",
   },
   {
-    q: "Demora para chegar?",
-    a: "As peças saem em até 5 dias úteis, mais o prazo dos Correios.",
+    q: "Qual o prazo de envio?",
+    a: "As peças saem do ateliê em até 5 dias úteis, acrescidos do prazo dos Correios.",
   },
   {
-    q: "Posso parcelar?",
-    a: "Sim, em até 3 vezes sem juros no cartão, pelo Mercado Pago.",
+    q: "É possível parcelar?",
+    a: "Sim. O pagamento pode ser feito em até 3 vezes sem juros no cartão, pelo Mercado Pago. No PIX, há 5% de desconto.",
   },
 ];
 

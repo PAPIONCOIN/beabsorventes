@@ -147,8 +147,8 @@ function Checkout() {
   if (lines.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="font-display text-3xl italic">A sacola está vazia</h1>
-        <p className="mt-3 text-muted">Escolha uma peça para continuar.</p>
+        <h1 className="font-display text-3xl italic">Sua sacola está vazia</h1>
+        <p className="mt-3 text-muted">Adicione um modelo para finalizar a compra.</p>
         <Button asChild className="mt-6">
           <Link to="/loja">Ir para a loja</Link>
         </Button>
@@ -159,11 +159,12 @@ function Checkout() {
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:gap-12 sm:px-6 sm:py-12 lg:grid-cols-[1fr_22rem]">
       <form onSubmit={onSubmit} className="space-y-5">
-        <h1 className="font-display text-[2rem] italic sm:text-4xl">Checkout</h1>
+        <h1 className="font-display text-[2rem] italic sm:text-4xl">Finalizar pedido</h1>
         {mpReady === false ? (
           <p className="rounded-md bg-bg-warm px-4 py-3 text-sm text-muted">
-            Mercado Pago ainda sem token. O pedido será registrado aqui para você
-            conferir o fluxo; no ar, basta adicionar MERCADOPAGO_ACCESS_TOKEN.
+            O Mercado Pago ainda não está configurado nesta hospedagem. O pedido
+            será registrado para conferência. Em produção, adicione a variável
+            MERCADOPAGO_ACCESS_TOKEN.
           </p>
         ) : null}
         <Field

@@ -15,40 +15,35 @@ function Sobre() {
             Quem somos
           </p>
           <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">
-            Seja bem-vinde ao beabsorventes.
+            Cuidado artesanal, ciclo após ciclo.
           </h1>
           <p className="mt-5 leading-relaxed text-muted">
-            Os absorventes são produzidos artesanalmente em máquina doméstica.
+            A beabsorventes produz absorventes reutilizáveis de algodão
+            orgânico, costurados um a um em ateliê. Cada peça é pensada para
+            acompanhar o ciclo com conforto, discrição e menor impacto
+            ambiental.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            Surgiu primeiramente da necessidade de colaborar com o meio
-            ambiente, pois a humanidade tem produzido demasiada quantidade de
-            lixo. Depois, da urgência de recorrer ao CICLO menstrual e toda
-            sabedoria que ele nos revela.
+            A marca nasceu de duas convicções: reduzir o volume de resíduos
+            gerado pela higiene menstrual e devolver à menstruação o lugar de
+            cuidado que ela merece.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            Ao longo da vida cíclica usamos cerca de 150 kg de absorventes. Se
-            usarmos absorventes de tecido por um ano, podemos reduzir até 500
-            unidades de descartáveis, equivalente a 4 kg de lixo.
+            Ao longo da vida, uma pessoa menstruante usa cerca de 150 kg de
+            absorventes descartáveis. Um ano com tecido evita até 500 unidades
+            — o equivalente a aproximadamente 4 kg de resíduo.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            Os absorventes de tecido são melhores para a saúde porque não
-            possuem química em sua composição, são mais respiráveis que os
-            descartáveis e por isso mais indicados para a saúde íntima.
+            Sem química agressiva na composição e com tecido respirável, as
+            peças são uma alternativa mais amena para a saúde íntima do que os
+            descartáveis convencionais.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            A sociedade moderna mostra-se passiva quando o assunto é
-            menstruação: sabe que existe, mas ignora. Enquanto, na verdade, a
-            menstruação afeta positivamente o crescimento físico, emocional,
-            intelectual e espiritual da mulher.
-          </p>
-          <p className="mt-4 leading-relaxed text-muted">
-            Desejamos que sua experiência com beabsorventes revele o quanto sua
-            menstruação pode ser boa para o ambiente, para a sua saúde íntima e
-            também para o seu bolso.
+            Desejamos que a experiência com a beabsorventes mostre que o ciclo
+            pode ser melhor para o corpo, para o ambiente e para o orçamento.
           </p>
           <Button asChild className="mt-8">
-            <Link to="/loja">Ver as peças</Link>
+            <Link to="/loja">Conhecer as peças</Link>
           </Button>
         </div>
         <ProductPhoto

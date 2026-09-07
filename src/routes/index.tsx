@@ -40,8 +40,8 @@ function Home() {
               Seu ciclo, com outro cuidado.
             </h1>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted sm:mt-5 sm:text-lg">
-              Kit 4 absorventes — Mini, Íntimo, Principal e Denso. Camadas
-              certas para o ciclo inteiro.
+              Absorventes reutilizáveis de algodão orgânico. O kit reúne Mini,
+              Íntimo, Principal e Denso — a proteção certa para cada fase do ciclo.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
               <Button asChild size="lg" className="w-full sm:w-auto">
@@ -69,12 +69,12 @@ function Home() {
             {
               icon: Droplets,
               title: "Cinco modelos",
-              text: "Mini, Íntimo, Principal, Denso e Noturno — um para cada fluxo.",
+              text: "Mini, Íntimo, Principal, Denso e Noturno — um para cada intensidade de fluxo.",
             },
             {
               icon: Recycle,
-              title: "Menos 4 kg de lixo",
-              text: "Um ano de tecido evita até 500 absorventes descartáveis.",
+              title: "Menos 4 kg de resíduo",
+              text: "Um ano de uso em tecido evita até 500 absorventes descartáveis.",
             },
           ].map((item) => (
             <div key={item.title} className="flex gap-4">
@@ -119,7 +119,7 @@ function Home() {
             />
             <div>
               <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
-                O ciclo completo
+                Kit completo
               </p>
               <h2 className="mt-3 font-display text-4xl italic">{kit.name}</h2>
               <p className="mt-4 max-w-md leading-relaxed text-muted">
@@ -177,10 +177,10 @@ function Home() {
               Guia rápido
             </p>
             <h2 className="mt-3 font-display text-3xl italic">
-              Qual absorvente é o seu?
+              Qual modelo combina com você?
             </h2>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-muted">
-              Duas perguntas. Uma recomendação honesta, no modelo certo do ciclo.
+              Duas perguntas objetivas. Uma recomendação alinhada ao seu fluxo.
             </p>
           </div>
           <CycleQuiz />

@@ -13,11 +13,11 @@ export function SiteFooter() {
         <div className="md:col-span-2">
           <Logo withName={false} markClassName="size-20 sm:size-28" />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted">
-            Absorventes ecológicos reutilizáveis de tecido 100% algodão
-            orgânico, com tingimento GOTS. Feito artesanalmente.
+            Absorventes reutilizáveis de algodão orgânico, com tingimento GOTS.
+            Produzidos artesanalmente no ateliê.
           </p>
           <p className="mt-3 max-w-sm font-display text-lg italic text-fg">
-            Feito girassol, conecte-se com seu ciclo e seja seu Sol.
+            Feito girassol: conecte-se ao seu ciclo.
           </p>
         </div>
         <div className="flex flex-col gap-2 text-sm">
@@ -42,7 +42,7 @@ export function SiteFooter() {
             Ateliê
           </p>
           <p className="text-muted">Envios para todo o Brasil.</p>
-          <p className="mt-1 text-muted">Peças saem em até 5 dias úteis.</p>
+          <p className="mt-1 text-muted">As peças saem em até 5 dias úteis.</p>
           <p className="mt-4">
             <a className="break-all text-muted hover:text-fg" href={`mailto:${CONTACT_EMAIL}`}>
               {CONTACT_EMAIL}
