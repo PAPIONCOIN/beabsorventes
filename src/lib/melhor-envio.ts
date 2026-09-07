@@ -139,15 +139,28 @@ export function shippingPayable(subtotalCents: number, quoteCents: number) {
   return quoteCents;
 }
 
+function asText(value: unknown, fallback = ""): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (value && typeof value === "object") {
+    const rec = value as Record<string, unknown>;
+    for (const key of ["city", "name", "title", "label", "abbreviation", "uf"]) {
+      if (typeof rec[key] === "string" && rec[key].trim()) return rec[key].trim();
+    }
+  }
+  return fallback;
+}
+
 type MeAddress = {
-  label?: string;
-  postal_code?: string;
-  address?: string;
-  number?: string;
-  complement?: string;
-  district?: string;
-  city?: string;
-  state_abbr?: string;
+  label?: unknown;
+  postal_code?: unknown;
+  address?: unknown;
+  number?: unknown;
+  complement?: unknown;
+  district?: unknown;
+  city?: unknown;
+  state_abbr?: unknown;
+  state?: unknown;
 };
 
 type MeProfile = {
@@ -269,7 +282,7 @@ async function senderFromAccount() {
   const addresses = asList(addressRes.data) as MeAddress[];
   const origin = fromCep();
   const address =
-    addresses.find((item) => (item.postal_code ?? "").replace(/\D/g, "") === origin) ??
+    addresses.find((item) => asText(item.postal_code).replace(/\D/g, "") === origin) ??
     addresses[0] ??
     {};
   const name =
@@ -278,16 +291,19 @@ async function senderFromAccount() {
     "Beabsorventes";
   return {
     name,
-    email: profile.email || CONTACT_EMAIL,
-    phone: digitsPhone(profile.phone?.phone || process.env.MELHOR_ENVIO_FROM_PHONE || "11995895103"),
-    document: (profile.document || process.env.MELHOR_ENVIO_FROM_DOCUMENT || "").replace(/\D/g, ""),
-    address: address.address || process.env.MELHOR_ENVIO_FROM_STREET || "Ateliê",
-    complement: address.complement || "",
-    number: address.number || process.env.MELHOR_ENVIO_FROM_NUMBER || "1",
-    district: address.district || process.env.MELHOR_ENVIO_FROM_DISTRICT || "Centro",
-    city: address.city || process.env.MELHOR_ENVIO_FROM_CITY || "Praia Grande",
-    state_abbr: address.state_abbr || process.env.MELHOR_ENVIO_FROM_STATE || "SP",
-    postal_code: (address.postal_code || origin).replace(/\D/g, "").slice(0, 8),
+    email: asText(profile.email, CONTACT_EMAIL),
+    phone: digitsPhone(asText(profile.phone?.phone, process.env.MELHOR_ENVIO_FROM_PHONE || "11995895103")),
+    document: asText(profile.document, process.env.MELHOR_ENVIO_FROM_DOCUMENT || "").replace(/\D/g, ""),
+    address: asText(address.address, process.env.MELHOR_ENVIO_FROM_STREET || "Rua Principal"),
+    complement: asText(address.complement),
+    number: asText(address.number, process.env.MELHOR_ENVIO_FROM_NUMBER || "1"),
+    district: asText(address.district, process.env.MELHOR_ENVIO_FROM_DISTRICT || "Centro"),
+    city: asText(address.city, process.env.MELHOR_ENVIO_FROM_CITY || "Praia Grande"),
+    state_abbr: asText(
+      address.state_abbr ?? address.state,
+      process.env.MELHOR_ENVIO_FROM_STATE || "SP",
+    ).slice(0, 2).toUpperCase(),
+    postal_code: asText(address.postal_code, origin).replace(/\D/g, "").slice(0, 8),
   };
 }
 
@@ -379,17 +395,17 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
       state_register: "ISENTO",
     },
     to: {
-      name: input.name,
-      email: input.email,
+      name: asText(input.name, "Cliente"),
+      email: asText(input.email),
       phone: digitsPhone(input.phone),
       document: recipientDocument,
-      address: input.address.street,
-      complement: input.address.complement || "",
-      number: input.address.number || "s/n",
-      district: input.address.neighborhood || "Centro",
-      city: input.address.city,
-      state_abbr: input.address.state,
-      postal_code: input.address.cep.replace(/\D/g, "").slice(0, 8),
+      address: asText(input.address.street, "Rua"),
+      complement: asText(input.address.complement),
+      number: asText(input.address.number, "s/n"),
+      district: asText(input.address.neighborhood, "Centro"),
+      city: asText(input.address.city, "Praia Grande"),
+      state_abbr: asText(input.address.state, "SP").slice(0, 2).toUpperCase(),
+      postal_code: asText(input.address.cep).replace(/\D/g, "").slice(0, 8),
       country_id: "BR",
     },
     products: input.items.map((item) => ({
