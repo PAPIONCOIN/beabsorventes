@@ -42,9 +42,14 @@ function Pedido() {
           <p className="mt-4 text-lg tabular-nums">{formatBRL(order.totals.total)}</p>
         </div>
       ) : null}
-      <Button asChild className="mt-8">
-        <Link to="/loja">Voltar à loja</Link>
-      </Button>
+      <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <Button asChild>
+          <Link to="/conta">Meus pedidos</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to="/loja">Voltar à loja</Link>
+        </Button>
+      </div>
     </div>
   );
 }

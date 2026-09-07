@@ -39,6 +39,9 @@ export function SiteFooter() {
           <Link to="/cadastro" className="flex min-h-11 items-center text-muted hover:text-fg">
             Cadastro
           </Link>
+          <Link to="/conta" className="flex min-h-11 items-center text-muted hover:text-fg">
+            Meus pedidos
+          </Link>
           <Link to="/admin" className="flex min-h-11 items-center text-muted hover:text-fg">
             Administração
           </Link>

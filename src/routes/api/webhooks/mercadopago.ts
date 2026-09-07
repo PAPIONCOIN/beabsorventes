@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sendOrderMail } from "@/lib/order-mail";
+import { updateOrderStatus } from "@/lib/shop-orders";
 
 type MpPayment = {
   id?: number;
@@ -54,6 +55,10 @@ export const Route = createFileRoute("/api/webhooks/mercadopago")({
           return Response.json({ ok: false }, { status: 502 });
         }
         const payment = (await response.json()) as MpPayment;
+        const orderId = payment.external_reference || payment.metadata?.orderId || "";
+        if (payment.status === "approved" && orderId) {
+          await updateOrderStatus(orderId, "paid");
+        }
         if (payment.status !== "approved") {
           return Response.json({ ok: true, status: payment.status });
         }

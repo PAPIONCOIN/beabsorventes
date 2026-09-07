@@ -17,6 +17,7 @@ const NAV = [
   { to: "/cuidados", label: "Como lavar" },
   { to: "/sobre", label: "Quem somos" },
   { to: "/cadastro", label: "Cadastro" },
+  { to: "/conta", label: "Meus pedidos" },
   { to: "/contato", label: "Contato" },
 ] as const;
 

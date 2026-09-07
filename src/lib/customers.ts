@@ -160,6 +160,14 @@ export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
   return row ? mapRow(row) : null;
 }
 
+export async function getCustomerByEmail(email: string) {
+  const sql = await getSql();
+  const rows = await sql<Parameters<typeof mapRow>[0]>`
+    select * from customers where email = ${email.trim().toLowerCase()} limit 1
+  `;
+  return rows[0] ? mapRow(rows[0]) : null;
+}
+
 export const registerCustomer = createServerFn({ method: "POST" })
   .validator(customerSchema)
   .handler(async ({ data }) => {

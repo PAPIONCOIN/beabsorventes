@@ -7,6 +7,7 @@ import { fetchShippingQuotes } from "@/lib/shipping";
 import { shippingPayable } from "@/lib/melhor-envio";
 import { shippingFor } from "@/lib/utils";
 import { upsertCustomer } from "@/lib/customers";
+import { persistOrder } from "@/lib/shop-orders";
 
 const itemSchema = z.object({
   slug: z.string().min(1),
@@ -195,6 +196,24 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       console.error("[customers] checkout upsert", error);
     }
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+
+    const orderRecord = {
+      orderId,
+      email: data.email,
+      name: data.name,
+      phone: data.phone ?? "",
+      payment: data.payment,
+      items: lines.map((item) => ({
+        name: item.name,
+        size: item.size,
+        qty: item.qty,
+        unitCents: item.unitCents,
+      })),
+      totals,
+      address,
+      shippingLabel: shipping.label,
+    };
+    await persistOrder({ ...orderRecord, status: token ? "pending" : "demo" });
 
     if (!token) {
       return {

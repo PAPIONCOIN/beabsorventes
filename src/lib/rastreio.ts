@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { CONTACT_EMAIL } from "@/lib/contact";
+import { updateOrderTracking } from "@/lib/shop-orders";
 
 export type TrackingUpdate = {
   source: "melhor-envio" | "correios" | "generico";
@@ -137,6 +138,12 @@ export function parseTrackingPayload(
 }
 
 export async function notifyTracking(update: TrackingUpdate) {
+  await updateOrderTracking({
+    orderId: update.orderTag,
+    tracking: update.tracking,
+    trackingUrl: update.trackingUrl,
+    status: update.status || update.event,
+  });
   if (!shouldNotify(update.event) && !shouldNotify(update.status)) {
     return { notified: false };
   }
