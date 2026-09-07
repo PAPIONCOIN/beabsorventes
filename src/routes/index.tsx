@@ -23,40 +23,37 @@ function Home() {
 
   return (
     <div>
-      <section className="border-b border-border">
-        <div className="mx-auto grid max-w-6xl lg:grid-cols-2">
-          <div className="flex flex-col justify-center px-4 py-10 sm:px-6 sm:py-20 lg:min-h-[34rem] lg:py-24">
-            <BrandMark className="mb-4 size-14 sm:mb-5 sm:size-20" />
+      <section className="relative overflow-hidden border-b border-border">
+        <img
+          src="/images/brand/banner.jpg"
+          alt="Kit de absorventes reutilizáveis de tecido beabsorventes"
+          className="h-[28rem] w-full object-cover object-[78%_center] sm:h-[32rem] lg:h-[38rem] lg:object-[70%_center]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/75 to-bg/20 sm:bg-gradient-to-r sm:from-bg sm:via-bg/80 sm:to-transparent" />
+        <div className="absolute inset-0 flex items-end sm:items-center">
+          <div className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-0">
+            <BrandMark className="mb-3 size-14 sm:mb-5 sm:size-20" />
             <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase sm:tracking-[0.2em]">
               Algodão orgânico · certificado GOTS
             </p>
-            <h1 className="mt-3 font-display text-[2.15rem] leading-[1.08] italic sm:mt-4 sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 max-w-lg font-display text-[2.15rem] leading-[1.08] italic sm:mt-4 sm:text-5xl lg:text-6xl">
               Seu ciclo, com outro cuidado.
             </h1>
             <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed text-muted sm:mt-5 sm:text-base">
-              Absorventes reutilizáveis de tecido. Cinco modelos, camadas
-              certas, zero descarte a cada mês.
+              Kit 4 absorventes — Mini, Íntimo, Principal e Denso. Camadas
+              certas para o ciclo inteiro.
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+            <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
               <Button asChild size="lg" className="w-full sm:w-auto">
-                <Link to="/loja">
-                  Ver a loja
+                <Link to="/produto/$slug" params={{ slug: "kit-4" }}>
+                  Comprar o kit
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-                <Link to="/guia">Escolher o modelo</Link>
+                <Link to="/loja">Ver a loja</Link>
               </Button>
             </div>
-          </div>
-          <div className="relative order-first min-h-64 bg-bg-warm sm:min-h-80 lg:order-last lg:min-h-0">
-            <ProductPhoto
-              src="/images/products/hero-pad.jpg"
-              alt="Absorvente reutilizável de tecido beabsorventes"
-              className="h-full min-h-64 sm:min-h-80"
-              imgClassName="p-8 sm:p-16"
-            />
-            <BrandMark className="absolute right-4 bottom-4 hidden size-24 drop-shadow-md sm:block sm:right-8 sm:bottom-8 sm:size-32" />
           </div>
         </div>
       </section>
