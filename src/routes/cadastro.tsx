@@ -1,0 +1,159 @@
+import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { BrandMark } from "@/components/logo";
+import { registerCustomer } from "@/lib/customers";
+import { formatCep, formatPhone } from "@/lib/utils";
+
+export const Route = createFileRoute("/cadastro")({ component: Cadastro });
+
+function Cadastro() {
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cep: "",
+    city: "",
+    state: "",
+  });
+
+  async function onSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await registerCustomer({
+        data: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          cep: form.cep,
+          city: form.city,
+          state: form.state,
+          source: "cadastro",
+        },
+      });
+      setDone(true);
+    } catch {
+      setError("Não foi possível concluir o cadastro. Tente de novo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
+        <BrandMark className="mx-auto mb-6 size-28" />
+        <h1 className="font-display text-4xl italic">Cadastro feito</h1>
+        <p className="mt-4 leading-relaxed text-muted">
+          Guardamos seus dados para facilitar os próximos pedidos. Quando quiser,
+          escolha as peças na loja.
+        </p>
+        <Button asChild className="mt-8">
+          <Link to="/loja">Ir para a loja</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-lg px-4 py-10 sm:px-6 sm:py-12">
+      <p className="text-xs font-medium tracking-wide text-primary uppercase">
+        Cadastro
+      </p>
+      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">
+        Seja cliente beabsorventes
+      </h1>
+      <p className="mt-4 text-muted">
+        Preencha uma vez. Usamos estes dados para enviar seus pedidos e avisar
+        sobre novidades da loja.
+      </p>
+      <form onSubmit={onSubmit} className="mt-10 space-y-5">
+        <Field
+          label="Nome"
+          value={form.name}
+          onChange={(value) => setForm({ ...form, name: value })}
+        />
+        <Field
+          label="E-mail"
+          type="email"
+          value={form.email}
+          onChange={(value) => setForm({ ...form, email: value })}
+        />
+        <Field
+          label="WhatsApp"
+          required={false}
+          inputMode="tel"
+          value={form.phone}
+          onChange={(value) => setForm({ ...form, phone: formatPhone(value) })}
+        />
+        <Field
+          label="CEP"
+          required={false}
+          inputMode="numeric"
+          value={form.cep}
+          onChange={(value) => setForm({ ...form, cep: formatCep(value) })}
+        />
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-span-2">
+            <Field
+              label="Cidade"
+              required={false}
+              value={form.city}
+              onChange={(value) => setForm({ ...form, city: value })}
+            />
+          </div>
+          <Field
+            label="UF"
+            required={false}
+            value={form.state}
+            onChange={(value) =>
+              setForm({ ...form, state: value.toUpperCase().slice(0, 2) })
+            }
+          />
+        </div>
+        {error ? <p className="text-sm text-primary">{error}</p> : null}
+        <Button type="submit" size="lg" className="w-full" disabled={busy}>
+          {busy ? "Salvando…" : "Cadastrar"}
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = true,
+  inputMode,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+  inputMode?: "numeric" | "tel" | "email";
+}) {
+  const id = label.toLowerCase();
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type={type}
+        required={required}
+        value={value}
+        inputMode={inputMode}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}

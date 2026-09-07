@@ -6,6 +6,7 @@ import { cartTotals, type CartLine } from "@/lib/cart-store";
 import { fetchShippingQuotes } from "@/lib/shipping";
 import { shippingPayable } from "@/lib/melhor-envio";
 import { shippingFor } from "@/lib/utils";
+import { upsertCustomer } from "@/lib/customers";
 
 const itemSchema = z.object({
   slug: z.string().min(1),
@@ -176,6 +177,23 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       city: data.city,
       state: data.state,
     };
+    try {
+      await upsertCustomer({
+        name: data.name,
+        email: data.email,
+        phone: data.phone ?? "",
+        cep: data.cep,
+        street: data.street,
+        number: data.number,
+        complement: data.complement,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        source: "checkout",
+      });
+    } catch (error) {
+      console.error("[customers] checkout upsert", error);
+    }
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
     if (!token) {
