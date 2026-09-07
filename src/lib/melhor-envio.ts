@@ -65,15 +65,19 @@ export function quoteProducts(items: CartLine[]) {
       : [{ slug: product.slug, qty: item.qty, unitCents: product.priceCents }];
 
     for (const part of parts) {
-      const box = shipBoxFor(part.slug);
-      if (!box) continue;
+      const box = shipBoxFor(part.slug) ?? {
+        width: 12,
+        height: 2,
+        length: 22,
+        weightKg: 0.08,
+      };
       products.push({
         id: part.slug,
-        width: Math.max(1, Math.round(box.width)),
-        height: Math.max(1, Math.round(box.height)),
-        length: Math.max(1, Math.round(box.length)),
-        weight: Math.max(0.1, box.weightKg),
-        insurance_value: Number((part.unitCents / 100).toFixed(2)),
+        width: Math.max(11, Math.round(box.width)),
+        height: Math.max(2, Math.round(box.height)),
+        length: Math.max(16, Math.round(box.length)),
+        weight: Math.max(0.1, Number(box.weightKg.toFixed(3))),
+        insurance_value: Number((Math.max(part.unitCents, 100) / 100).toFixed(2)),
         quantity: part.qty,
       });
     }
@@ -108,7 +112,9 @@ function parseQuotes(data: unknown): ShippingQuote[] {
 
 async function destinationPlace(cep: string) {
   try {
-    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+      signal: AbortSignal.timeout(2500),
+    });
     const data = (await response.json()) as {
       erro?: boolean;
       localidade?: string;
@@ -131,45 +137,83 @@ export async function fetchMelhorEnvioQuotes(
   const products = quoteProducts(items);
   if (!token || origin.length !== 8 || dest.length !== 8 || products.length === 0) return [];
 
-  const place = await destinationPlace(dest);
-  const response = await fetch(`${meBase()}/me/shipment/calculate`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      "User-Agent": `Beabsorventes (${CONTACT_EMAIL})`,
+  const volume = packedBox(products);
+  const payload = {
+    from: { postal_code: origin },
+    to: { postal_code: dest },
+    products,
+    options: {
+      receipt: false,
+      own_hand: false,
     },
-    body: JSON.stringify({
-      from: {
-        postal_code: origin,
-        address: "Rua Principal",
-        number: "1",
-        city: "Praia Grande",
-        state_abbr: "SP",
-      },
-      to: {
-        postal_code: dest,
-        city: place.city || undefined,
-        state_abbr: place.state || undefined,
-      },
-      products,
-      options: {
-        receipt: false,
-        own_hand: false,
-        insurance_value: products.reduce(
-          (sum, item) => sum + item.insurance_value * item.quantity,
-          0,
-        ),
-      },
-    }),
-  });
+    services: "1,2,3,4",
+  };
 
-  if (!response.ok) {
-    console.error("[melhor-envio] calculate", dest, response.status, await response.text());
+  try {
+    const response = await fetch(`${meBase()}/me/shipment/calculate`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": `Beabsorventes (${CONTACT_EMAIL})`,
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      console.error("[melhor-envio] calculate", dest, response.status, detail.slice(0, 600));
+      const retry = await fetch(`${meBase()}/me/shipment/calculate`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "User-Agent": `Beabsorventes (${CONTACT_EMAIL})`,
+        },
+        body: JSON.stringify({
+          from: { postal_code: origin },
+          to: { postal_code: dest },
+          package: volume,
+          options: { receipt: false, own_hand: false },
+          services: "1,2",
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!retry.ok) {
+        console.error("[melhor-envio] calculate-package", dest, retry.status, await retry.text());
+        return [];
+      }
+      return parseQuotes(await retry.json());
+    }
+    const quotes = parseQuotes(await response.json());
+    if (quotes.length > 0) return quotes;
+
+    const retry = await fetch(`${meBase()}/me/shipment/calculate`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": `Beabsorventes (${CONTACT_EMAIL})`,
+      },
+      body: JSON.stringify({
+        from: { postal_code: origin },
+        to: { postal_code: dest },
+        package: volume,
+        options: { receipt: false, own_hand: false },
+        services: "1,2",
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!retry.ok) return [];
+    return parseQuotes(await retry.json());
+  } catch (error) {
+    console.error("[melhor-envio] calculate", dest, error);
     return [];
   }
-  return parseQuotes(await response.json());
 }
 
 export function shippingPayable(subtotalCents: number, quoteCents: number) {

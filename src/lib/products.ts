@@ -340,9 +340,9 @@ const SHIP_BY_SLUG: Record<string, ShipBox> = {
   "ciclo-principal": { width: 12, height: 2, length: 24, weightKg: 0.07 },
   "ciclo-denso": { width: 13, height: 2.5, length: 28, weightKg: 0.08 },
   noturno: { width: 14, height: 3, length: 30, weightKg: 0.1 },
-  "protetor-diario": { width: 8, height: 1, length: 16, weightKg: 0.03 },
+  "protetor-diario": { width: 11, height: 2, length: 16, weightKg: 0.05 },
 };
 
 export function shipBoxFor(slug: string): ShipBox | null {
-  return SHIP_BY_SLUG[slug] ?? null;
+  return SHIP_BY_SLUG[slug] ?? { width: 12, height: 2, length: 22, weightKg: 0.08 };
 }

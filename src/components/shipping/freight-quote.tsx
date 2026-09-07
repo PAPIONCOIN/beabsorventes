@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { quoteShipping, type QuotedShipping } from "@/lib/shipping";
 import { ORIGIN_CEP_LABEL, readSavedCep, saveCep } from "@/lib/origin-cep";
 import { digitsOnly, formatBRL, formatCep } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CartLine } from "@/lib/cart-store";
@@ -19,6 +20,7 @@ export function FreightQuote({
   const [quoting, setQuoting] = useState(false);
   const [quotes, setQuotes] = useState<QuotedShipping[]>([]);
   const [picked, setPicked] = useState<number | null>(null);
+  const [error, setError] = useState("");
 
   const itemKey = items.map((item) => `${item.slug}:${item.qty}:${item.size}`).join("|");
 
@@ -35,14 +37,19 @@ export function FreightQuote({
   async function load(cepDigits: string) {
     if (cepDigits.length !== 8 || items.length === 0) return;
     setQuoting(true);
+    setError("");
     try {
       const result = await quoteShipping({ data: { cep: cepDigits, items } });
       setQuotes(result.quotes);
       setPicked(result.quotes[0]?.serviceId ?? null);
       onQuoted?.(cepDigits, result.quotes);
+      if (result.quotes.length === 0) {
+        setError("Não encontramos frete para este CEP. Confira o número.");
+      }
     } catch {
       setQuotes([]);
       setPicked(null);
+      setError("Não foi possível cotar agora. Tente de novo.");
     } finally {
       setQuoting(false);
     }
@@ -54,24 +61,48 @@ export function FreightQuote({
       <p className="mt-1 text-xs text-muted">
         Postagem saindo de {ORIGIN_CEP_LABEL}, com valores do Melhor Envio
       </p>
-      <div className="mt-3 space-y-1.5">
-        <Label htmlFor={inputId}>CEP</Label>
-        <Input
-          id={inputId}
-          inputMode="numeric"
-          autoComplete="postal-code"
-          placeholder="00000-000"
-          value={cep}
-          onChange={(event) => {
-            const next = formatCep(event.target.value);
-            setCep(next);
-            const digits = digitsOnly(next);
-            if (digits.length === 8) {
-              saveCep(digits);
-              void load(digits);
-            }
+      <div className="mt-3 flex items-end gap-2">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <Label htmlFor={inputId}>CEP</Label>
+          <Input
+            id={inputId}
+            inputMode="numeric"
+            autoComplete="postal-code"
+            placeholder="00000-000"
+            value={cep}
+            onChange={(event) => {
+              const next = formatCep(event.target.value);
+              setCep(next);
+              const digits = digitsOnly(next);
+              if (digits.length === 8) {
+                saveCep(digits);
+                void load(digits);
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                const digits = digitsOnly(cep);
+                if (digits.length === 8) {
+                  saveCep(digits);
+                  void load(digits);
+                }
+              }
+            }}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={quoting || digitsOnly(cep).length !== 8 || items.length === 0}
+          onClick={() => {
+            const digits = digitsOnly(cep);
+            saveCep(digits);
+            void load(digits);
           }}
-        />
+        >
+          {quoting ? "…" : "Calcular"}
+        </Button>
       </div>
       {items.length === 0 ? (
         <p className="mt-3 text-xs text-muted">Escolha uma peça para cotar o envio.</p>
@@ -109,6 +140,8 @@ export function FreightQuote({
             );
           })}
         </ul>
+      ) : error ? (
+        <p className="mt-3 text-xs text-primary">{error}</p>
       ) : digitsOnly(cep).length === 8 ? (
         <p className="mt-3 text-xs text-muted">
           Não foi possível cotar neste CEP. Confira o número ou tente de novo.
