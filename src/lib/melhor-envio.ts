@@ -1,17 +1,7 @@
-import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { getProduct, shipBoxFor } from "@/lib/products";
-import { FREE_SHIPPING_FROM, SHIPPING_CENTS, shippingFor } from "@/lib/utils";
+import { FREE_SHIPPING_FROM } from "@/lib/utils";
 import type { CartLine } from "@/lib/cart-store";
-
-const itemSchema = z.object({
-  slug: z.string().min(1),
-  printId: z.string().min(1),
-  size: z.string().min(1),
-  qty: z.number().int().positive(),
-});
-
 export type ShippingQuote = {
   serviceId: number;
   name: string;
@@ -140,47 +130,3 @@ export function shippingPayable(subtotalCents: number, quoteCents: number) {
   if (subtotalCents >= FREE_SHIPPING_FROM) return 0;
   return quoteCents;
 }
-
-export const quoteShipping = createServerFn({ method: "POST" })
-  .validator(
-    z.object({
-      cep: z.string().regex(/^\d{8}$/),
-      items: z.array(itemSchema).min(1),
-    }),
-  )
-  .handler(async ({ data }) => {
-    const subtotal = data.items.reduce((sum, item) => {
-      const product = getProduct(item.slug);
-      return sum + (product ? product.priceCents * item.qty : 0);
-    }, 0);
-
-    try {
-      const quotes = await fetchMelhorEnvioQuotes(data.cep, data.items);
-      if (quotes.length > 0) {
-        return {
-          ready: true as const,
-          quotes: quotes.map((quote) => ({
-            ...quote,
-            payableCents: shippingPayable(subtotal, quote.priceCents),
-          })),
-        };
-      }
-    } catch (error) {
-      console.error("[melhor-envio]", error);
-    }
-
-    const fallback = shippingFor(subtotal);
-    return {
-      ready: false as const,
-      quotes: [
-        {
-          serviceId: 0,
-          name: "PAC",
-          company: "Correios",
-          priceCents: fallback || SHIPPING_CENTS,
-          days: 8,
-          payableCents: fallback,
-        },
-      ],
-    };
-  });

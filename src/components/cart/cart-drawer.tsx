@@ -106,7 +106,7 @@ export function CartDrawer() {
             <span className="tabular-nums">{formatBRL(totals.subtotal)}</span>
           </div>
           <p className="mt-2 text-xs text-muted">
-            Frete cotado no checkout pelo Melhor Envio. Grátis a partir de R$ 180.
+            Frete cotado no checkout pelos Correios. Grátis a partir de R$ 180.
             PIX com 5% de desconto.
           </p>
           <Button asChild className="mt-4 w-full" disabled={lines.length === 0}>

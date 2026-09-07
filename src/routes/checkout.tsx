@@ -10,7 +10,7 @@ import {
   useCartStore,
 } from "@/lib/cart-store";
 import { createMpCheckout, getMercadoPagoStatus } from "@/lib/mercadopago";
-import { quoteShipping } from "@/lib/melhor-envio";
+import { quoteShipping } from "@/lib/shipping";
 import { saveLastOrder } from "@/lib/orders";
 import { getProduct } from "@/lib/products";
 import { BrandMark } from "@/components/logo";
@@ -264,7 +264,7 @@ function Checkout() {
         <fieldset>
           <legend className="text-sm font-medium">Frete</legend>
           <p className="mt-1 text-xs text-muted">
-            Cotação pelo Melhor Envio. Frete grátis a partir de {formatBRL(FREE_SHIPPING_FROM)}.
+            Cotação pelos Correios. Frete grátis a partir de {formatBRL(FREE_SHIPPING_FROM)}.
           </p>
           <div className="mt-3 space-y-2">
             {quoting ? (

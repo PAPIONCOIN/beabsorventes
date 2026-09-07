@@ -3,7 +3,8 @@ import { z } from "zod";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { getProduct, PRINTS } from "@/lib/products";
 import { cartTotals, type CartLine } from "@/lib/cart-store";
-import { fetchMelhorEnvioQuotes, shippingPayable } from "@/lib/melhor-envio";
+import { fetchShippingQuotes } from "@/lib/shipping";
+import { shippingPayable } from "@/lib/melhor-envio";
 import { shippingFor } from "@/lib/utils";
 
 const itemSchema = z.object({
@@ -89,7 +90,7 @@ async function resolveShipping(
 ) {
   const subtotal = cartTotals(items, "card", 0).subtotal;
   try {
-    const quotes = await fetchMelhorEnvioQuotes(cep, items);
+    const { quotes } = await fetchShippingQuotes(cep, items);
     const chosen =
       quotes.find((quote) => quote.serviceId === serviceId) ?? quotes[0];
     if (chosen) {
