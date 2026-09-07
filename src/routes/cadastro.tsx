@@ -25,6 +25,8 @@ function Cadastro() {
     neighborhood: "",
     city: "",
     state: "",
+    password: "",
+    confirm: "",
   });
 
   async function lookupCep(cepDigits: string) {
@@ -55,6 +57,16 @@ function Cadastro() {
     event.preventDefault();
     setBusy(true);
     setError("");
+    if (form.password.length < 6) {
+      setError("A senha precisa ter pelo menos 6 caracteres.");
+      setBusy(false);
+      return;
+    }
+    if (form.password !== form.confirm) {
+      setError("As senhas não coincidem.");
+      setBusy(false);
+      return;
+    }
     const payload = {
       name: form.name,
       email: form.email,
@@ -67,11 +79,24 @@ function Cadastro() {
       city: form.city,
       state: form.state,
       source: "cadastro" as const,
+      password: form.password,
     };
     try {
       let mailed = false;
       try {
-        await sendCustomerMail(payload);
+        await sendCustomerMail({
+          name: payload.name,
+          email: payload.email,
+          phone: payload.phone,
+          cep: payload.cep,
+          street: payload.street,
+          number: payload.number,
+          complement: payload.complement,
+          neighborhood: payload.neighborhood,
+          city: payload.city,
+          state: payload.state,
+          source: payload.source,
+        });
         mailed = true;
       } catch (error) {
         console.error("[cadastro-mail]", error);
@@ -119,8 +144,7 @@ function Cadastro() {
         Seja cliente beabsorventes
       </h1>
       <p className="mt-4 text-muted">
-        Preencha uma vez. Usamos estes dados para enviar seus pedidos e avisar
-        sobre novidades da loja.
+        Preencha uma vez. Use este e-mail e senha para ver seus pedidos.
       </p>
       <form onSubmit={onSubmit} className="mt-10 space-y-5">
         <Field
@@ -198,6 +222,18 @@ function Cadastro() {
             }
           />
         </div>
+        <Field
+          label="Senha"
+          type="password"
+          value={form.password}
+          onChange={(value) => setForm({ ...form, password: value })}
+        />
+        <Field
+          label="Confirmar senha"
+          type="password"
+          value={form.confirm}
+          onChange={(value) => setForm({ ...form, confirm: value })}
+        />
         {error ? <p className="text-sm text-primary">{error}</p> : null}
         <Button type="submit" size="lg" className="w-full" disabled={busy}>
           {busy ? "Salvando…" : "Cadastrar"}

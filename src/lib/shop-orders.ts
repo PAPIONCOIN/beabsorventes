@@ -9,6 +9,7 @@ import {
   type Customer,
 } from "@/lib/customers";
 import { digitsOnly } from "@/lib/utils";
+import { getPasswordHash, setPasswordForEmail, verifyPassword } from "@/lib/customer-auth";
 
 const COOKIE = "bea_conta";
 
@@ -303,6 +304,7 @@ export const openAccount = createServerFn({ method: "POST" })
   .validator(
     z.object({
       email: z.string().trim().email(),
+      password: z.string().optional().default(""),
       phone: z.string().trim().optional().default(""),
       cep: z.string().trim().optional().default(""),
     }),
@@ -327,18 +329,35 @@ export const openAccount = createServerFn({ method: "POST" })
       console.error("[conta] orders", error);
     }
 
-    const storedPhone = customer?.phone || orders[0]?.phone || "";
-    const storedCep = customer?.cep || orders[0]?.address.cep || "";
-    const phoneOk = data.phone ? phonesMatch(data.phone, storedPhone) : false;
-    const cepOk = data.cep ? cepsMatch(data.cep, storedCep) : false;
     if (!customer && orders.length === 0) {
       return { ok: false as const, message: "Não encontramos cadastro com este e-mail." };
     }
-    if (!phoneOk && !cepOk) {
-      return {
-        ok: false as const,
-        message: "Confira o WhatsApp ou o CEP usados no cadastro.",
-      };
+
+    const storedHash = customer ? await getPasswordHash(email) : "";
+    if (data.password) {
+      if (!storedHash) {
+        return {
+          ok: false as const,
+          message: "Este e-mail ainda não tem senha. Use o primeiro acesso ou recupere a senha.",
+        };
+      }
+      if (!(await verifyPassword(data.password, storedHash))) {
+        return { ok: false as const, message: "E-mail ou senha incorretos." };
+      }
+    } else {
+      if (storedHash) {
+        return { ok: false as const, message: "Informe a senha da conta." };
+      }
+      const storedPhone = customer?.phone || orders[0]?.phone || "";
+      const storedCep = customer?.cep || orders[0]?.address.cep || "";
+      const phoneOk = data.phone ? phonesMatch(data.phone, storedPhone) : false;
+      const cepOk = data.cep ? cepsMatch(data.cep, storedCep) : false;
+      if (!phoneOk && !cepOk) {
+        return {
+          ok: false as const,
+          message: "Confira o WhatsApp ou o CEP usados no cadastro.",
+        };
+      }
     }
 
     const { setCookie } = await import("@tanstack/react-start/server");
@@ -349,12 +368,24 @@ export const openAccount = createServerFn({ method: "POST" })
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 14,
     });
-    return { ok: true as const, customer, orders };
+    return {
+      ok: true as const,
+      customer,
+      orders,
+      hasPassword: Boolean(storedHash),
+    };
   });
 
 export const getAccount = createServerFn({ method: "GET" }).handler(async () => {
   const email = await sessionEmail();
-  if (!email) return { ok: false as const, customer: null, orders: [] as ShopOrder[] };
+  if (!email) {
+    return {
+      ok: false as const,
+      customer: null,
+      orders: [] as ShopOrder[],
+      hasPassword: false,
+    };
+  }
   let customer: Customer | null = null;
   try {
     customer = await getCustomerByEmail(email);
@@ -371,7 +402,8 @@ export const getAccount = createServerFn({ method: "GET" }).handler(async () => 
   } catch (error) {
     console.error("[conta] session orders", error);
   }
-  return { ok: true as const, customer, orders };
+  const hasPassword = Boolean(await getPasswordHash(email));
+  return { ok: true as const, customer, orders, hasPassword };
 });
 
 export const closeAccount = createServerFn({ method: "POST" }).handler(async () => {
@@ -391,6 +423,31 @@ export const updateAccount = createServerFn({ method: "POST" })
     } catch (error) {
       console.error("[conta] update", error);
       return { ok: false as const, message: "Não foi possível salvar agora." };
+    }
+  });
+
+export const changeAccountPassword = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      current: z.string().optional().default(""),
+      password: z.string().min(6),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const email = await sessionEmail();
+    if (!email) return { ok: false as const, message: "Entre de novo para salvar." };
+    const stored = await getPasswordHash(email);
+    if (stored) {
+      if (!data.current || !(await verifyPassword(data.current, stored))) {
+        return { ok: false as const, message: "A senha atual não confere." };
+      }
+    }
+    try {
+      await setPasswordForEmail(email, data.password);
+      return { ok: true as const };
+    } catch (error) {
+      console.error("[conta] password", error);
+      return { ok: false as const, message: "Não foi possível salvar a senha." };
     }
   });
 

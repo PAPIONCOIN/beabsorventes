@@ -21,6 +21,8 @@ import { Route as LojaRouteImport } from './routes/loja'
 import { Route as PedidoRouteImport } from './routes/pedido'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as ContaRecuperarRouteImport } from './routes/conta.recuperar'
+import { Route as ContaRedefinirRouteImport } from './routes/conta.redefinir'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 import { Route as ApiWebhooksMercadopagoRouteImport } from './routes/api/webhooks/mercadopago'
 import { Route as ApiWebhooksRastreioRouteImport } from './routes/api/webhooks/rastreio'
@@ -85,6 +87,16 @@ const SobreRoute = SobreRouteImport.update({
   path: '/sobre',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContaRecuperarRoute = ContaRecuperarRouteImport.update({
+  id: '/recuperar',
+  path: '/recuperar',
+  getParentRoute: () => ContaRoute,
+} as any)
+const ContaRedefinirRoute = ContaRedefinirRouteImport.update({
+  id: '/redefinir',
+  path: '/redefinir',
+  getParentRoute: () => ContaRoute,
+} as any)
 const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
   id: '/produto/$slug',
   path: '/produto/$slug',
@@ -106,7 +118,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/cadastro': typeof CadastroRoute
   '/checkout': typeof CheckoutRoute
-  '/conta': typeof ContaRoute
+  '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
   '/guia': typeof GuiaRoute
@@ -114,6 +126,8 @@ export interface FileRoutesByFullPath {
   '/pedido': typeof PedidoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
+  '/conta/recuperar': typeof ContaRecuperarRoute
+  '/conta/redefinir': typeof ContaRedefinirRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/api/webhooks/mercadopago': typeof ApiWebhooksMercadopagoRoute
   '/api/webhooks/rastreio': typeof ApiWebhooksRastreioRoute
@@ -123,7 +137,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/cadastro': typeof CadastroRoute
   '/checkout': typeof CheckoutRoute
-  '/conta': typeof ContaRoute
+  '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
   '/guia': typeof GuiaRoute
@@ -131,6 +145,8 @@ export interface FileRoutesByTo {
   '/pedido': typeof PedidoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
+  '/conta/recuperar': typeof ContaRecuperarRoute
+  '/conta/redefinir': typeof ContaRedefinirRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/api/webhooks/mercadopago': typeof ApiWebhooksMercadopagoRoute
   '/api/webhooks/rastreio': typeof ApiWebhooksRastreioRoute
@@ -141,7 +157,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/cadastro': typeof CadastroRoute
   '/checkout': typeof CheckoutRoute
-  '/conta': typeof ContaRoute
+  '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/cuidados': typeof CuidadosRoute
   '/guia': typeof GuiaRoute
@@ -149,6 +165,8 @@ export interface FileRoutesById {
   '/pedido': typeof PedidoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
+  '/conta/recuperar': typeof ContaRecuperarRoute
+  '/conta/redefinir': typeof ContaRedefinirRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/api/webhooks/mercadopago': typeof ApiWebhooksMercadopagoRoute
   '/api/webhooks/rastreio': typeof ApiWebhooksRastreioRoute
@@ -168,6 +186,8 @@ export interface FileRouteTypes {
     | '/pedido'
     | '/privacidade'
     | '/sobre'
+    | '/conta/recuperar'
+    | '/conta/redefinir'
     | '/produto/$slug'
     | '/api/webhooks/mercadopago'
     | '/api/webhooks/rastreio'
@@ -185,6 +205,8 @@ export interface FileRouteTypes {
     | '/pedido'
     | '/privacidade'
     | '/sobre'
+    | '/conta/recuperar'
+    | '/conta/redefinir'
     | '/produto/$slug'
     | '/api/webhooks/mercadopago'
     | '/api/webhooks/rastreio'
@@ -202,6 +224,8 @@ export interface FileRouteTypes {
     | '/pedido'
     | '/privacidade'
     | '/sobre'
+    | '/conta/recuperar'
+    | '/conta/redefinir'
     | '/produto/$slug'
     | '/api/webhooks/mercadopago'
     | '/api/webhooks/rastreio'
@@ -212,7 +236,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CadastroRoute: typeof CadastroRoute
   CheckoutRoute: typeof CheckoutRoute
-  ContaRoute: typeof ContaRoute
+  ContaRoute: typeof ContaRouteWithChildren
   ContatoRoute: typeof ContatoRoute
   CuidadosRoute: typeof CuidadosRoute
   GuiaRoute: typeof GuiaRoute
@@ -311,6 +335,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SobreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conta/recuperar': {
+      id: '/conta/recuperar'
+      path: '/recuperar'
+      fullPath: '/conta/recuperar'
+      preLoaderRoute: typeof ContaRecuperarRouteImport
+      parentRoute: typeof ContaRoute
+    }
+    '/conta/redefinir': {
+      id: '/conta/redefinir'
+      path: '/redefinir'
+      fullPath: '/conta/redefinir'
+      preLoaderRoute: typeof ContaRedefinirRouteImport
+      parentRoute: typeof ContaRoute
+    }
     '/produto/$slug': {
       id: '/produto/$slug'
       path: '/produto/$slug'
@@ -335,12 +373,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ContaRouteChildren {
+  ContaRecuperarRoute: typeof ContaRecuperarRoute
+  ContaRedefinirRoute: typeof ContaRedefinirRoute
+}
+
+const ContaRouteChildren: ContaRouteChildren = {
+  ContaRecuperarRoute: ContaRecuperarRoute,
+  ContaRedefinirRoute: ContaRedefinirRoute,
+}
+
+const ContaRouteWithChildren = ContaRoute._addFileChildren(ContaRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CadastroRoute: CadastroRoute,
   CheckoutRoute: CheckoutRoute,
-  ContaRoute: ContaRoute,
+  ContaRoute: ContaRouteWithChildren,
   ContatoRoute: ContatoRoute,
   CuidadosRoute: CuidadosRoute,
   GuiaRoute: GuiaRoute,

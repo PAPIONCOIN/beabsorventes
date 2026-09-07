@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
 import {
+  changeAccountPassword,
   closeAccount,
   getAccount,
   openAccount,
@@ -24,6 +25,12 @@ function Conta() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstAccess, setFirstAccess] = useState(false);
+  const [hasPassword, setHasPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [cep, setCep] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -62,6 +69,7 @@ function Conta() {
       if (result.ok) {
         setAuthed(true);
         applyAccount(result);
+        setHasPassword(result.hasPassword);
       }
       setReady(true);
     });
@@ -97,13 +105,17 @@ function Conta() {
     setBusy(true);
     setError("");
     try {
-      const result = await openAccount({ data: { email, phone, cep } });
+      const result = await openAccount({
+        data: firstAccess ? { email, phone, cep, password: "" } : { email, password },
+      });
       if (!result.ok) {
         setError(result.message);
         return;
       }
       setAuthed(true);
       applyAccount(result);
+      setHasPassword(result.hasPassword);
+      setPassword("");
     } catch {
       setError("Não foi possível entrar agora.");
     } finally {
@@ -148,7 +160,7 @@ function Conta() {
         </p>
         <h1 className="mt-3 font-display text-4xl italic">Meus pedidos</h1>
         <p className="mt-3 text-sm text-muted">
-          Entre com o e-mail da compra e o WhatsApp ou o CEP cadastrados.
+          Entre com o e-mail e a senha do cadastro.
         </p>
         <form onSubmit={onLogin} className="mt-8 space-y-4">
           <Field
@@ -157,31 +169,59 @@ function Conta() {
             value={email}
             onChange={setEmail}
           />
-          <Field
-            label="WhatsApp"
-            required={false}
-            inputMode="tel"
-            value={phone}
-            onChange={(value) => setPhone(formatPhone(value))}
-          />
-          <Field
-            label="CEP"
-            required={false}
-            inputMode="numeric"
-            value={cep}
-            onChange={(value) => setCep(formatCep(value))}
-          />
+          {firstAccess ? (
+            <>
+              <Field
+                label="WhatsApp"
+                required={false}
+                inputMode="tel"
+                value={phone}
+                onChange={(value) => setPhone(formatPhone(value))}
+              />
+              <Field
+                label="CEP"
+                required={false}
+                inputMode="numeric"
+                value={cep}
+                onChange={(value) => setCep(formatCep(value))}
+              />
+            </>
+          ) : (
+            <Field
+              label="Senha"
+              type="password"
+              value={password}
+              onChange={setPassword}
+            />
+          )}
           {error ? <p className="text-sm text-primary">{error}</p> : null}
           <Button type="submit" className="w-full" size="lg" disabled={busy}>
-            {busy ? "Entrando…" : "Ver meus pedidos"}
+            {busy ? "Entrando…" : "Entrar"}
           </Button>
         </form>
-        <p className="mt-6 text-sm text-muted">
-          Ainda não tem cadastro?{" "}
-          <Link to="/cadastro" className="text-fg underline-offset-2 hover:underline">
-            Crie o seu
+        <p className="mt-6 space-y-2 text-sm text-muted">
+          <button
+            type="button"
+            className="block underline-offset-2 hover:underline"
+            onClick={() => {
+              setFirstAccess((value) => !value);
+              setError("");
+            }}
+          >
+            {firstAccess ? "Já tenho senha" : "Primeiro acesso, ainda sem senha"}
+          </button>
+          <Link
+            to="/conta/recuperar"
+            className="block text-fg underline-offset-2 hover:underline"
+          >
+            Esqueci a senha
           </Link>
-          .
+          <span className="block">
+            Ainda não tem cadastro?{" "}
+            <Link to="/cadastro" className="text-fg underline-offset-2 hover:underline">
+              Crie o seu
+            </Link>
+          </span>
         </p>
       </div>
     );
@@ -344,6 +384,67 @@ function Conta() {
           {saved ? <p className="text-sm text-muted sm:col-span-2">{saved}</p> : null}
           <Button type="submit" className="sm:col-span-2" disabled={busy}>
             {busy ? "Salvando…" : "Salvar dados"}
+          </Button>
+        </form>
+      </section>
+
+      <section className="mt-12 max-w-md">
+        <h2 className="font-display text-2xl italic">
+          {hasPassword ? "Alterar senha" : "Criar senha"}
+        </h2>
+        <form
+          className="mt-5 space-y-4"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (newPassword !== confirmPassword) {
+              setError("As senhas não coincidem.");
+              return;
+            }
+            setBusy(true);
+            setSaved("");
+            setError("");
+            try {
+              const result = await changeAccountPassword({
+                data: { current: currentPassword, password: newPassword },
+              });
+              if (!result.ok) {
+                setError(result.message);
+                return;
+              }
+              setHasPassword(true);
+              setCurrentPassword("");
+              setNewPassword("");
+              setConfirmPassword("");
+              setSaved("Senha atualizada.");
+            } catch {
+              setError("Não foi possível salvar a senha.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          {hasPassword ? (
+            <Field
+              label="Senha atual"
+              type="password"
+              value={currentPassword}
+              onChange={setCurrentPassword}
+            />
+          ) : null}
+          <Field
+            label="Nova senha"
+            type="password"
+            value={newPassword}
+            onChange={setNewPassword}
+          />
+          <Field
+            label="Confirmar senha"
+            type="password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+          />
+          <Button type="submit" disabled={busy}>
+            {busy ? "Salvando…" : hasPassword ? "Trocar senha" : "Salvar senha"}
           </Button>
         </form>
       </section>

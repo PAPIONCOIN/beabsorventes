@@ -34,6 +34,7 @@ const customerSchema = z.object({
   city: z.string().trim().optional().default(""),
   state: z.string().trim().optional().default(""),
   source: z.enum(["cadastro", "checkout"]).optional().default("cadastro"),
+  password: z.string().min(6).optional(),
 });
 
 function expectedPassword() {
@@ -127,6 +128,9 @@ export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
       updated_at timestamptz not null default now()
     )
   `;
+  await sql`alter table customers add column if not exists password_hash text not null default ''`;
+  await sql`alter table customers add column if not exists reset_token_hash text not null default ''`;
+  await sql`alter table customers add column if not exists reset_expires timestamptz`;
   const rows = await sql<Parameters<typeof mapRow>[0]>`
     insert into customers (
       email, name, phone, cep, street, number, complement, neighborhood, city, state, source, updated_at
@@ -159,6 +163,10 @@ export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
     returning *
   `;
   const row = rows[0];
+  if (row && data.password) {
+    const { setPasswordForEmail } = await import("@/lib/customer-auth");
+    await setPasswordForEmail(data.email, data.password);
+  }
   return row ? mapRow(row) : null;
 }
 
