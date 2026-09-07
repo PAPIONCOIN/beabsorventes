@@ -4,21 +4,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
-import { requestPasswordReset } from "@/lib/customer-auth";
+import { resetPasswordWithIdentity } from "@/lib/customer-auth";
+import { formatCpf, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/conta/recuperar")({ component: Recuperar });
 
 function Recuperar() {
   const [email, setEmail] = useState("");
+  const [document, setDocument] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (password.length < 6) {
+      setError("A senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("As senhas não coincidem.");
+      return;
+    }
     setBusy(true);
+    setError("");
     try {
-      await requestPasswordReset({ data: { email } });
+      const result = await resetPasswordWithIdentity({
+        data: { email, document, phone, password },
+      });
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
       setDone(true);
+    } catch {
+      setError("Não foi possível salvar agora.");
     } finally {
       setBusy(false);
     }
@@ -34,18 +57,16 @@ function Recuperar() {
       {done ? (
         <>
           <p className="mt-4 text-sm leading-relaxed text-muted">
-            Se este e-mail estiver cadastrado, enviamos um link para criar uma
-            nova senha. No primeiro envio, pode chegar um pedido de confirmação
-            do FormSubmit — abra e confirme.
+            Senha atualizada. Entre com o e-mail e a nova senha.
           </p>
           <Button asChild className="mt-8">
-            <Link to="/conta">Voltar ao login</Link>
+            <Link to="/conta">Entrar</Link>
           </Button>
         </>
       ) : (
         <>
           <p className="mt-3 text-sm text-muted">
-            Informe o e-mail do cadastro. Você recebe um link para criar outra
+            Confirme o e-mail e o CPF ou o WhatsApp do cadastro e crie uma nova
             senha.
           </p>
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -59,8 +80,49 @@ function Recuperar() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="recuperar-cpf">CPF</Label>
+              <Input
+                id="recuperar-cpf"
+                inputMode="numeric"
+                value={document}
+                onChange={(e) => setDocument(formatCpf(e.target.value))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="recuperar-phone">WhatsApp</Label>
+              <Input
+                id="recuperar-phone"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(formatPhone(e.target.value))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="recuperar-senha">Nova senha</Label>
+              <Input
+                id="recuperar-senha"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="recuperar-confirm">Confirmar senha</Label>
+              <Input
+                id="recuperar-confirm"
+                type="password"
+                required
+                minLength={6}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+              />
+            </div>
+            {error ? <p className="text-sm text-primary">{error}</p> : null}
             <Button type="submit" className="w-full" size="lg" disabled={busy}>
-              {busy ? "Enviando…" : "Enviar link"}
+              {busy ? "Salvando…" : "Salvar nova senha"}
             </Button>
           </form>
         </>

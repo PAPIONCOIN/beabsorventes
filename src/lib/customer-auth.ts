@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { getCustomerByEmail } from "@/lib/customers";
+import { digitsOnly } from "@/lib/utils";
 
 const scrypt = promisify(scryptCb);
 
@@ -137,4 +138,43 @@ export const resetPasswordWithToken = createServerFn({ method: "POST" })
     }
     await setPasswordForEmail(email, data.password);
     return { ok: true as const };
+  });
+
+export const resetPasswordWithIdentity = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      email: z.string().trim().email(),
+      document: z.string().trim().optional().default(""),
+      phone: z.string().trim().optional().default(""),
+      password: z.string().min(6),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const email = data.email.trim().toLowerCase();
+    const customer = await getCustomerByEmail(email).catch(() => null);
+    if (!customer) {
+      return { ok: false as const, message: "E-mail ou dados não conferem." };
+    }
+    const cpf = digitsOnly(data.document);
+    const phone = digitsOnly(data.phone);
+    const storedCpf = digitsOnly(customer.document);
+    const storedPhone = digitsOnly(customer.phone);
+    const cpfOk = cpf.length === 11 && storedCpf.length === 11 && cpf === storedCpf;
+    const phoneOk =
+      phone.length >= 10 &&
+      storedPhone.length >= 10 &&
+      phone.slice(-10) === storedPhone.slice(-10);
+    if (!cpfOk && !phoneOk) {
+      return {
+        ok: false as const,
+        message: "Informe o CPF ou o WhatsApp do cadastro.",
+      };
+    }
+    try {
+      await setPasswordForEmail(email, data.password);
+      return { ok: true as const };
+    } catch (error) {
+      console.error("[auth] reset", error);
+      return { ok: false as const, message: "Não foi possível salvar a senha agora." };
+    }
   });
