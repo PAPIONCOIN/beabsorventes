@@ -28,6 +28,7 @@ import {
   type ShopOrder,
 } from "@/lib/shop-orders";
 import { listContactMessages, type ContactMessage } from "@/lib/contact";
+import { testMelhorEnvioQuote } from "@/lib/shipping";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -87,6 +88,8 @@ function Admin() {
   const [sending, setSending] = useState<string | null>(null);
   const [pulling, setPulling] = useState(false);
   const [pullNote, setPullNote] = useState("");
+  const [quoteNote, setQuoteNote] = useState("");
+  const [quoting, setQuoting] = useState(false);
   const [shipError, setShipError] = useState("");
   const [shipDocs, setShipDocs] = useState<Record<string, string>>({});
   const [trackCodes, setTrackCodes] = useState<Record<string, string>>({});
@@ -333,7 +336,41 @@ function Admin() {
             >
               {pulling ? "Puxando…" : "Puxar do Melhor Envio"}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={quoting}
+              onClick={async () => {
+                setQuoting(true);
+                setQuoteNote("");
+                setShipError("");
+                try {
+                  const result = await testMelhorEnvioQuote();
+                  if (!result.ok) {
+                    setShipError(result.message);
+                    return;
+                  }
+                  setQuoteNote(
+                    result.quotes
+                      .slice(0, 3)
+                      .map(
+                        (quote) =>
+                          `${quote.company} ${quote.name} ${formatBRL(quote.priceCents)} · ${quote.days} dias`,
+                      )
+                      .join(" · "),
+                  );
+                } catch {
+                  setShipError("Não foi possível cotar no Melhor Envio agora.");
+                } finally {
+                  setQuoting(false);
+                }
+              }}
+            >
+              {quoting ? "Cotando…" : "Testar cotação Melhor Envio"}
+            </Button>
             {pullNote ? <p className="text-sm text-muted">{pullNote}</p> : null}
+            {quoteNote ? <p className="text-sm text-muted">{quoteNote}</p> : null}
           </div>
         </div>
       ) : null}

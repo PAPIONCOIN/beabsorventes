@@ -21,6 +21,7 @@ export function FreightQuote({
   const [quotes, setQuotes] = useState<QuotedShipping[]>([]);
   const [picked, setPicked] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [fromMe, setFromMe] = useState(false);
 
   const itemKey = items.map((item) => `${item.slug}:${item.qty}:${item.size}`).join("|");
 
@@ -41,6 +42,7 @@ export function FreightQuote({
     try {
       const result = await quoteShipping({ data: { cep: cepDigits, items } });
       setQuotes(result.quotes);
+      setFromMe(result.ready);
       setPicked(result.quotes[0]?.serviceId ?? null);
       onQuoted?.(cepDigits, result.quotes);
       if (result.quotes.length === 0) {
@@ -49,6 +51,7 @@ export function FreightQuote({
     } catch {
       setQuotes([]);
       setPicked(null);
+      setFromMe(false);
       setError("Não foi possível cotar agora. Tente de novo.");
     } finally {
       setQuoting(false);
@@ -59,7 +62,8 @@ export function FreightQuote({
     <div className="rounded-xl border border-border bg-surface p-4">
       <p className="text-sm font-medium">Calcular frete</p>
       <p className="mt-1 text-xs text-muted">
-        Postagem saindo de {ORIGIN_CEP_LABEL}, com valores do Melhor Envio
+        Postagem saindo de {ORIGIN_CEP_LABEL}
+        {fromMe ? ", com valores do Melhor Envio" : ", PAC e SEDEX"}
       </p>
       <div className="mt-3 flex items-end gap-2">
         <div className="min-w-0 flex-1 space-y-1.5">

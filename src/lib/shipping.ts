@@ -94,11 +94,44 @@ export const quoteShipping = createServerFn({ method: "POST" })
     const { ready, quotes } = await fetchShippingQuotes(data.cep, data.items);
     return {
       ready,
+      source: ready ? ("melhor-envio" as const) : ("tabela" as const),
       quotes: quotes.map((quote) => ({
         ...quote,
         payableCents: shippingPayable(subtotal, quote.priceCents),
       })),
     };
   });
+
+export const testMelhorEnvioQuote = createServerFn({ method: "POST" }).handler(async () => {
+  const { isAdmin } = await import("@/lib/customers");
+  const { getMelhorEnvioAccount } = await import("@/lib/melhor-envio");
+  if (!(await isAdmin())) {
+    return { ok: false as const, message: "Entre de novo.", quotes: [] as ShippingQuote[] };
+  }
+  const account = await getMelhorEnvioAccount();
+  if (!account.ready) {
+    return {
+      ok: false as const,
+      message:
+        "Token inválido. Em Integrações → Permissões de Acesso, gere um token e cadastre MELHOR_ENVIO_TOKEN na Vercel.",
+      quotes: [] as ShippingQuote[],
+    };
+  }
+  const quotes = await fetchMelhorEnvioQuotes("01310100", [
+    { slug: "ciclo-mini", printId: "padrao", size: "Único", qty: 1 },
+  ]);
+  if (quotes.length === 0) {
+    return {
+      ok: false as const,
+      message: "A API não devolveu cotação. Confira o token, as permissões de frete e o CEP de origem 11700-170.",
+      quotes: [] as ShippingQuote[],
+    };
+  }
+  return {
+    ok: true as const,
+    email: account.email,
+    quotes,
+  };
+});
 
 export { shippingPayable, FREE_SHIPPING_FROM };
