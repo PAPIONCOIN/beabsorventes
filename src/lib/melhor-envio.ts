@@ -144,19 +144,27 @@ async function destinationPlace(cep: string) {
   }
 }
 
-export async function fetchMelhorEnvioQuotes(
+const CALCULATE_UNAUTH =
+  "O token do Melhor Envio autenticou, mas não pode cotar. Gere um novo em Integrações → Permissões de Acesso com: Calcular fretes, Carrinho, Pedidos e Rastreio. Use esse token em MELHOR_ENVIO_TOKEN (não o Secret do aplicativo).";
+
+export async function fetchMelhorEnvioQuoteResult(
   destinationCep: string,
   items: CartLine[],
-): Promise<ShippingQuote[]> {
+): Promise<{ quotes: ShippingQuote[]; status: number; message?: string }> {
   const token = meToken();
   const origin = fromCep();
   const dest = asCep(destinationCep);
   const products = quoteProducts(items);
   if (!token) {
-    console.error("[melhor-envio] MELHOR_ENVIO_TOKEN ausente");
-    return [];
+    return {
+      quotes: [],
+      status: 401,
+      message: "MELHOR_ENVIO_TOKEN não está na Vercel.",
+    };
   }
-  if (origin.length !== 8 || dest.length !== 8 || products.length === 0) return [];
+  if (origin.length !== 8 || dest.length !== 8 || products.length === 0) {
+    return { quotes: [], status: 0 };
+  }
 
   const volume = packedBox(products);
   const attempts = [
@@ -179,18 +187,32 @@ export async function fetchMelhorEnvioQuotes(
     },
   ];
 
+  let lastStatus = 0;
   for (const body of attempts) {
     const result = await meFetch("/me/shipment/calculate", {
       method: "POST",
       body: JSON.stringify(body),
     });
+    lastStatus = result.status;
     const quotes = parseQuotes(result.data);
-    if (quotes.length > 0) return quotes;
+    if (quotes.length > 0) return { quotes, status: result.status };
+    if (result.status === 401 || result.status === 403) {
+      console.error("[melhor-envio] calculate", dest, result.status, "unauthorized");
+      return { quotes: [], status: result.status, message: CALCULATE_UNAUTH };
+    }
     if (!result.ok) {
       console.error("[melhor-envio] calculate", dest, result.status);
     }
   }
-  return [];
+  return { quotes: [], status: lastStatus };
+}
+
+export async function fetchMelhorEnvioQuotes(
+  destinationCep: string,
+  items: CartLine[],
+): Promise<ShippingQuote[]> {
+  const result = await fetchMelhorEnvioQuoteResult(destinationCep, items);
+  return result.quotes;
 }
 
 export function shippingPayable(subtotalCents: number, quoteCents: number) {

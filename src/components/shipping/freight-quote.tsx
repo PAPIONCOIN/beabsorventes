@@ -22,6 +22,7 @@ export function FreightQuote({
   const [picked, setPicked] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [fromMe, setFromMe] = useState(false);
+  const [meError, setMeError] = useState("");
 
   const itemKey = items.map((item) => `${item.slug}:${item.qty}:${item.size}`).join("|");
 
@@ -43,6 +44,7 @@ export function FreightQuote({
       const result = await quoteShipping({ data: { cep: cepDigits, items } });
       setQuotes(result.quotes);
       setFromMe(result.ready);
+      setMeError("meError" in result && result.meError ? result.meError : "");
       setPicked(result.quotes[0]?.serviceId ?? null);
       onQuoted?.(cepDigits, result.quotes);
       if (result.quotes.length === 0) {
@@ -52,6 +54,7 @@ export function FreightQuote({
       setQuotes([]);
       setPicked(null);
       setFromMe(false);
+      setMeError("");
       setError("Não foi possível cotar agora. Tente de novo.");
     } finally {
       setQuoting(false);
@@ -65,6 +68,11 @@ export function FreightQuote({
         Postagem saindo de {ORIGIN_CEP_LABEL}
         {fromMe ? ", com valores do Melhor Envio" : ", PAC e SEDEX"}
       </p>
+      {meError ? (
+        <p className="mt-2 text-xs text-primary">
+          Melhor Envio recusou o token. PAC/SEDEX pela tabela até gerar um token com permissão de cotar.
+        </p>
+      ) : null}
       <div className="mt-3 flex items-end gap-2">
         <div className="min-w-0 flex-1 space-y-1.5">
           <Label htmlFor={inputId}>CEP</Label>

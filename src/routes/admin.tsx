@@ -295,6 +295,10 @@ function Admin() {
               ? `Melhor Envio ligado${melhor.email ? ` · ${melhor.email}` : ""}.`
               : "Melhor Envio sem token. Cadastre MELHOR_ENVIO_TOKEN na Vercel."}
           </p>
+          <p className="mt-2 text-xs text-muted">
+            Se a cotação der 403, o token não tem “Calcular fretes”. Gere outro em
+            Integrações → Permissões de Acesso (não use o Secret do aplicativo).
+          </p>
           <a
             className="mt-3 inline-block underline-offset-2 hover:underline"
             href="https://melhorenvio.com.br/painel/carrinho"

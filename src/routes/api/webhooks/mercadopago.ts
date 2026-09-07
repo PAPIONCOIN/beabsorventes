@@ -62,7 +62,11 @@ export const Route = createFileRoute("/api/webhooks/mercadopago")({
           { headers: { Authorization: `Bearer ${token}` } },
         );
         if (!response.ok) {
-          console.error("[mp-webhook] payment", response.status, await response.text());
+          const detail = await response.text();
+          if (response.status === 404) {
+            return Response.json({ ok: true, ignored: true, reason: "payment_not_found" });
+          }
+          console.error("[mp-webhook] payment", response.status, detail);
           return Response.json({ ok: false }, { status: 502 });
         }
         const payment = (await response.json()) as MpPayment;

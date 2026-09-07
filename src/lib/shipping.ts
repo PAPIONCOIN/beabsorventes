@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getProduct } from "@/lib/products";
 import { fetchCorreiosQuotes } from "@/lib/correios";
 import {
-  fetchMelhorEnvioQuotes,
+  fetchMelhorEnvioQuoteResult,
   shippingPayable,
   type ShippingQuote,
 } from "@/lib/melhor-envio";
@@ -59,11 +59,15 @@ export function tableShippingQuotes(destinationCep: string): ShippingQuote[] {
 export async function fetchShippingQuotes(
   cep: string,
   items: z.infer<typeof itemSchema>[],
-): Promise<{ ready: boolean; quotes: ShippingQuote[] }> {
+): Promise<{ ready: boolean; quotes: ShippingQuote[]; meError?: string }> {
   const dest = cep.replace(/\D/g, "").slice(0, 8);
   try {
-    const melhor = await fetchMelhorEnvioQuotes(dest, items);
-    if (melhor.length > 0) return { ready: true, quotes: melhor };
+    const melhor = await fetchMelhorEnvioQuoteResult(dest, items);
+    if (melhor.quotes.length > 0) return { ready: true, quotes: melhor.quotes };
+    if (melhor.message) {
+      const fallback = tableShippingQuotes(dest);
+      return { ready: false, quotes: fallback, meError: melhor.message };
+    }
   } catch (error) {
     console.error("[shipping] melhor-envio", error);
   }
@@ -91,10 +95,11 @@ export const quoteShipping = createServerFn({ method: "POST" })
       return sum + (product ? product.priceCents * item.qty : 0);
     }, 0);
 
-    const { ready, quotes } = await fetchShippingQuotes(data.cep, data.items);
+    const { ready, quotes, meError } = await fetchShippingQuotes(data.cep, data.items);
     return {
       ready,
       source: ready ? ("melhor-envio" as const) : ("tabela" as const),
+      meError,
       quotes: quotes.map((quote) => ({
         ...quote,
         payableCents: shippingPayable(subtotal, quote.priceCents),
@@ -104,7 +109,7 @@ export const quoteShipping = createServerFn({ method: "POST" })
 
 export const testMelhorEnvioQuote = createServerFn({ method: "POST" }).handler(async () => {
   const { isAdmin } = await import("@/lib/customers");
-  const { getMelhorEnvioAccount } = await import("@/lib/melhor-envio");
+  const { getMelhorEnvioAccount, fetchMelhorEnvioQuoteResult } = await import("@/lib/melhor-envio");
   if (!(await isAdmin())) {
     return { ok: false as const, message: "Entre de novo.", quotes: [] as ShippingQuote[] };
   }
@@ -117,20 +122,22 @@ export const testMelhorEnvioQuote = createServerFn({ method: "POST" }).handler(a
       quotes: [] as ShippingQuote[],
     };
   }
-  const quotes = await fetchMelhorEnvioQuotes("01310100", [
+  const result = await fetchMelhorEnvioQuoteResult("01310100", [
     { slug: "ciclo-mini", printId: "padrao", size: "Único", qty: 1 },
   ]);
-  if (quotes.length === 0) {
+  if (result.quotes.length === 0) {
     return {
       ok: false as const,
-      message: "A API não devolveu cotação. Confira o token, as permissões de frete e o CEP de origem 11700-170.",
+      message:
+        result.message ||
+        "A API não devolveu cotação. Confira o token, as permissões de frete e o CEP de origem 11700-170.",
       quotes: [] as ShippingQuote[],
     };
   }
   return {
     ok: true as const,
     email: account.email,
-    quotes,
+    quotes: result.quotes,
   };
 });
 
