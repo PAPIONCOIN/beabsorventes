@@ -131,8 +131,8 @@ function ProductPage() {
 
           <dl className="mt-8 grid gap-2 border-t border-border pt-6 text-sm text-muted">
             <div className="flex justify-between gap-4">
-              <dt>Envio</dt>
-              <dd>em até {product.leadDays} dias úteis</dd>
+              <dt>Confecção</dt>
+              <dd>{product.leadDays} dias</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>Tecido</dt>
