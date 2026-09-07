@@ -16,6 +16,7 @@ import {
   type Customer,
 } from "@/lib/customers";
 import { formatCep, formatCpf, formatPhone, formatBRL } from "@/lib/utils";
+import { ORIGIN_CEP_LABEL } from "@/lib/origin-cep";
 import {
   adminSendToMelhorEnvio,
   getMelhorEnvioStatus,
@@ -274,11 +275,26 @@ function Admin() {
       </div>
 
       {melhor ? (
-        <p className={`mt-6 text-sm ${melhor.ready ? "text-muted" : "text-primary"}`}>
-          {melhor.ready
-            ? `Melhor Envio ligado${melhor.email ? ` · ${melhor.email}` : ""}.`
-            : "Melhor Envio sem token. Cadastre MELHOR_ENVIO_TOKEN na Vercel."}
-        </p>
+        <div className="mt-6 rounded-xl border border-border bg-surface p-5 text-sm">
+          <p className="font-medium">Sistema de frete</p>
+          <p className="mt-2 text-muted">
+            Origem {ORIGIN_CEP_LABEL} · Praia Grande/SP · cotação e etiqueta pelo
+            Melhor Envio.
+          </p>
+          <p className={`mt-2 ${melhor.ready ? "text-muted" : "text-primary"}`}>
+            {melhor.ready
+              ? `Melhor Envio ligado${melhor.email ? ` · ${melhor.email}` : ""}.`
+              : "Melhor Envio sem token. Cadastre MELHOR_ENVIO_TOKEN na Vercel."}
+          </p>
+          <a
+            className="mt-3 inline-block underline-offset-2 hover:underline"
+            href="https://melhorenvio.com.br/painel/carrinho"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Abrir carrinho do Melhor Envio
+          </a>
+        </div>
       ) : null}
 
       <Input
@@ -436,6 +452,16 @@ function Admin() {
                         ? "Enviando…"
                         : "Gerar envio no Melhor Envio"}
                   </Button>
+                  {order.meUuid ? (
+                    <a
+                      className="text-sm underline-offset-2 hover:underline"
+                      href="https://melhorenvio.com.br/painel/carrinho"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Abrir carrinho
+                    </a>
+                  ) : null}
                 </div>
                 {shipError ? (
                   <p className="mt-2 text-sm text-primary">{shipError}</p>

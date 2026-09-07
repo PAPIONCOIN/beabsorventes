@@ -513,6 +513,7 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
     trackingUrl: tracking
       ? `https://www.melhorrastreio.com.br/rastreio/${tracking}`
       : "",
+    cartUrl: "https://melhorenvio.com.br/painel/carrinho",
     status,
   };
 }

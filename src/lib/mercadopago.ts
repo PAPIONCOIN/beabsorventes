@@ -218,6 +218,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       address,
       shippingLabel: shipping.label,
       shippingServiceId: shipping.serviceId,
+      document: data.document ?? "",
     };
     await persistOrder({ ...orderRecord, status: token ? "pending" : "demo" });
 

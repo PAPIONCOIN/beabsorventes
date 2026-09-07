@@ -136,6 +136,10 @@ function Checkout() {
       toast.error("Informe o CPF para o envio.");
       return;
     }
+    if (!selected) {
+      toast.error("Informe o CEP e escolha o frete.");
+      return;
+    }
     setBusy(true);
     try {
       const result = await createMpCheckout({
@@ -273,6 +277,11 @@ function Checkout() {
           <div className="mt-3 space-y-2">
             {quoting ? (
               <p className="text-sm text-muted">Consultando prazos e valores…</p>
+            ) : null}
+            {!quoting && digitsOnly(form.cep).length === 8 && quotes.length === 0 ? (
+              <p className="text-sm text-primary">
+                Não encontramos frete para este CEP. Confira o número.
+              </p>
             ) : null}
             {quotes.map((quote) => {
               const active = (selected?.serviceId ?? null) === quote.serviceId;

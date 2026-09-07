@@ -53,6 +53,7 @@ export type PersistOrderInput = {
   address: ShopOrder["address"];
   shippingLabel?: string;
   shippingServiceId?: number;
+  document?: string;
 };
 
 const profileSchema = z.object({
@@ -126,6 +127,7 @@ async function ensureOrdersTable() {
   `;
   await sql`alter table orders add column if not exists shipping_service_id integer not null default 0`;
   await sql`alter table orders add column if not exists me_uuid text not null default ''`;
+  await sql`alter table orders add column if not exists document text not null default ''`;
   return sql;
 }
 
@@ -182,7 +184,7 @@ function mapOrder(row: {
     trackingUrl: row.tracking_url,
     shippingServiceId: row.shipping_service_id ?? 0,
     meUuid: row.me_uuid ?? "",
-    document: digitsOnly(row.customer_document || row.document || ""),
+    document: digitsOnly(row.document || row.customer_document || ""),
     createdAt: typeof row.created_at === "string" ? row.created_at : row.created_at.toISOString(),
   };
 }
@@ -218,12 +220,13 @@ export async function persistOrder(input: PersistOrderInput) {
     const sql = await ensureOrdersTable();
     await sql`
       insert into orders (
-        order_id, email, name, phone, status, payment, items, totals, address, shipping_label, shipping_service_id, updated_at
+        order_id, email, name, phone, document, status, payment, items, totals, address, shipping_label, shipping_service_id, updated_at
       ) values (
         ${input.orderId},
         ${input.email.trim().toLowerCase()},
         ${input.name},
         ${input.phone ?? ""},
+        ${digitsOnly(input.document ?? "")},
         ${input.status},
         ${input.payment},
         ${JSON.stringify(input.items)}::jsonb,
@@ -236,6 +239,7 @@ export async function persistOrder(input: PersistOrderInput) {
       on conflict (order_id) do update set
         name = excluded.name,
         phone = case when excluded.phone = '' then orders.phone else excluded.phone end,
+        document = case when excluded.document = '' then orders.document else excluded.document end,
         status = excluded.status,
         payment = excluded.payment,
         items = excluded.items,
@@ -488,7 +492,7 @@ export const listAdminOrders = createServerFn({ method: "GET" }).handler(async (
   try {
     const sql = await ensureOrdersTable();
     const rows = await sql<Parameters<typeof mapOrder>[0]>`
-      select o.*, coalesce(c.document, '') as customer_document
+      select o.*, coalesce(nullif(o.document, ''), c.document, '') as customer_document
       from orders o
       left join customers c on lower(c.email) = o.email
       order by o.created_at desc, o.id desc
