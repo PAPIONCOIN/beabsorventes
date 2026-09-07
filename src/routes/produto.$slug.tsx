@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
@@ -15,27 +15,39 @@ import {
 import { formatBRL } from "@/lib/utils";
 
 export const Route = createFileRoute("/produto/$slug")({
+  loader: ({ params }) => {
+    const product = getProduct(params.slug);
+    if (!product) throw notFound();
+    return product;
+  },
   component: ProductPage,
   notFoundComponent: () => (
     <div className="mx-auto max-w-lg px-4 py-20 text-center">
       <h1 className="font-display text-3xl italic">Peça não encontrada</h1>
       <p className="mt-3 text-muted">Essa peça saiu do catálogo.</p>
+      <Button asChild className="mt-6">
+        <Link to="/loja">Voltar à loja</Link>
+      </Button>
     </div>
   ),
 });
 
 function ProductPage() {
-  const { slug } = Route.useParams();
-  const product = getProduct(slug);
-  if (!product) throw notFound();
-
+  const product = Route.useLoaderData();
   const add = useCartStore((s) => s.add);
-  const [size] = useState<SizeId>(product.sizes[0] ?? "Único");
-  const [printId] = useState<PrintId>(product.prints[0] ?? "padrao");
+  const [size, setSize] = useState<SizeId>(product.sizes[0] ?? "Único");
+  const [printId, setPrintId] = useState<PrintId>(product.prints[0] ?? "padrao");
   const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState(product.image);
   const related = relatedProducts(product.slug);
   const parcel = Math.round(product.priceCents / 3);
+
+  useEffect(() => {
+    setSize(product.sizes[0] ?? "Único");
+    setPrintId(product.prints[0] ?? "padrao");
+    setQty(1);
+    setPhoto(product.image);
+  }, [product]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">

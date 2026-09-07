@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getProduct } from "@/lib/products";
+import { getProduct, type PrintId, type SizeId } from "@/lib/products";
 import { PIX_DISCOUNT, shippingFor } from "@/lib/utils";
 
 export type CartLine = {
@@ -14,12 +14,36 @@ export function lineKey(line: Pick<CartLine, "slug" | "printId" | "size">) {
   return `${line.slug}|${line.printId}|${line.size}`;
 }
 
+export function sanitizeLines(lines: CartLine[]): CartLine[] {
+  const next: CartLine[] = [];
+  for (const line of lines) {
+    const product = getProduct(line.slug);
+    if (!product) continue;
+    const printId = product.prints.includes(line.printId as PrintId)
+      ? line.printId
+      : (product.prints[0] ?? "padrao");
+    const size = product.sizes.includes(line.size as SizeId)
+      ? line.size
+      : (product.sizes[0] ?? "Único");
+    const qty = Math.min(20, Math.max(1, Math.floor(Number(line.qty) || 1)));
+    const existing = next.find(
+      (item) => item.slug === product.slug && item.printId === printId && item.size === size,
+    );
+    if (existing) {
+      existing.qty = Math.min(20, existing.qty + qty);
+    } else {
+      next.push({ slug: product.slug, printId, size, qty });
+    }
+  }
+  return next;
+}
+
 export function cartCount(lines: CartLine[]) {
-  return lines.reduce((n, line) => n + line.qty, 0);
+  return sanitizeLines(lines).reduce((n, line) => n + line.qty, 0);
 }
 
 export function cartSubtotal(lines: CartLine[]) {
-  return lines.reduce((sum, line) => {
+  return sanitizeLines(lines).reduce((sum, line) => {
     const product = getProduct(line.slug);
     return sum + (product ? product.priceCents * line.qty : 0);
   }, 0);
@@ -55,13 +79,14 @@ export const useCartStore = create<CartState>()(
       lines: [],
       isOpen: false,
       add: (line) => {
+        if (!getProduct(line.slug)) return;
         const qty = line.qty ?? 1;
         const lines = [...get().lines];
         const index = lines.findIndex((item) => sameLine(item, line));
         if (index >= 0) {
           const current = lines[index];
           if (current) {
-            lines[index] = { ...current, qty: current.qty + qty };
+            lines[index] = { ...current, qty: Math.min(20, current.qty + qty) };
           }
         } else {
           lines.push({
@@ -71,7 +96,7 @@ export const useCartStore = create<CartState>()(
             qty,
           });
         }
-        set({ lines, isOpen: true });
+        set({ lines: sanitizeLines(lines), isOpen: true });
       },
       setQty: (key, qty) => {
         if (qty <= 0) {
@@ -82,7 +107,7 @@ export const useCartStore = create<CartState>()(
         }
         set({
           lines: get().lines.map((item) =>
-            sameLine(item, key) ? { ...item, qty } : item,
+            sameLine(item, key) ? { ...item, qty: Math.min(20, qty) } : item,
           ),
         });
       },
@@ -99,6 +124,13 @@ export const useCartStore = create<CartState>()(
       name: "bea-cart",
       partialize: (state) => ({ lines: state.lines }),
       skipHydration: true,
+      merge: (persisted, current) => {
+        const stored = persisted as { lines?: CartLine[] } | undefined;
+        return {
+          ...current,
+          lines: sanitizeLines(stored?.lines ?? current.lines),
+        };
+      },
     },
   ),
 );

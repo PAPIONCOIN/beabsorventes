@@ -34,6 +34,8 @@ function Contato() {
     setBusy(true);
     const url = whatsappMessageUrl(form);
     setWhatsUrl(url);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setSent(true);
     try {
       await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
         method: "POST",
@@ -51,10 +53,8 @@ function Contato() {
         }),
       });
     } catch {
-      /* WhatsApp segue como canal principal */
+      /* WhatsApp já abriu */
     }
-    window.open(url, "_blank", "noopener,noreferrer");
-    setSent(true);
     setBusy(false);
   }
 

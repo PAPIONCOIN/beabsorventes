@@ -29,5 +29,5 @@ export function whatsappMessageUrl(input: {
     input.message,
   ].filter((line): line is string => line !== null);
 
-  return `${CONTACT_WHATSAPP}?text=${encodeURIComponent(lines.join("\n"))}`;
+  return `https://api.whatsapp.com/send?phone=${CONTACT_PHONE_E164}&text=${encodeURIComponent(lines.join("\n"))}`;
 }

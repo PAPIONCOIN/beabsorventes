@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   cartTotals,
+  sanitizeLines,
   useCartStore,
 } from "@/lib/cart-store";
 import { createMpCheckout, getMercadoPagoStatus } from "@/lib/mercadopago";
@@ -40,8 +41,8 @@ function Checkout() {
     void getMercadoPagoStatus().then((s) => setMpReady(s.ready));
   }, []);
 
-  async function lookupCep() {
-    const cep = digitsOnly(form.cep);
+  async function lookupCep(cepDigits?: string) {
+    const cep = cepDigits ?? digitsOnly(form.cep);
     if (cep.length !== 8) return;
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -75,7 +76,7 @@ function Checkout() {
           ...form,
           cep: digitsOnly(form.cep),
           payment,
-          items: lines,
+          items: sanitizeLines(lines),
         },
       });
       const items = result.items.map((item) => ({
@@ -178,9 +179,14 @@ function Checkout() {
         />
         <Field
           label="CEP"
+          inputMode="numeric"
+          autoComplete="postal-code"
           value={form.cep}
-          onChange={(v) => setForm({ ...form, cep: formatCep(v) })}
-          onBlur={lookupCep}
+          onChange={(v) => {
+            const cep = formatCep(v);
+            setForm((prev) => ({ ...prev, cep }));
+            if (digitsOnly(cep).length === 8) void lookupCep(digitsOnly(cep));
+          }}
         />
         <Field
           label="Rua"
@@ -276,18 +282,20 @@ function Field({
   label,
   value,
   onChange,
-  onBlur,
   type = "text",
   required = true,
+  inputMode,
+  autoComplete,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  onBlur?: () => void;
   type?: string;
   required?: boolean;
+  inputMode?: "numeric" | "tel" | "email" | "text";
+  autoComplete?: string;
 }) {
-  const id = label.toLowerCase();
+  const id = label.toLowerCase().replace(/\s+/g, "-");
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
@@ -296,8 +304,9 @@ function Field({
         type={type}
         required={required}
         value={value}
+        inputMode={inputMode}
+        autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
       />
     </div>
   );

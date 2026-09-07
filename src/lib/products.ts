@@ -315,8 +315,14 @@ export type QuizAnswers = {
 };
 
 export function recommendFromQuiz(answers: QuizAnswers): Product {
-  if (answers.night) return getProduct("noturno")!;
-  if (answers.flow === "intenso") return getProduct("ciclo-denso")!;
-  if (answers.flow === "medio") return getProduct("ciclo-principal")!;
-  return getProduct("ciclo-mini")!;
+  const pick =
+    (answers.night ? getProduct("noturno") : null) ??
+    (answers.flow === "intenso" ? getProduct("ciclo-denso") : null) ??
+    (answers.flow === "medio" ? getProduct("ciclo-principal") : null) ??
+    getProduct("ciclo-mini") ??
+    PRODUCTS[0];
+  if (!pick) {
+    throw new Error("Catálogo vazio");
+  }
+  return pick;
 }

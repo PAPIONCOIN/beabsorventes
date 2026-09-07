@@ -13,7 +13,7 @@ const itemSchema = z.object({
 const checkoutSchema = z.object({
   name: z.string().trim().min(2),
   email: z.string().trim().email(),
-  cep: z.string().min(8),
+  cep: z.string().regex(/^\d{8}$/),
   street: z.string().trim().min(2),
   number: z.string().trim().min(1),
   complement: z.string().trim(),
@@ -51,13 +51,12 @@ async function requestOrigin() {
 }
 
 function pricedItems(items: CartLine[]) {
-  return items.map((item) => {
+  const lines = [];
+  for (const item of items) {
     const product = getProduct(item.slug);
-    if (!product) {
-      throw new Error("Peça indisponível no catálogo.");
-    }
+    if (!product) continue;
     const print = PRINTS[item.printId as keyof typeof PRINTS];
-    return {
+    lines.push({
       slug: item.slug,
       name: product.name,
       printId: item.printId,
@@ -65,8 +64,9 @@ function pricedItems(items: CartLine[]) {
       size: item.size,
       qty: item.qty,
       unitCents: product.priceCents,
-    };
-  });
+    });
+  }
+  return lines;
 }
 
 export const getMercadoPagoStatus = createServerFn({ method: "GET" }).handler(
@@ -79,6 +79,16 @@ export const createMpCheckout = createServerFn({ method: "POST" })
   .validator(checkoutSchema)
   .handler(async ({ data }) => {
     const lines = pricedItems(data.items);
+    if (lines.length === 0) {
+      return {
+        ok: false as const,
+        reason: "empty" as const,
+        orderId: newOrderId(),
+        items: [],
+        totals: cartTotals([], data.payment),
+        message: "Sua sacola tem peças que saíram do catálogo. Volte à loja e escolha de novo.",
+      };
+    }
     const totals = cartTotals(data.items, data.payment);
     const orderId = newOrderId();
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;

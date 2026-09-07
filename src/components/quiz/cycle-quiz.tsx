@@ -25,8 +25,9 @@ const STEPS = [
 ];
 
 export function CycleQuiz() {
-  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<QuizAnswers>>({});
+  const step =
+    answers.flow === undefined ? 0 : answers.night === undefined ? 1 : 2;
   const current = STEPS[step];
   const done = answers.flow !== undefined && answers.night !== undefined;
 
@@ -53,7 +54,6 @@ export function CycleQuiz() {
             variant="outline"
             onClick={() => {
               setAnswers({});
-              setStep(0);
             }}
           >
             Refazer
@@ -79,7 +79,6 @@ export function CycleQuiz() {
             className="h-11 rounded-md border border-border bg-surface px-4 text-left text-sm hover:border-fg"
             onClick={() => {
               setAnswers((prev) => ({ ...prev, [current.key]: option.value }));
-              setStep((n) => n + 1);
             }}
           >
             {option.label}

@@ -13,6 +13,17 @@ import appCss from "../styles.css?url";
 const APP_NAME = "Beabsorventes";
 
 export const Route = createRootRoute({
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-lg px-4 py-20 text-center">
+      <h1 className="font-display text-3xl italic">Página não encontrada</h1>
+      <p className="mt-3 text-muted">Esse endereço não existe na loja.</p>
+      <p className="mt-6">
+        <a href="/loja" className="text-primary underline-offset-4 hover:underline">
+          Ir para a loja
+        </a>
+      </p>
+    </div>
+  ),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
