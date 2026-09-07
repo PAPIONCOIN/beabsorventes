@@ -20,6 +20,7 @@ import { ORIGIN_CEP_LABEL } from "@/lib/origin-cep";
 import {
   adminSendToMelhorEnvio,
   adminSetTracking,
+  adminDeleteOrder,
   getMelhorEnvioStatus,
   listAdminOrders,
   orderStatusLabel,
@@ -27,7 +28,7 @@ import {
   refreshOrderTracking,
   type ShopOrder,
 } from "@/lib/shop-orders";
-import { listContactMessages, type ContactMessage } from "@/lib/contact";
+import { adminDeleteContactMessage, listContactMessages, type ContactMessage } from "@/lib/contact";
 import { diagnoseMelhorEnvio, testMelhorEnvioQuote } from "@/lib/shipping";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
@@ -142,6 +143,26 @@ function Admin() {
     if (editingId === customer.id) {
       setEditingId(null);
       setNewCustomer(EMPTY_CUSTOMER);
+    }
+    await load(true);
+  }
+
+  async function removeOrder(order: ShopOrder) {
+    if (!window.confirm(`Excluir a compra ${order.orderId}?`)) return;
+    const result = await adminDeleteOrder({ data: { orderId: order.orderId } });
+    if (!result.ok) {
+      setShipError(result.message);
+      return;
+    }
+    await load(true);
+  }
+
+  async function removeMessage(item: ContactMessage) {
+    if (!window.confirm(`Excluir a mensagem de ${item.name}?`)) return;
+    const result = await adminDeleteContactMessage({ data: { id: item.id } });
+    if (!result.ok) {
+      setAddError(result.message);
+      return;
     }
     await load(true);
   }
@@ -655,6 +676,16 @@ function Admin() {
                 {shipError ? (
                   <p className="mt-2 text-sm text-primary">{shipError}</p>
                 ) : null}
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void removeOrder(order)}
+                  >
+                    Excluir compra
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
@@ -686,6 +717,16 @@ function Admin() {
                   {item.topic}
                 </p>
                 <p className="mt-2 whitespace-pre-wrap text-sm">{item.message}</p>
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void removeMessage(item)}
+                  >
+                    Excluir mensagem
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

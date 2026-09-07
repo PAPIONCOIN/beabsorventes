@@ -534,6 +534,22 @@ export const listAdminOrders = createServerFn({ method: "GET" }).handler(async (
   }
 });
 
+export const adminDeleteOrder = createServerFn({ method: "POST" })
+  .validator(z.object({ orderId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    if (!(await isAdmin())) {
+      return { ok: false as const, message: "Entre de novo." };
+    }
+    try {
+      const sql = await ensureOrdersTable();
+      await sql`delete from orders where order_id = ${data.orderId}`;
+      return { ok: true as const };
+    } catch (error) {
+      console.error("[orders] delete", error);
+      return { ok: false as const, message: "Não foi possível excluir esta compra." };
+    }
+  });
+
 export async function sendPaidOrderToMelhorEnvio(orderId: string, extraDocument = "") {
   try {
     const sql = await ensureOrdersTable();

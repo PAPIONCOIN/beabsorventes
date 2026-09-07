@@ -175,3 +175,19 @@ export const listContactMessages = createServerFn({ method: "GET" }).handler(asy
     return { ok: true as const, messages: [] as ContactMessage[] };
   }
 });
+
+export const adminDeleteContactMessage = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.number().int().positive() }))
+  .handler(async ({ data }) => {
+    if (!(await isAdmin())) {
+      return { ok: false as const, message: "Entre de novo." };
+    }
+    try {
+      const sql = await ensureContactTable();
+      await sql`delete from contact_messages where id = ${data.id}`;
+      return { ok: true as const };
+    } catch (error) {
+      console.error("[contact] delete", error);
+      return { ok: false as const, message: "Não foi possível excluir esta mensagem." };
+    }
+  });
