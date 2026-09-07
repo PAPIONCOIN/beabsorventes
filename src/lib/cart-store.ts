@@ -49,10 +49,15 @@ export function cartSubtotal(lines: CartLine[]) {
   }, 0);
 }
 
-export function cartTotals(lines: CartLine[], payment: "pix" | "card") {
+export function cartTotals(
+  lines: CartLine[],
+  payment: "pix" | "card",
+  shippingCents?: number,
+) {
   const subtotal = cartSubtotal(lines);
   const discount = payment === "pix" ? Math.round(subtotal * PIX_DISCOUNT) : 0;
-  const shipping = shippingFor(subtotal);
+  const shipping =
+    shippingCents === undefined ? shippingFor(subtotal) : shippingCents;
   const total = Math.max(0, subtotal - discount + shipping);
   return { subtotal, discount, shipping, total };
 }

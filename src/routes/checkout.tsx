@@ -10,10 +10,11 @@ import {
   useCartStore,
 } from "@/lib/cart-store";
 import { createMpCheckout, getMercadoPagoStatus } from "@/lib/mercadopago";
+import { quoteShipping } from "@/lib/melhor-envio";
 import { saveLastOrder } from "@/lib/orders";
 import { getProduct } from "@/lib/products";
 import { BrandMark } from "@/components/logo";
-import { digitsOnly, formatBRL, formatCep } from "@/lib/utils";
+import { digitsOnly, formatBRL, formatCep, FREE_SHIPPING_FROM } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkout")({ component: Checkout });
 
@@ -22,7 +23,20 @@ function Checkout() {
   const lines = useCartStore((s) => s.lines);
   const clear = useCartStore((s) => s.clear);
   const [payment, setPayment] = useState<"pix" | "card">("pix");
-  const totals = cartTotals(lines, payment);
+  const [quotes, setQuotes] = useState<
+    {
+      serviceId: number;
+      name: string;
+      company: string;
+      priceCents: number;
+      days: number;
+      payableCents: number;
+    }[]
+  >([]);
+  const [serviceId, setServiceId] = useState<number | null>(null);
+  const [quoting, setQuoting] = useState(false);
+  const selected = quotes.find((quote) => quote.serviceId === serviceId) ?? quotes[0];
+  const totals = cartTotals(lines, payment, selected?.payableCents);
   const [mpReady, setMpReady] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
@@ -41,9 +55,27 @@ function Checkout() {
     void getMercadoPagoStatus().then((s) => setMpReady(s.ready));
   }, []);
 
+  async function loadQuotes(cep: string) {
+    if (cep.length !== 8 || lines.length === 0) return;
+    setQuoting(true);
+    try {
+      const result = await quoteShipping({
+        data: { cep, items: sanitizeLines(lines) },
+      });
+      setQuotes(result.quotes);
+      setServiceId(result.quotes[0]?.serviceId ?? null);
+    } catch {
+      setQuotes([]);
+      setServiceId(null);
+    } finally {
+      setQuoting(false);
+    }
+  }
+
   async function lookupCep(cepDigits?: string) {
     const cep = cepDigits ?? digitsOnly(form.cep);
     if (cep.length !== 8) return;
+    void loadQuotes(cep);
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = (await res.json()) as {
@@ -77,6 +109,7 @@ function Checkout() {
           cep: digitsOnly(form.cep),
           payment,
           items: sanitizeLines(lines),
+          shippingServiceId: serviceId ?? undefined,
         },
       });
       const items = result.items.map((item) => ({
@@ -229,6 +262,42 @@ function Checkout() {
           />
         </div>
         <fieldset>
+          <legend className="text-sm font-medium">Frete</legend>
+          <p className="mt-1 text-xs text-muted">
+            Cotação pelo Melhor Envio. Frete grátis a partir de {formatBRL(FREE_SHIPPING_FROM)}.
+          </p>
+          <div className="mt-3 space-y-2">
+            {quoting ? (
+              <p className="text-sm text-muted">Consultando prazos e valores…</p>
+            ) : null}
+            {quotes.map((quote) => {
+              const active = (selected?.serviceId ?? null) === quote.serviceId;
+              return (
+                <button
+                  key={quote.serviceId}
+                  type="button"
+                  onClick={() => setServiceId(quote.serviceId)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-md border px-4 py-3 text-left text-sm ${
+                    active ? "border-fg bg-fg text-bg" : "border-border bg-surface"
+                  }`}
+                >
+                  <span>
+                    <span className="block font-medium">
+                      {quote.company} {quote.name}
+                    </span>
+                    <span className={active ? "text-bg/80" : "text-muted"}>
+                      {quote.days} dia{quote.days === 1 ? "" : "s"} úteis
+                    </span>
+                  </span>
+                  <span className="shrink-0 tabular-nums">
+                    {quote.payableCents === 0 ? "Grátis" : formatBRL(quote.payableCents)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+        <fieldset>
           <legend className="text-sm font-medium">Pagamento</legend>
           <div className="mt-2 flex gap-2">
             {(["pix", "card"] as const).map((method) => (
@@ -270,7 +339,13 @@ function Checkout() {
           <Row label="Desconto" value={formatBRL(-totals.discount)} />
           <Row
             label="Frete"
-            value={totals.shipping === 0 ? "Grátis" : formatBRL(totals.shipping)}
+            value={
+              quoting
+                ? "…"
+                : totals.shipping === 0
+                  ? "Grátis"
+                  : formatBRL(totals.shipping)
+            }
           />
           <Row label="Total" value={formatBRL(totals.total)} strong />
         </dl>

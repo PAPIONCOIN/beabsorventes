@@ -3,6 +3,8 @@ import { z } from "zod";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { getProduct, PRINTS } from "@/lib/products";
 import { cartTotals, type CartLine } from "@/lib/cart-store";
+import { fetchMelhorEnvioQuotes, shippingPayable } from "@/lib/melhor-envio";
+import { shippingFor } from "@/lib/utils";
 
 const itemSchema = z.object({
   slug: z.string().min(1),
@@ -23,6 +25,7 @@ const checkoutSchema = z.object({
   state: z.string().trim().min(2).max(2),
   payment: z.enum(["pix", "card"]),
   items: z.array(itemSchema).min(1),
+  shippingServiceId: z.number().int().optional(),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
@@ -79,6 +82,31 @@ function pricedItems(items: CartLine[]) {
 
 type PricedLine = ReturnType<typeof pricedItems>[number];
 
+async function resolveShipping(
+  items: CartLine[],
+  cep: string,
+  serviceId: number | undefined,
+) {
+  const subtotal = cartTotals(items, "card", 0).subtotal;
+  try {
+    const quotes = await fetchMelhorEnvioQuotes(cep, items);
+    const chosen =
+      quotes.find((quote) => quote.serviceId === serviceId) ?? quotes[0];
+    if (chosen) {
+      return {
+        cents: shippingPayable(subtotal, chosen.priceCents),
+        label: `${chosen.company} ${chosen.name} · ${chosen.days} dia${chosen.days === 1 ? "" : "s"} úteis`,
+      };
+    }
+  } catch (error) {
+    console.error("[shipping]", error);
+  }
+  return {
+    cents: shippingFor(subtotal),
+    label: "Correios PAC",
+  };
+}
+
 async function notifyMerchant(input: {
   orderId: string;
   name: string;
@@ -86,6 +114,7 @@ async function notifyMerchant(input: {
   payment: "pix" | "card";
   items: PricedLine[];
   totals: ReturnType<typeof cartTotals>;
+  shippingLabel: string;
   address: {
     cep: string;
     street: string;
@@ -132,9 +161,9 @@ async function notifyMerchant(input: {
         Pagamento: input.payment === "pix" ? "PIX (5% de desconto)" : "Cartão em até 3×",
         Endereco: address,
         Itens: itemsText,
+        Frete: `${input.shippingLabel} — ${input.totals.shipping === 0 ? "Grátis" : money(input.totals.shipping)}`,
         Subtotal: money(input.totals.subtotal),
         Desconto: money(input.totals.discount),
-        Frete: input.totals.shipping === 0 ? "Grátis" : money(input.totals.shipping),
         Total: money(input.totals.total),
       }),
     });
@@ -162,11 +191,16 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         reason: "empty" as const,
         orderId: newOrderId(),
         items: [],
-        totals: cartTotals([], data.payment),
+        totals: cartTotals([], data.payment, 0),
         message: "Sua sacola tem peças que saíram do catálogo. Volte à loja e escolha de novo.",
       };
     }
-    const totals = cartTotals(data.items, data.payment);
+    const shipping = await resolveShipping(
+      data.items,
+      data.cep,
+      data.shippingServiceId,
+    );
+    const totals = cartTotals(data.items, data.payment, shipping.cents);
     const orderId = newOrderId();
     const address = {
       cep: data.cep,
@@ -188,6 +222,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         items: lines,
         totals,
         address,
+        shippingLabel: shipping.label,
         status: "demonstracao",
       });
       return {
@@ -251,6 +286,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         payment: data.payment,
         items: itemSummary,
         address: `${data.street}, ${data.number} — ${data.neighborhood}, ${data.city}/${data.state} CEP ${data.cep}`,
+        shipping: shipping.label,
       },
     };
 
@@ -304,6 +340,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       items: lines,
       totals,
       address,
+      shippingLabel: shipping.label,
       status: "pago_pendente",
     });
 
