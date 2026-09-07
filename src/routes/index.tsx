@@ -156,7 +156,7 @@ function Home() {
                 src={product.image}
                 alt={product.name}
                 className="aspect-square rounded-lg"
-                imgClassName="p-3 sm:p-4"
+                imgClassName="p-0"
               />
               <p className="mt-2 font-display text-xl italic leading-tight">
                 {product.shortName}

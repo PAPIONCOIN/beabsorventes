@@ -52,7 +52,7 @@ function Sobre() {
           </Button>
         </div>
         <ProductPhoto
-          src="/images/products/pad-3.jpg"
+          src="/images/about.jpg"
           alt="Absorvente reutilizável de tecido beabsorventes"
           className="aspect-square rounded-lg"
         />
