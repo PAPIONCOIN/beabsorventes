@@ -70,6 +70,8 @@ async function isAdmin() {
   return Boolean(value) && equal(value, signedToken());
 }
 
+export { isAdmin };
+
 function mapRow(row: {
   id: number;
   email: string;

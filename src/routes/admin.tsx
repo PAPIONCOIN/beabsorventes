@@ -13,7 +13,12 @@ import {
   registerCustomer,
   type Customer,
 } from "@/lib/customers";
-import { formatCep, formatPhone } from "@/lib/utils";
+import { formatCep, formatPhone, formatBRL } from "@/lib/utils";
+import {
+  listAdminOrders,
+  orderStatusLabel,
+  type ShopOrder,
+} from "@/lib/shop-orders";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -50,6 +55,7 @@ function Admin() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [postgres, setPostgres] = useState<boolean | null>(null);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
@@ -66,7 +72,12 @@ function Admin() {
     if (!sessionOk) return;
     const result = await listCustomers();
     if (result.ok) setCustomers(result.customers);
-    else setAuthed(false);
+    else {
+      setAuthed(false);
+      return;
+    }
+    const purchases = await listAdminOrders();
+    if (purchases.ok) setOrders(purchases.orders);
   }
 
   useEffect(() => {
@@ -91,6 +102,27 @@ function Admin() {
         .includes(q),
     );
   }, [customers, query]);
+
+  const filteredOrders = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return orders;
+    return orders.filter((order) =>
+      [
+        order.orderId,
+        order.name,
+        order.email,
+        order.phone,
+        order.status,
+        order.tracking,
+        order.items.map((item) => item.name).join(" "),
+        order.address.city,
+        order.address.state,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [orders, query]);
 
   async function onLogin(event: React.FormEvent) {
     event.preventDefault();
@@ -165,10 +197,10 @@ function Admin() {
           <p className="text-xs font-medium tracking-wide text-primary uppercase">
             Administração
           </p>
-          <h1 className="mt-3 font-display text-4xl italic">Clientes</h1>
+          <h1 className="mt-3 font-display text-4xl italic">Pedidos e clientes</h1>
           <p className="mt-2 text-sm text-muted">
-            {customers.length} cadastro{customers.length === 1 ? "" : "s"} ·
-            compras e formulário da loja
+            {orders.length} compra{orders.length === 1 ? "" : "s"} · {customers.length}{" "}
+            cadastro{customers.length === 1 ? "" : "s"}
           </p>
         </div>
         <Button
@@ -177,6 +209,7 @@ function Admin() {
             await adminLogout();
             setAuthed(false);
             setCustomers([]);
+            setOrders([]);
           }}
         >
           Sair
@@ -185,7 +218,7 @@ function Admin() {
 
       <Input
         className="mt-8 max-w-md"
-        placeholder="Buscar por nome, e-mail, telefone ou cidade"
+        placeholder="Buscar por nome, e-mail, pedido ou cidade"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
@@ -211,6 +244,80 @@ function Admin() {
           </p>
         </div>
       ) : null}
+
+      <section className="mt-10">
+        <h2 className="font-display text-3xl italic">Compras</h2>
+        {filteredOrders.length === 0 ? (
+          <p className="mt-4 text-sm text-muted">
+            Nenhuma compra encontrada. Os pedidos feitos depois do banco ligado
+            aparecem aqui, com peças, valor e situação.
+          </p>
+        ) : (
+          <ul className="mt-5 space-y-4">
+            {filteredOrders.map((order) => (
+              <li
+                key={order.orderId}
+                className="rounded-xl border border-border bg-surface p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs tracking-wide text-muted uppercase">
+                      {order.orderId}
+                    </p>
+                    <p className="mt-1 font-medium">{order.name}</p>
+                    <p className="mt-1 break-all text-sm text-muted">{order.email}</p>
+                    {order.phone ? (
+                      <p className="mt-1 text-sm tabular-nums">{order.phone}</p>
+                    ) : null}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">{orderStatusLabel(order.status)}</p>
+                    <p className="mt-1 tabular-nums">{formatBRL(order.totals.total)}</p>
+                    <p className="mt-1 text-xs text-muted">{formatDate(order.createdAt)}</p>
+                  </div>
+                </div>
+                <ul className="mt-4 space-y-1 text-sm text-muted">
+                  {order.items.map((item, index) => (
+                    <li key={`${order.orderId}-${index}`}>
+                      {item.qty}× {item.name}
+                      {item.size ? ` · ${item.size}` : ""}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-muted">
+                  {[
+                    order.shippingLabel,
+                    [order.address.street, order.address.number].filter(Boolean).join(", "),
+                    order.address.city && order.address.state
+                      ? `${order.address.city}/${order.address.state}`
+                      : "",
+                    order.address.cep,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                {order.tracking ? (
+                  <p className="mt-2 text-sm">
+                    Rastreio{" "}
+                    {order.trackingUrl ? (
+                      <a
+                        className="underline-offset-2 hover:underline"
+                        href={order.trackingUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {order.tracking}
+                      </a>
+                    ) : (
+                      order.tracking
+                    )}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <form
         className="mt-8 grid gap-3 rounded-xl border border-border bg-surface p-5 sm:grid-cols-2"
@@ -293,6 +400,8 @@ function Admin() {
           {adding ? "Salvando…" : "Salvar cliente"}
         </Button>
       </form>
+
+      <h2 className="mt-12 font-display text-3xl italic">Clientes</h2>
 
       {filtered.length === 0 ? (
         <p className="mt-10 text-muted">Nenhum cliente encontrado.</p>

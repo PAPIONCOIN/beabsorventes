@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getSql } from "@/lib/db";
 import {
   getCustomerByEmail,
+  isAdmin,
   upsertCustomer,
   type Customer,
 } from "@/lib/customers";
@@ -392,3 +393,19 @@ export const updateAccount = createServerFn({ method: "POST" })
       return { ok: false as const, message: "Não foi possível salvar agora." };
     }
   });
+
+export const listAdminOrders = createServerFn({ method: "GET" }).handler(async () => {
+  if (!(await isAdmin())) {
+    return { ok: false as const, orders: [] as ShopOrder[] };
+  }
+  try {
+    const sql = await ensureOrdersTable();
+    const rows = await sql<Parameters<typeof mapOrder>[0]>`
+      select * from orders order by created_at desc, id desc
+    `;
+    return { ok: true as const, orders: rows.map(mapOrder) };
+  } catch (error) {
+    console.error("[orders] admin list", error);
+    return { ok: true as const, orders: [] as ShopOrder[] };
+  }
+});
