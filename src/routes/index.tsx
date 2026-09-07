@@ -31,7 +31,7 @@ function Home() {
               Algodão orgânico · certificado GOTS
             </p>
             <h1 className="mt-3 font-display text-[2.15rem] leading-[1.08] italic sm:mt-4 sm:text-5xl lg:text-6xl">
-              O ciclo, com outro cuidado.
+              Seu ciclo, com outro cuidado.
             </h1>
             <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed text-muted sm:mt-5 sm:text-base">
               Absorventes reutilizáveis de tecido. Cinco modelos, camadas
