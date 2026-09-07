@@ -10,7 +10,7 @@ import {
 } from "@/lib/customers";
 import { digitsOnly } from "@/lib/utils";
 import { getPasswordHash, setPasswordForEmail, verifyPassword } from "@/lib/customer-auth";
-import { createMelhorEnvioShipment, fetchMelhorEnvioTracking, getMelhorEnvioAccount, trackingLink } from "@/lib/melhor-envio";
+import { createMelhorEnvioShipment, fetchMelhorEnvioTracking, getMelhorEnvioAccount, listMelhorEnvioShipments, trackingLink } from "@/lib/melhor-envio";
 
 const COOKIE = "bea_conta";
 
@@ -187,6 +187,14 @@ function mapOrder(row: {
     document: digitsOnly(row.document || row.customer_document || ""),
     createdAt: typeof row.created_at === "string" ? row.created_at : row.created_at.toISOString(),
   };
+}
+
+function mappedMeStatus(status: string, fallback: string) {
+  const key = status.replace(/^order\./, "").toLowerCase();
+  if (key === "delivered") return "delivered";
+  if (key === "posted" || key === "generated" || key === "released") return "posted";
+  if (key === "cancelled" || key === "canceled") return "cancelled";
+  return fallback;
 }
 
 export function orderStatusLabel(status: string) {
@@ -607,6 +615,31 @@ export const refreshOrderTracking = createServerFn({ method: "POST" })
         return { ok: false as const, message: "Entre na conta para atualizar." };
       }
       if (!order.meUuid) {
+        const listed = await listMelhorEnvioShipments();
+        const match = listed.find(
+          (item) => item.orderTag === order.orderId.toUpperCase() || item.email === order.email,
+        );
+        if (match?.id) {
+          await sql`
+            update orders set me_uuid = ${match.id}, updated_at = now()
+            where order_id = ${order.orderId}
+          `;
+          order.meUuid = match.id;
+          if (match.tracking) {
+            await updateOrderStatus(order.orderId, mappedMeStatus(match.status, order.status), {
+              tracking: match.tracking,
+              trackingUrl: match.trackingUrl,
+            });
+            return {
+              ok: true as const,
+              tracking: match.tracking,
+              trackingUrl: match.trackingUrl,
+              status: mappedMeStatus(match.status, order.status),
+            };
+          }
+        }
+      }
+      if (!order.meUuid) {
         return {
           ok: false as const,
           message: "Gere o envio no Melhor Envio para obter o rastreio.",
@@ -619,12 +652,7 @@ export const refreshOrderTracking = createServerFn({ method: "POST" })
           message: "Ainda não há código de rastreio neste envio.",
         };
       }
-      const mapped =
-        info.status === "delivered"
-          ? "delivered"
-          : info.status === "posted" || info.status === "generated"
-            ? "posted"
-            : order.status;
+      const mapped = mappedMeStatus(info.status, order.status);
       await updateOrderStatus(order.orderId, mapped, {
         tracking: info.tracking,
         trackingUrl: info.trackingUrl,
@@ -690,3 +718,53 @@ export const lookupPublicTracking = createServerFn({ method: "POST" })
       return { ok: false as const, message: "Não foi possível consultar agora." };
     }
   });
+
+export const pullFromMelhorEnvio = createServerFn({ method: "POST" }).handler(async () => {
+  if (!(await isAdmin())) {
+    return { ok: false as const, message: "Entre de novo.", updated: 0 };
+  }
+  try {
+    const shipments = await listMelhorEnvioShipments();
+    const sql = await ensureOrdersTable();
+    const rows = await sql<Parameters<typeof mapOrder>[0]>`
+      select o.*, coalesce(nullif(o.document, ''), c.document, '') as customer_document
+      from orders o
+      left join customers c on lower(c.email) = o.email
+      order by o.created_at desc
+    `;
+    const orders = rows.map(mapOrder);
+    let updated = 0;
+    for (const shipment of shipments) {
+      const match =
+        orders.find((order) => order.meUuid && order.meUuid === shipment.id) ??
+        orders.find((order) => shipment.orderTag && order.orderId.toUpperCase() === shipment.orderTag) ??
+        orders.find(
+          (order) =>
+            shipment.email &&
+            order.email === shipment.email &&
+            !order.tracking &&
+            (order.status === "paid" || order.status === "posted"),
+        );
+      if (!match) continue;
+      await sql`
+        update orders set
+          me_uuid = case when ${shipment.id} = '' then me_uuid else ${shipment.id} end,
+          tracking = case when ${shipment.tracking} = '' then tracking else ${shipment.tracking} end,
+          tracking_url = case when ${shipment.trackingUrl} = '' then tracking_url else ${shipment.trackingUrl} end,
+          status = case
+            when ${mappedMeStatus(shipment.status, "")} = '' then status
+            else ${mappedMeStatus(shipment.status, match.status)}
+          end,
+          updated_at = now()
+        where order_id = ${match.orderId}
+      `;
+      match.meUuid = shipment.id || match.meUuid;
+      if (shipment.tracking) match.tracking = shipment.tracking;
+      updated += 1;
+    }
+    return { ok: true as const, updated, found: shipments.length };
+  } catch (error) {
+    console.error("[orders] pull melhor-envio", error);
+    return { ok: false as const, message: "Não foi possível puxar o Melhor Envio.", updated: 0 };
+  }
+});

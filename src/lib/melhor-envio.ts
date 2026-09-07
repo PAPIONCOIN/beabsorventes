@@ -526,21 +526,110 @@ export function trackingLink(code: string) {
   return `https://www.melhorrastreio.com.br/rastreio/${tracking}`;
 }
 
+export type MelhorEnvioShipment = {
+  id: string;
+  tracking: string;
+  trackingUrl: string;
+  status: string;
+  protocol: string;
+  orderTag: string;
+  email: string;
+};
+
+function parseShipment(raw: unknown): MelhorEnvioShipment | null {
+  const rec = asObject(raw);
+  if (!rec) return null;
+  const id = asText(rec.id);
+  if (!id) return null;
+  const tags = Array.isArray(rec.tags) ? rec.tags : [];
+  let orderTag = "";
+  for (const tag of tags) {
+    const value =
+      typeof tag === "string"
+        ? tag
+        : asText((tag as { tag?: unknown }).tag);
+    if (value.toUpperCase().startsWith("BEA-")) {
+      orderTag = value.toUpperCase();
+    }
+  }
+  const to = asObject(rec.to) ?? {};
+  const tracking = asText(rec.tracking || rec.self_tracking);
+  return {
+    id,
+    tracking,
+    trackingUrl: tracking ? trackingLink(tracking) : asText(rec.tracking_url),
+    status: asText(rec.status).toLowerCase(),
+    protocol: asText(rec.protocol),
+    orderTag,
+    email: asText(to.email).toLowerCase(),
+  };
+}
+
+export async function listMelhorEnvioShipments() {
+  const paths = [
+    "/me/orders",
+    "/me/cart",
+    "/me/orders?status=Posted",
+    "/me/orders?status=Released",
+    "/me/orders?status=Delivered",
+  ];
+  const byId = new Map<string, MelhorEnvioShipment>();
+  for (const path of paths) {
+    const res = await meFetch(path);
+    for (const raw of asList(res.data)) {
+      const item = parseShipment(raw);
+      if (!item) continue;
+      const prev = byId.get(item.id);
+      if (!prev || (item.tracking && !prev.tracking)) byId.set(item.id, item);
+      else if (!prev) byId.set(item.id, item);
+    }
+  }
+  return [...byId.values()];
+}
+
+function trackingFromPayload(data: unknown, uuid: string) {
+  if (!data) return null;
+  if (Array.isArray(data)) {
+    return parseShipment(data.find((item) => asText(asObject(item)?.id) === uuid) ?? data[0]);
+  }
+  const rec = asObject(data);
+  if (!rec) return null;
+  if (rec[uuid]) return parseShipment(rec[uuid]);
+  if (asText(rec.id) === uuid || rec.tracking) return parseShipment(rec);
+  const nested = asObject(rec.data);
+  if (nested) return parseShipment(nested);
+  return null;
+}
+
 export async function fetchMelhorEnvioTracking(uuid: string) {
   if (!uuid) {
-    return { ok: false as const, tracking: "", trackingUrl: "", status: "" };
+    return { ok: false as const, tracking: "", trackingUrl: "", status: "", protocol: "" };
   }
+
   const info = await meFetch(`/me/orders/${uuid}`);
-  const data = asObject(info.data);
-  if (!info.ok || !data) {
-    return { ok: false as const, tracking: "", trackingUrl: "", status: "" };
+  let shipment = trackingFromPayload(info.data, uuid);
+
+  if (!shipment?.tracking) {
+    const track = await meFetch("/me/shipment/tracking", {
+      method: "POST",
+      body: JSON.stringify({ orders: [uuid] }),
+    });
+    shipment = trackingFromPayload(track.data, uuid) ?? shipment;
   }
-  const tracking = asText(data.tracking || data.self_tracking);
-  const status = asText(data.status);
+
+  if (!shipment?.tracking) {
+    const listed = await listMelhorEnvioShipments();
+    shipment = listed.find((item) => item.id === uuid) ?? shipment;
+  }
+
+  if (!shipment) {
+    return { ok: false as const, tracking: "", trackingUrl: "", status: "", protocol: "" };
+  }
   return {
     ok: true as const,
-    tracking,
-    trackingUrl: tracking ? trackingLink(tracking) : asText(data.tracking_url),
-    status,
+    tracking: shipment.tracking,
+    trackingUrl: shipment.trackingUrl,
+    status: shipment.status,
+    protocol: shipment.protocol,
   };
 }

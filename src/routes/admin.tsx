@@ -23,6 +23,7 @@ import {
   getMelhorEnvioStatus,
   listAdminOrders,
   orderStatusLabel,
+  pullFromMelhorEnvio,
   refreshOrderTracking,
   type ShopOrder,
 } from "@/lib/shop-orders";
@@ -84,6 +85,8 @@ function Admin() {
     null,
   );
   const [sending, setSending] = useState<string | null>(null);
+  const [pulling, setPulling] = useState(false);
+  const [pullNote, setPullNote] = useState("");
   const [shipError, setShipError] = useState("");
   const [shipDocs, setShipDocs] = useState<Record<string, string>>({});
   const [trackCodes, setTrackCodes] = useState<Record<string, string>>({});
@@ -297,6 +300,41 @@ function Admin() {
           >
             Abrir carrinho do Melhor Envio
           </a>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={pulling || !melhor.ready}
+              onClick={async () => {
+                setPulling(true);
+                setPullNote("");
+                setShipError("");
+                try {
+                  const result = await pullFromMelhorEnvio();
+                  if (!result.ok) {
+                    setShipError(result.message);
+                    return;
+                  }
+                  setPullNote(
+                    result.updated
+                      ? `${result.updated} pedido${result.updated === 1 ? "" : "s"} atualizado${result.updated === 1 ? "" : "s"} (${result.found} etiqueta${result.found === 1 ? "" : "s"} no Melhor Envio).`
+                      : result.found
+                        ? "Nenhum pedido da loja bateu com as etiquetas."
+                        : "Nenhuma etiqueta encontrada no Melhor Envio.",
+                  );
+                  await load(true);
+                } catch {
+                  setShipError("Não foi possível puxar o Melhor Envio agora.");
+                } finally {
+                  setPulling(false);
+                }
+              }}
+            >
+              {pulling ? "Puxando…" : "Puxar do Melhor Envio"}
+            </Button>
+            {pullNote ? <p className="text-sm text-muted">{pullNote}</p> : null}
+          </div>
         </div>
       ) : null}
 
