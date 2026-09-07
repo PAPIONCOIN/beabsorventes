@@ -12,9 +12,10 @@ import {
 import { createMpCheckout, getMercadoPagoStatus } from "@/lib/mercadopago";
 import { quoteShipping } from "@/lib/shipping";
 import { saveLastOrder } from "@/lib/orders";
+import { sendOrderMail } from "@/lib/order-mail";
 import { getProduct } from "@/lib/products";
 import { BrandMark } from "@/components/logo";
-import { digitsOnly, formatBRL, formatCep, FREE_SHIPPING_FROM } from "@/lib/utils";
+import { digitsOnly, formatBRL, formatCep, formatPhone, FREE_SHIPPING_FROM } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkout")({ component: Checkout });
 
@@ -42,6 +43,7 @@ function Checkout() {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    phone: "",
     cep: "",
     street: "",
     number: "",
@@ -107,6 +109,7 @@ function Checkout() {
         data: {
           ...form,
           cep: digitsOnly(form.cep),
+          phone: digitsOnly(form.phone),
           payment,
           items: sanitizeLines(lines),
           shippingServiceId: serviceId ?? undefined,
@@ -121,50 +124,63 @@ function Checkout() {
         qty: item.qty,
         unitCents: item.unitCents,
       }));
+      const shippingLabel =
+        "shippingLabel" in result && result.shippingLabel
+          ? result.shippingLabel
+          : selected
+            ? `${selected.company} ${selected.name}`
+            : "Correios";
+      const mailPayload = {
+        orderId: result.orderId,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        payment,
+        items,
+        totals: result.totals,
+        shippingLabel,
+        address: {
+          cep: form.cep,
+          street: form.street,
+          number: form.number,
+          complement: form.complement,
+          neighborhood: form.neighborhood,
+          city: form.city,
+          state: form.state,
+        },
+      };
       if (result.ok) {
         saveLastOrder({
-          orderId: result.orderId,
-          name: form.name,
-          email: form.email,
-          payment,
-          items,
-          totals: result.totals,
-          address: {
-            cep: form.cep,
-            street: form.street,
-            number: form.number,
-            complement: form.complement,
-            neighborhood: form.neighborhood,
-            city: form.city,
-            state: form.state,
-          },
+          ...mailPayload,
           createdAt: new Date().toISOString(),
           status: "pending",
         });
+        try {
+          await sendOrderMail({
+            ...mailPayload,
+            status: "Aguardando pagamento",
+          });
+        } catch (error) {
+          console.error("[order-mail]", error);
+        }
         clear();
         window.location.href = result.url;
         return;
       }
       if (result.reason === "missing_token") {
         saveLastOrder({
-          orderId: result.orderId,
-          name: form.name,
-          email: form.email,
-          payment,
-          items,
-          totals: result.totals,
-          address: {
-            cep: form.cep,
-            street: form.street,
-            number: form.number,
-            complement: form.complement,
-            neighborhood: form.neighborhood,
-            city: form.city,
-            state: form.state,
-          },
+          ...mailPayload,
           createdAt: new Date().toISOString(),
           status: "demo",
         });
+        try {
+          await sendOrderMail({
+            ...mailPayload,
+            status: "Teste (sem Mercado Pago)",
+          });
+        } catch (error) {
+          console.error("[order-mail]", error);
+        }
         clear();
         await navigate({ to: "/pedido", search: { status: "demo" } });
         return;
@@ -210,6 +226,13 @@ function Checkout() {
           type="email"
           value={form.email}
           onChange={(v) => setForm({ ...form, email: v })}
+        />
+        <Field
+          label="WhatsApp"
+          inputMode="tel"
+          autoComplete="tel"
+          value={form.phone}
+          onChange={(v) => setForm({ ...form, phone: formatPhone(v) })}
         />
         <Field
           label="CEP"

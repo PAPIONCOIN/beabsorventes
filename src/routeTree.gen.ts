@@ -19,6 +19,8 @@ import { Route as PedidoRouteImport } from './routes/pedido'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
+import { Route as ApiWebhooksMercadopagoRouteImport } from './routes/api/webhooks/mercadopago'
+import { Route as ApiWebhooksRastreioRouteImport } from './routes/api/webhooks/rastreio'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +72,16 @@ const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
   path: '/produto/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksMercadopagoRoute = ApiWebhooksMercadopagoRouteImport.update({
+  id: '/api/webhooks/mercadopago',
+  path: '/api/webhooks/mercadopago',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksRastreioRoute = ApiWebhooksRastreioRouteImport.update({
+  id: '/api/webhooks/rastreio',
+  path: '/api/webhooks/rastreio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +94,8 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/api/webhooks/mercadopago': typeof ApiWebhooksMercadopagoRoute
+  '/api/webhooks/rastreio': typeof ApiWebhooksRastreioRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +108,8 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/api/webhooks/mercadopago': typeof ApiWebhooksMercadopagoRoute
+  '/api/webhooks/rastreio': typeof ApiWebhooksRastreioRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +123,8 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/api/webhooks/mercadopago': typeof ApiWebhooksMercadopagoRoute
+  '/api/webhooks/rastreio': typeof ApiWebhooksRastreioRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +139,8 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/produto/$slug'
+    | '/api/webhooks/mercadopago'
+    | '/api/webhooks/rastreio'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +153,8 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/produto/$slug'
+    | '/api/webhooks/mercadopago'
+    | '/api/webhooks/rastreio'
   id:
     | '__root__'
     | '/'
@@ -145,6 +167,8 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/produto/$slug'
+    | '/api/webhooks/mercadopago'
+    | '/api/webhooks/rastreio'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +182,8 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
+  ApiWebhooksMercadopagoRoute: typeof ApiWebhooksMercadopagoRoute
+  ApiWebhooksRastreioRoute: typeof ApiWebhooksRastreioRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +258,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdutoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/mercadopago': {
+      id: '/api/webhooks/mercadopago'
+      path: '/api/webhooks/mercadopago'
+      fullPath: '/api/webhooks/mercadopago'
+      preLoaderRoute: typeof ApiWebhooksMercadopagoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/rastreio': {
+      id: '/api/webhooks/rastreio'
+      path: '/api/webhooks/rastreio'
+      fullPath: '/api/webhooks/rastreio'
+      preLoaderRoute: typeof ApiWebhooksRastreioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,6 +286,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
+  ApiWebhooksMercadopagoRoute: ApiWebhooksMercadopagoRoute,
+  ApiWebhooksRastreioRoute: ApiWebhooksRastreioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
