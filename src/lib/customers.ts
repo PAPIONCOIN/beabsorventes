@@ -10,6 +10,7 @@ export type Customer = {
   email: string;
   name: string;
   phone: string;
+  document: string;
   cep: string;
   street: string;
   number: string;
@@ -26,6 +27,7 @@ const customerSchema = z.object({
   name: z.string().trim().min(2),
   email: z.string().trim().email(),
   phone: z.string().trim().optional().default(""),
+  document: z.string().trim().optional().default(""),
   cep: z.string().trim().optional().default(""),
   street: z.string().trim().optional().default(""),
   number: z.string().trim().optional().default(""),
@@ -78,6 +80,7 @@ function mapRow(row: {
   email: string;
   name: string;
   phone: string;
+  document?: string;
   cep: string;
   street: string;
   number: string;
@@ -94,6 +97,7 @@ function mapRow(row: {
     email: row.email,
     name: row.name,
     phone: row.phone,
+    document: row.document ?? "",
     cep: row.cep,
     street: row.street,
     number: row.number,
@@ -131,13 +135,15 @@ export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
   await sql`alter table customers add column if not exists password_hash text not null default ''`;
   await sql`alter table customers add column if not exists reset_token_hash text not null default ''`;
   await sql`alter table customers add column if not exists reset_expires timestamptz`;
+  await sql`alter table customers add column if not exists document text not null default ''`;
   const rows = await sql<Parameters<typeof mapRow>[0]>`
     insert into customers (
-      email, name, phone, cep, street, number, complement, neighborhood, city, state, source, updated_at
+      email, name, phone, document, cep, street, number, complement, neighborhood, city, state, source, updated_at
     ) values (
       ${data.email.toLowerCase()},
       ${data.name},
       ${data.phone},
+      ${data.document.replace(/\D/g, "").slice(0, 11)},
       ${data.cep.replace(/\D/g, "").slice(0, 8)},
       ${data.street},
       ${data.number},
@@ -151,6 +157,7 @@ export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
     on conflict (email) do update set
       name = excluded.name,
       phone = case when excluded.phone = '' then customers.phone else excluded.phone end,
+      document = case when excluded.document = '' then customers.document else excluded.document end,
       cep = case when excluded.cep = '' then customers.cep else excluded.cep end,
       street = case when excluded.street = '' then customers.street else excluded.street end,
       number = case when excluded.number = '' then customers.number else excluded.number end,

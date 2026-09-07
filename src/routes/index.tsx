@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/accordion";
 import { FAQS, PRODUCTS, featuredProducts } from "@/lib/products";
 import { formatBRL } from "@/lib/utils";
+import { useShopSession } from "@/lib/use-shop-session";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -20,6 +21,7 @@ function Home() {
   const featured = featuredProducts().filter((p) => p.category !== "kit");
   const kit = PRODUCTS.find((p) => p.slug === "kit-4");
   const pads = PRODUCTS.filter((p) => p.category === "pad");
+  const session = useShopSession();
 
   return (
     <div>
@@ -34,7 +36,9 @@ function Home() {
           <div className="relative mx-auto w-full max-w-6xl">
             <BrandMark className="mb-4 size-16 sm:size-20 lg:size-24" />
             <p className="text-xs font-medium tracking-[0.14em] text-primary uppercase sm:text-sm sm:tracking-[0.16em]">
-              Algodão orgânico · certificado GOTS
+              {session.ok && session.firstName
+                ? `Olá, ${session.firstName}`
+                : "Algodão orgânico · certificado GOTS"}
             </p>
             <h1 className="mt-3 max-w-xl font-display text-[1.85rem] leading-[1.12] italic sm:mt-4 sm:text-5xl lg:text-6xl">
               Seu ciclo, com outro cuidado.

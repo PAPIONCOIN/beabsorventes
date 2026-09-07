@@ -4,6 +4,7 @@ export type CustomerMailInput = {
   name: string;
   email: string;
   phone?: string;
+  document?: string;
   cep?: string;
   street?: string;
   number?: string;
@@ -33,6 +34,7 @@ export async function sendCustomerMail(input: CustomerMailInput) {
   body.append("Nome", input.name);
   body.append("Email", input.email);
   body.append("WhatsApp", input.phone?.trim() || "não informado");
+  body.append("CPF", input.document?.trim() || "não informado");
   body.append("Endereco", endereco || "não informado");
   body.append("CEP", input.cep?.trim() || "—");
   body.append("Rua", input.street?.trim() || "—");

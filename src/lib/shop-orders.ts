@@ -64,6 +64,7 @@ const profileSchema = z.object({
   neighborhood: z.string().trim().optional().default(""),
   city: z.string().trim().optional().default(""),
   state: z.string().trim().optional().default(""),
+  document: z.string().trim().optional().default(""),
 });
 
 function cookieSecret() {
@@ -420,6 +421,17 @@ export const getAccount = createServerFn({ method: "GET" }).handler(async () => 
   return { ok: true as const, customer, orders, hasPassword };
 });
 
+export const getShopSession = createServerFn({ method: "GET" }).handler(async () => {
+  const email = await sessionEmail();
+  if (!email) return { ok: false as const, name: "", email: "" };
+  try {
+    const customer = await getCustomerByEmail(email);
+    return { ok: true as const, name: customer?.name || "", email };
+  } catch {
+    return { ok: true as const, name: "", email };
+  }
+});
+
 export const closeAccount = createServerFn({ method: "POST" }).handler(async () => {
   const { setCookie } = await import("@tanstack/react-start/server");
   setCookie(COOKIE, "", { path: "/", httpOnly: true, sameSite: "lax", maxAge: 0 });
@@ -481,7 +493,7 @@ export const listAdminOrders = createServerFn({ method: "GET" }).handler(async (
   }
 });
 
-export async function sendPaidOrderToMelhorEnvio(orderId: string, document = "") {
+export async function sendPaidOrderToMelhorEnvio(orderId: string, extraDocument = "") {
   try {
     const sql = await ensureOrdersTable();
     const rows = await sql<Parameters<typeof mapOrder>[0]>`
@@ -490,6 +502,11 @@ export async function sendPaidOrderToMelhorEnvio(orderId: string, document = "")
     const order = rows[0] ? mapOrder(rows[0]) : null;
     if (!order) return { ok: false as const, message: "Pedido não encontrado." };
     if (order.meUuid) return { ok: true as const, uuid: order.meUuid };
+    let document = extraDocument;
+    if (!document) {
+      const customer = await getCustomerByEmail(order.email).catch(() => null);
+      document = customer?.document ?? "";
+    }
     const result = await createMelhorEnvioShipment({
       orderId: order.orderId,
       serviceId: order.shippingServiceId,

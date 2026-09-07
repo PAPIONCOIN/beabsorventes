@@ -10,6 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cartCount, useCartStore } from "@/lib/cart-store";
+import { useShopSession } from "@/lib/use-shop-session";
 
 const NAV = [
   { to: "/loja", label: "Loja" },
@@ -25,6 +26,7 @@ export function SiteHeader() {
   const [menu, setMenu] = useState(false);
   const openCart = useCartStore((s) => s.open);
   const count = useCartStore((s) => cartCount(s.lines));
+  const session = useShopSession();
 
   return (
     <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
@@ -50,6 +52,14 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="flex items-center gap-1">
+            {session.ok && session.firstName ? (
+              <Link
+                to="/conta"
+                className="mr-1 hidden max-w-[9rem] truncate text-sm text-muted hover:text-fg sm:inline"
+              >
+                Olá, {session.firstName}
+              </Link>
+            ) : null}
             <Button
               type="button"
               variant="ghost"
@@ -96,6 +106,9 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
+            {session.ok && session.firstName ? (
+              <p className="px-2 pt-3 text-sm text-muted">Olá, {session.firstName}</p>
+            ) : null}
           </nav>
         </SheetContent>
       </Sheet>

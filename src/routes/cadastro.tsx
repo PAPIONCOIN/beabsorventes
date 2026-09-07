@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
 import { registerCustomer } from "@/lib/customers";
 import { sendCustomerMail } from "@/lib/customer-mail";
-import { digitsOnly, formatCep, formatPhone } from "@/lib/utils";
+import { openAccount } from "@/lib/shop-orders";
+import { digitsOnly, formatCep, formatCpf, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro")({ component: Cadastro });
 
@@ -18,6 +19,7 @@ function Cadastro() {
     name: "",
     email: "",
     phone: "",
+    document: "",
     cep: "",
     street: "",
     number: "",
@@ -67,10 +69,16 @@ function Cadastro() {
       setBusy(false);
       return;
     }
+    if (digitsOnly(form.document).length !== 11) {
+      setError("Informe um CPF com 11 números.");
+      setBusy(false);
+      return;
+    }
     const payload = {
       name: form.name,
       email: form.email,
       phone: form.phone,
+      document: form.document,
       cep: form.cep,
       street: form.street,
       number: form.number,
@@ -88,6 +96,7 @@ function Cadastro() {
           name: payload.name,
           email: payload.email,
           phone: payload.phone,
+          document: payload.document,
           cep: payload.cep,
           street: payload.street,
           number: payload.number,
@@ -103,6 +112,11 @@ function Cadastro() {
       }
       try {
         await registerCustomer({ data: payload });
+        try {
+          await openAccount({ data: { email: payload.email, password: payload.password } });
+        } catch {
+          /* login happens on /conta if this fails */
+        }
         mailed = true;
       } catch (error) {
         console.error("[cadastro-db]", error);
@@ -125,8 +139,8 @@ function Cadastro() {
         <BrandMark className="mx-auto mb-6 size-28" />
         <h1 className="font-display text-4xl italic">Cadastro feito</h1>
         <p className="mt-4 leading-relaxed text-muted">
-          Guardamos seus dados para facilitar os próximos pedidos. Quando quiser,
-          escolha as peças na loja.
+          Guardamos seus dados para facilitar os próximos pedidos. Você já está
+          na conta — o seu nome aparece no topo e na sacola.
         </p>
         <Button asChild className="mt-8">
           <Link to="/loja">Ir para a loja</Link>
@@ -144,7 +158,7 @@ function Cadastro() {
         Seja cliente beabsorventes
       </h1>
       <p className="mt-4 text-muted">
-        Preencha uma vez. Use este e-mail e senha para ver seus pedidos.
+        Preencha uma vez. Use este e-mail, senha e CPF para ver pedidos e gerar o envio.
       </p>
       <form onSubmit={onSubmit} className="mt-10 space-y-5">
         <Field
@@ -157,6 +171,12 @@ function Cadastro() {
           type="email"
           value={form.email}
           onChange={(value) => setForm({ ...form, email: value })}
+        />
+        <Field
+          label="CPF"
+          inputMode="numeric"
+          value={form.document}
+          onChange={(value) => setForm({ ...form, document: formatCpf(value) })}
         />
         <Field
           label="WhatsApp"

@@ -19,6 +19,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { BrandMark } from "@/components/logo";
+import { useShopSession } from "@/lib/use-shop-session";
 
 export function CartDrawer() {
   const isOpen = useCartStore((s) => s.isOpen);
@@ -29,6 +30,7 @@ export function CartDrawer() {
   const totals = cartTotals(lines, "card");
   const count = cartCount(lines);
   const [freight, setFreight] = useState(0);
+  const session = useShopSession();
 
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -36,9 +38,11 @@ export function CartDrawer() {
         <SheetHeader>
           <SheetTitle>Sacola</SheetTitle>
           <SheetDescription>
-            {count === 0
-              ? "Ainda vazia."
-              : `${count} ${count === 1 ? "peça" : "peças"}`}
+            {session.ok && session.firstName
+              ? `Olá, ${session.firstName}`
+              : count === 0
+                ? "Ainda vazia."
+                : `${count} ${count === 1 ? "peça" : "peças"}`}
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">

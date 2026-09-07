@@ -28,6 +28,7 @@ const checkoutSchema = z.object({
   state: z.string().trim().min(2).max(2),
   payment: z.enum(["pix", "card"]),
   phone: z.string().trim().optional(),
+  document: z.string().trim().optional(),
   items: z.array(itemSchema).min(1),
   shippingServiceId: z.number().int().optional(),
 });
@@ -185,6 +186,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         name: data.name,
         email: data.email,
         phone: data.phone ?? "",
+        document: data.document ?? "",
         cep: data.cep,
         street: data.street,
         number: data.number,

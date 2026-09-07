@@ -14,7 +14,7 @@ import {
   type ShopOrder,
 } from "@/lib/shop-orders";
 import { type Customer } from "@/lib/customers";
-import { digitsOnly, formatBRL, formatCep, formatPhone } from "@/lib/utils";
+import { digitsOnly, formatBRL, formatCep, formatCpf, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/conta")({ component: Conta });
 
@@ -38,6 +38,7 @@ function Conta() {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    document: "",
     cep: "",
     street: "",
     number: "",
@@ -54,6 +55,7 @@ function Conta() {
     setForm({
       name: next.customer?.name || fromOrder?.name || "",
       phone: next.customer?.phone || fromOrder?.phone || "",
+      document: formatCpf(next.customer?.document || ""),
       cep: formatCep(next.customer?.cep || fromOrder?.address.cep || ""),
       street: next.customer?.street || fromOrder?.address.street || "",
       number: next.customer?.number || fromOrder?.address.number || "",
@@ -319,6 +321,13 @@ function Conta() {
             label="Nome"
             value={form.name}
             onChange={(value) => setForm({ ...form, name: value })}
+          />
+          <Field
+            label="CPF"
+            required={false}
+            inputMode="numeric"
+            value={form.document}
+            onChange={(value) => setForm({ ...form, document: formatCpf(value) })}
           />
           <Field
             label="WhatsApp"

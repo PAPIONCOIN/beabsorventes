@@ -15,8 +15,9 @@ import { saveLastOrder } from "@/lib/orders";
 import { sendOrderMail } from "@/lib/order-mail";
 import { getProduct } from "@/lib/products";
 import { BrandMark } from "@/components/logo";
-import { digitsOnly, formatBRL, formatCep, formatPhone, FREE_SHIPPING_FROM } from "@/lib/utils";
+import { digitsOnly, formatBRL, formatCep, formatCpf, formatPhone, FREE_SHIPPING_FROM } from "@/lib/utils";
 import { ORIGIN_CEP_LABEL, readSavedCep, saveCep } from "@/lib/origin-cep";
+import { getAccount } from "@/lib/shop-orders";
 
 export const Route = createFileRoute("/checkout")({ component: Checkout });
 
@@ -45,6 +46,7 @@ function Checkout() {
     name: "",
     email: "",
     phone: "",
+    document: "",
     cep: "",
     street: "",
     number: "",
@@ -61,6 +63,27 @@ function Checkout() {
       setForm((prev) => ({ ...prev, cep: formatCep(saved) }));
       void lookupCep(saved);
     }
+    void getAccount().then((account) => {
+      if (!account.ok || !account.customer) return;
+      const customer = account.customer;
+      setForm((prev) => ({
+        ...prev,
+        name: customer.name || prev.name,
+        email: customer.email || prev.email,
+        phone: customer.phone ? formatPhone(customer.phone) : prev.phone,
+        document: customer.document ? formatCpf(customer.document) : prev.document,
+        cep: customer.cep ? formatCep(customer.cep) : prev.cep,
+        street: customer.street || prev.street,
+        number: customer.number || prev.number,
+        complement: customer.complement || prev.complement,
+        neighborhood: customer.neighborhood || prev.neighborhood,
+        city: customer.city || prev.city,
+        state: customer.state || prev.state,
+      }));
+      if (customer.cep && digitsOnly(customer.cep).length === 8) {
+        void lookupCep(digitsOnly(customer.cep));
+      }
+    });
   }, []);
 
   async function loadQuotes(cep: string) {
@@ -109,6 +132,10 @@ function Checkout() {
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (lines.length === 0) return;
+    if (digitsOnly(form.document).length !== 11) {
+      toast.error("Informe o CPF para o envio.");
+      return;
+    }
     setBusy(true);
     try {
       const result = await createMpCheckout({
@@ -116,6 +143,7 @@ function Checkout() {
           ...form,
           cep: digitsOnly(form.cep),
           phone: digitsOnly(form.phone),
+          document: digitsOnly(form.document),
           payment,
           items: sanitizeLines(lines),
           shippingServiceId: serviceId ?? undefined,
@@ -290,6 +318,12 @@ function Checkout() {
           autoComplete="tel"
           value={form.phone}
           onChange={(v) => setForm({ ...form, phone: formatPhone(v) })}
+        />
+        <Field
+          label="CPF"
+          inputMode="numeric"
+          value={form.document}
+          onChange={(v) => setForm({ ...form, document: formatCpf(v) })}
         />
         <Field
           label="Rua"

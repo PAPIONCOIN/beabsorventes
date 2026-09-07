@@ -13,7 +13,7 @@ import {
   registerCustomer,
   type Customer,
 } from "@/lib/customers";
-import { formatCep, formatPhone, formatBRL } from "@/lib/utils";
+import { formatCep, formatCpf, formatPhone, formatBRL } from "@/lib/utils";
 import {
   adminSendToMelhorEnvio,
   getMelhorEnvioStatus,
@@ -71,6 +71,7 @@ function Admin() {
     name: "",
     email: "",
     phone: "",
+    document: "",
     cep: "",
     city: "",
     state: "",
@@ -105,7 +106,7 @@ function Admin() {
     const q = query.trim().toLowerCase();
     if (!q) return customers;
     return customers.filter((customer) =>
-      [customer.name, customer.email, customer.phone, customer.city, customer.state, customer.street, customer.cep]
+      [customer.name, customer.email, customer.phone, customer.document, customer.city, customer.state, customer.street, customer.cep]
         .join(" ")
         .toLowerCase()
         .includes(q),
@@ -403,6 +404,7 @@ function Admin() {
               name: "",
               email: "",
               phone: "",
+              document: "",
               cep: "",
               city: "",
               state: "",
@@ -434,6 +436,13 @@ function Admin() {
           value={newCustomer.phone}
           onChange={(e) =>
             setNewCustomer({ ...newCustomer, phone: formatPhone(e.target.value) })
+          }
+        />
+        <Input
+          placeholder="CPF"
+          value={newCustomer.document}
+          onChange={(e) =>
+            setNewCustomer({ ...newCustomer, document: formatCpf(e.target.value) })
           }
         />
         <Input
@@ -481,6 +490,9 @@ function Admin() {
                 {customer.phone ? (
                   <p className="mt-1 text-sm">{customer.phone}</p>
                 ) : null}
+                {customer.document ? (
+                  <p className="mt-1 text-sm tabular-nums">{formatCpf(customer.document)}</p>
+                ) : null}
                 <p className="mt-2 text-xs text-muted">
                   {sourceLabel(customer.source)} · {formatDate(customer.createdAt)}
                 </p>
@@ -502,6 +514,7 @@ function Admin() {
                   <th className="py-3 pr-4 font-medium">Nome</th>
                   <th className="py-3 pr-4 font-medium">E-mail</th>
                   <th className="py-3 pr-4 font-medium">WhatsApp</th>
+                  <th className="py-3 pr-4 font-medium">CPF</th>
                   <th className="py-3 pr-4 font-medium">Endereço</th>
                   <th className="py-3 pr-4 font-medium">Origem</th>
                   <th className="py-3 font-medium">Desde</th>
@@ -513,6 +526,9 @@ function Admin() {
                     <td className="py-3 pr-4 font-medium">{customer.name}</td>
                     <td className="py-3 pr-4 break-all">{customer.email}</td>
                     <td className="py-3 pr-4 tabular-nums">{customer.phone || "—"}</td>
+                    <td className="py-3 pr-4 tabular-nums">
+                      {customer.document ? formatCpf(customer.document) : "—"}
+                    </td>
                     <td className="py-3 pr-4 text-muted">
                       {addressLine(customer) || "—"}
                     </td>
