@@ -48,7 +48,7 @@ export function SiteFooter() {
             Ateliê
           </p>
           <p className="text-muted">Envios para todo o Brasil.</p>
-          <p className="mt-1 text-muted">As peças saem em até 5 dias úteis.</p>
+          <p className="mt-1 text-muted">O tempo de confecção é de 5 dias.</p>
           <p className="mt-4">
             <a className="break-all text-muted hover:text-fg" href={`mailto:${CONTACT_EMAIL}`}>
               {CONTACT_EMAIL}

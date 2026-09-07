@@ -101,9 +101,9 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
       <p className="bg-primary px-3 py-2.5 text-center text-xs font-medium tracking-[0.08em] text-primary-fg uppercase sm:px-4 sm:tracking-[0.12em]">
-        <span className="sm:hidden">PIX 5% · 3 vezes sem juros · 5 dias úteis</span>
+        <span className="sm:hidden">PIX 5% · 3 vezes sem juros · confecção em 5 dias</span>
         <span className="hidden sm:inline">
-          5% de desconto no PIX · até 3 vezes sem juros · envio em 5 dias úteis
+          5% de desconto no PIX · até 3 vezes sem juros · tempo de confecção de 5 dias
         </span>
       </p>
       <div className="border-b border-border bg-bg/90 backdrop-blur-sm">

@@ -31,7 +31,7 @@ function Pedido() {
       <p className="mt-4 leading-relaxed text-muted">
         {status === "demo"
           ? "O Mercado Pago ainda não está ligado nesta hospedagem. Registramos o pedido para que você possa conferir o fluxo completo."
-          : "Enviamos um e-mail com o resumo. As peças saem do ateliê em até 5 dias úteis."}
+          : "Enviamos um e-mail com o resumo. O tempo de confecção é de 5 dias."}
       </p>
       {order ? (
         <div className="mt-8 rounded-xl bg-bg-warm p-6">

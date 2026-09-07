@@ -67,7 +67,7 @@ export const PRODUCTS: Product[] = [
       "1 camada absorvente e tecido impermeável",
       "Algodão orgânico com tingimento GOTS",
       "Fluxo leve, final do ciclo",
-      "Produção e envio em até 5 dias úteis",
+      "Tempo de confecção de 5 dias",
     ],
   },
   {
@@ -93,7 +93,7 @@ export const PRODUCTS: Product[] = [
       "2 camadas absorventes e tecido impermeável",
       "Parte posterior mais fina",
       "Fluxo leve, qualquer período",
-      "Produção e envio em até 5 dias úteis",
+      "Tempo de confecção de 5 dias",
     ],
   },
   {
@@ -122,7 +122,7 @@ export const PRODUCTS: Product[] = [
       "2 camadas absorventes e tecido impermeável",
       "Fluxo moderado, qualquer período",
       "Algodão orgânico com tingimento GOTS",
-      "Produção e envio em até 5 dias úteis",
+      "Tempo de confecção de 5 dias",
     ],
   },
   {
@@ -152,7 +152,7 @@ export const PRODUCTS: Product[] = [
       "3 camadas absorventes e tecido impermeável",
       "Fluxo intenso, qualquer período",
       "Algodão orgânico com tingimento GOTS",
-      "Produção e envio em até 5 dias úteis",
+      "Tempo de confecção de 5 dias",
     ],
   },
   {
@@ -182,7 +182,7 @@ export const PRODUCTS: Product[] = [
       "4 camadas absorventes e tecido impermeável",
       "Parte posterior mais larga",
       "Uso noturno",
-      "Produção e envio em até 5 dias úteis",
+      "Tempo de confecção de 5 dias",
     ],
   },
   {
@@ -205,7 +205,7 @@ export const PRODUCTS: Product[] = [
     details: [
       "100% algodão",
       "Uso diário",
-      "Produção e envio em até 5 dias úteis",
+      "Tempo de confecção de 5 dias",
     ],
   },
   {
@@ -301,7 +301,7 @@ export const FAQS = [
   },
   {
     q: "Qual o prazo de envio?",
-    a: "As peças saem do ateliê em até 5 dias úteis, acrescidos do prazo dos Correios.",
+    a: "O tempo de confecção é de 5 dias, acrescidos do prazo dos Correios.",
   },
   {
     q: "É possível parcelar?",
