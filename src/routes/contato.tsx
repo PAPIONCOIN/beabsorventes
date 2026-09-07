@@ -13,6 +13,7 @@ import {
   type ContactTopic,
 } from "@/lib/contact";
 import { formatPhone } from "@/lib/utils";
+import { BrandMark } from "@/components/logo";
 
 export const Route = createFileRoute("/contato")({ component: Contato });
 
@@ -150,6 +151,7 @@ function Contato() {
       </div>
 
       <aside className="h-fit rounded-xl bg-bg-warm p-6">
+        <BrandMark className="mb-4 size-20" />
         <h2 className="font-display text-2xl italic">Ateliê</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Segunda a sexta, das 9h às 18h.

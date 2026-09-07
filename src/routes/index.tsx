@@ -3,6 +3,7 @@ import { ArrowRight, Droplets, Leaf, Recycle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductPhoto } from "@/components/product/product-photo";
+import { BrandMark } from "@/components/logo";
 import { CycleQuiz } from "@/components/quiz/cycle-quiz";
 import {
   Accordion,
@@ -25,6 +26,7 @@ function Home() {
       <section className="border-b border-border">
         <div className="mx-auto grid max-w-6xl lg:grid-cols-2">
           <div className="flex flex-col justify-center px-4 py-16 sm:px-6 sm:py-20 lg:min-h-[34rem] lg:py-24">
+            <BrandMark className="mb-5 size-16 sm:size-20" />
             <p className="text-[11px] font-medium tracking-[0.2em] text-primary uppercase">
               Algodão orgânico · certificado GOTS
             </p>
@@ -47,13 +49,14 @@ function Home() {
               </Button>
             </div>
           </div>
-          <div className="min-h-80 bg-bg-warm lg:min-h-0">
+          <div className="relative min-h-80 bg-bg-warm lg:min-h-0">
             <ProductPhoto
               src="/images/products/hero-pad.jpg"
               alt="Absorvente reutilizável de tecido beabsorventes"
               className="h-full min-h-80"
               imgClassName="p-10 sm:p-16"
             />
+            <BrandMark className="absolute right-5 bottom-5 size-24 drop-shadow-md sm:right-8 sm:bottom-8 sm:size-32" />
           </div>
         </div>
       </section>

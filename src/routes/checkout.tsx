@@ -11,6 +11,7 @@ import {
 import { createMpCheckout, getMercadoPagoStatus } from "@/lib/mercadopago";
 import { saveLastOrder } from "@/lib/orders";
 import { getProduct } from "@/lib/products";
+import { BrandMark } from "@/components/logo";
 import { digitsOnly, formatBRL, formatCep } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkout")({ component: Checkout });
@@ -244,6 +245,7 @@ function Checkout() {
         </Button>
       </form>
       <aside className="h-fit rounded-xl bg-bg-warm p-6">
+        <BrandMark className="mb-4 size-16" />
         <h2 className="font-display text-2xl italic">Pedido</h2>
         <ul className="mt-4 space-y-3 text-sm">
           {lines.map((line) => {

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ProductPhoto } from "@/components/product/product-photo";
+import { BrandMark } from "@/components/logo";
 
 export const Route = createFileRoute("/sobre")({ component: Sobre });
 
@@ -9,7 +10,8 @@ function Sobre() {
     <div>
       <section className="mx-auto grid max-w-6xl items-start gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2">
         <div>
-        <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
+          <BrandMark className="mb-6 size-24" />
+          <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
             Quem somos
           </p>
           <h1 className="mt-3 font-display text-4xl italic">

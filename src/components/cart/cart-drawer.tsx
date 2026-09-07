@@ -15,6 +15,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { BrandMark } from "@/components/logo";
 
 export function CartDrawer() {
   const isOpen = useCartStore((s) => s.isOpen);
@@ -38,9 +39,12 @@ export function CartDrawer() {
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {lines.length === 0 ? (
-            <p className="text-sm text-muted">
-              Escolha um absorvente na loja. O kit de 4 peças é um bom começo.
-            </p>
+            <div className="flex flex-col items-center py-8 text-center">
+              <BrandMark className="size-20" />
+              <p className="mt-4 text-sm text-muted">
+                Escolha um absorvente na loja. O kit de 4 peças é um bom começo.
+              </p>
+            </div>
           ) : (
             <ul className="flex flex-col gap-5">
               {lines.map((line) => {

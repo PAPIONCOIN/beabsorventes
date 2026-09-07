@@ -1,21 +1,37 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-export function Logo({ className }: { className?: string }) {
+export function BrandMark({ className }: { className?: string }) {
+  return (
+    <img
+      src="/images/brand/logo.png"
+      alt="Beabsorventes"
+      className={cn("object-contain", className)}
+    />
+  );
+}
+
+export function Logo({
+  className,
+  markClassName,
+  withName = true,
+}: {
+  className?: string;
+  markClassName?: string;
+  withName?: boolean;
+}) {
   return (
     <Link
       to="/"
       className={cn("flex items-center gap-2.5", className)}
-      aria-label="beabsorventes, página inicial"
+      aria-label="Beabsorventes, página inicial"
     >
-      <img
-        src="/images/brand/logo.png"
-        alt=""
-        className="size-10 rounded-sm object-cover sm:size-11"
-      />
-      <span className="hidden font-display text-xl italic leading-none sm:inline">
-        beabsorventes
-      </span>
+      <BrandMark className={cn("size-12", markClassName)} />
+      {withName ? (
+        <span className="hidden font-display text-xl italic leading-none sm:inline">
+          beabsorventes
+        </span>
+      ) : null}
     </Link>
   );
 }

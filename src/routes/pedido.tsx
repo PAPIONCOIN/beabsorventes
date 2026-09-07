@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/logo";
 import { readLastOrder } from "@/lib/orders";
 import { formatBRL } from "@/lib/utils";
 
@@ -15,7 +16,8 @@ function Pedido() {
   const order = typeof window === "undefined" ? null : readLastOrder();
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-16 sm:px-6">
+    <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
+      <BrandMark className="mx-auto mb-6 size-24" />
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Pedido
       </p>

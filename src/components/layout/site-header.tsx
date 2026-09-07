@@ -30,7 +30,7 @@ export function SiteHeader() {
         PIX 5% · até 3× sem juros · envio em 5 dias úteis
       </p>
       <div className="border-b border-border bg-bg/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo />
           <nav className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) => (
@@ -76,7 +76,9 @@ export function SiteHeader() {
       <Sheet open={menu} onOpenChange={setMenu}>
         <SheetContent side="left" className="max-w-xs">
           <SheetHeader>
-            <SheetTitle>Menu</SheetTitle>
+            <SheetTitle>
+              <Logo withName={false} markClassName="size-16" />
+            </SheetTitle>
           </SheetHeader>
           <nav className="flex flex-col gap-1 px-4 py-4">
             {NAV.map((item) => (
