@@ -37,6 +37,7 @@ export type ShopOrder = {
   trackingUrl: string;
   shippingServiceId: number;
   meUuid: string;
+  document: string;
   createdAt: string;
 };
 
@@ -155,6 +156,8 @@ function mapOrder(row: {
   tracking_url: string;
   shipping_service_id?: number;
   me_uuid?: string;
+  customer_document?: string;
+  document?: string;
   created_at: string | Date;
 }): ShopOrder {
   return {
@@ -179,6 +182,7 @@ function mapOrder(row: {
     trackingUrl: row.tracking_url,
     shippingServiceId: row.shipping_service_id ?? 0,
     meUuid: row.me_uuid ?? "",
+    document: digitsOnly(row.customer_document || row.document || ""),
     createdAt: typeof row.created_at === "string" ? row.created_at : row.created_at.toISOString(),
   };
 }
@@ -484,7 +488,10 @@ export const listAdminOrders = createServerFn({ method: "GET" }).handler(async (
   try {
     const sql = await ensureOrdersTable();
     const rows = await sql<Parameters<typeof mapOrder>[0]>`
-      select * from orders order by created_at desc, id desc
+      select o.*, coalesce(c.document, '') as customer_document
+      from orders o
+      left join customers c on lower(c.email) = o.email
+      order by o.created_at desc, o.id desc
     `;
     return { ok: true as const, orders: rows.map(mapOrder) };
   } catch (error) {
@@ -502,10 +509,16 @@ export async function sendPaidOrderToMelhorEnvio(orderId: string, extraDocument 
     const order = rows[0] ? mapOrder(rows[0]) : null;
     if (!order) return { ok: false as const, message: "Pedido não encontrado." };
     if (order.meUuid) return { ok: true as const, uuid: order.meUuid };
-    let document = extraDocument;
+    let document = digitsOnly(extraDocument);
     if (!document) {
       const customer = await getCustomerByEmail(order.email).catch(() => null);
-      document = customer?.document ?? "";
+      document = digitsOnly(customer?.document ?? order.document ?? "");
+    }
+    if (document.length !== 11) {
+      return {
+        ok: false as const,
+        message: "Cadastre o CPF do cliente para gerar a etiqueta.",
+      };
     }
     const result = await createMelhorEnvioShipment({
       orderId: order.orderId,

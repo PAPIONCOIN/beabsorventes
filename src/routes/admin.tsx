@@ -82,7 +82,7 @@ function Admin() {
   );
   const [sending, setSending] = useState<string | null>(null);
   const [shipError, setShipError] = useState("");
-  const [shipDoc, setShipDoc] = useState("");
+  const [shipDocs, setShipDocs] = useState<Record<string, string>>({});
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -334,6 +334,11 @@ function Admin() {
                     {order.phone ? (
                       <p className="mt-1 text-sm tabular-nums">{order.phone}</p>
                     ) : null}
+                    {order.document ? (
+                      <p className="mt-1 text-sm tabular-nums">
+                        CPF {formatCpf(order.document)}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="text-right">
                     <p className="font-medium">{orderStatusLabel(order.status)}</p>
@@ -384,9 +389,17 @@ function Admin() {
                     <Input
                       id={`cpf-${order.orderId}`}
                       inputMode="numeric"
-                      placeholder="somente números"
-                      value={shipDoc}
-                      onChange={(e) => setShipDoc(e.target.value)}
+                      placeholder="CPF do cadastro"
+                      value={
+                        shipDocs[order.orderId] ??
+                        (order.document ? formatCpf(order.document) : "")
+                      }
+                      onChange={(e) =>
+                        setShipDocs((prev) => ({
+                          ...prev,
+                          [order.orderId]: formatCpf(e.target.value),
+                        }))
+                      }
                     />
                   </div>
                   <Button
@@ -399,7 +412,11 @@ function Admin() {
                       setSending(order.orderId);
                       try {
                         const result = await adminSendToMelhorEnvio({
-                          data: { orderId: order.orderId, document: shipDoc },
+                          data: {
+                            orderId: order.orderId,
+                            document:
+                              shipDocs[order.orderId] || order.document || "",
+                          },
                         });
                         if (!result.ok) {
                           setShipError(result.message);
