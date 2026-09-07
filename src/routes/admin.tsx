@@ -63,6 +63,8 @@ function Admin() {
     null,
   );
   const [sending, setSending] = useState<string | null>(null);
+  const [shipError, setShipError] = useState("");
+  const [shipDoc, setShipDoc] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [newCustomer, setNewCustomer] = useState({
@@ -329,24 +331,39 @@ function Admin() {
                     )}
                   </p>
                 ) : null}
-                <div className="mt-4">
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div className="max-w-[12rem] space-y-1.5">
+                    <Label htmlFor={`cpf-${order.orderId}`}>CPF do destinatário</Label>
+                    <Input
+                      id={`cpf-${order.orderId}`}
+                      inputMode="numeric"
+                      placeholder="somente números"
+                      value={shipDoc}
+                      onChange={(e) => setShipDoc(e.target.value)}
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     disabled={sending === order.orderId}
                     onClick={async () => {
+                      setShipError("");
                       setSending(order.orderId);
-                      const result = await adminSendToMelhorEnvio({
-                        data: { orderId: order.orderId },
-                      });
-                      setSending(null);
-                      if (!result.ok) {
-                        setError(result.message);
-                        return;
+                      try {
+                        const result = await adminSendToMelhorEnvio({
+                          data: { orderId: order.orderId, document: shipDoc },
+                        });
+                        if (!result.ok) {
+                          setShipError(result.message);
+                          return;
+                        }
+                        await load(true);
+                      } catch {
+                        setShipError("Não foi possível falar com o Melhor Envio agora.");
+                      } finally {
+                        setSending(null);
                       }
-                      setError("");
-                      await load(true);
                     }}
                   >
                     {order.meUuid
@@ -356,6 +373,9 @@ function Admin() {
                         : "Gerar envio no Melhor Envio"}
                   </Button>
                 </div>
+                {shipError ? (
+                  <p className="mt-2 text-sm text-primary">{shipError}</p>
+                ) : null}
               </li>
             ))}
           </ul>

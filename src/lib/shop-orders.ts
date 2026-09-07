@@ -481,7 +481,7 @@ export const listAdminOrders = createServerFn({ method: "GET" }).handler(async (
   }
 });
 
-export async function sendPaidOrderToMelhorEnvio(orderId: string) {
+export async function sendPaidOrderToMelhorEnvio(orderId: string, document = "") {
   try {
     const sql = await ensureOrdersTable();
     const rows = await sql<Parameters<typeof mapOrder>[0]>`
@@ -498,6 +498,7 @@ export async function sendPaidOrderToMelhorEnvio(orderId: string) {
       phone: order.phone,
       address: order.address,
       items: order.items,
+      document,
     });
     if (!result.ok) return result;
     await sql`
@@ -521,10 +522,15 @@ export const getMelhorEnvioStatus = createServerFn({ method: "GET" }).handler(as
 });
 
 export const adminSendToMelhorEnvio = createServerFn({ method: "POST" })
-  .validator(z.object({ orderId: z.string().min(3) }))
+  .validator(
+    z.object({
+      orderId: z.string().min(3),
+      document: z.string().optional().default(""),
+    }),
+  )
   .handler(async ({ data }) => {
     if (!(await isAdmin())) {
       return { ok: false as const, message: "Entre de novo." };
     }
-    return sendPaidOrderToMelhorEnvio(data.orderId);
+    return sendPaidOrderToMelhorEnvio(data.orderId, data.document);
   });

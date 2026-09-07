@@ -158,6 +158,60 @@ type MeProfile = {
   phone?: { phone?: string };
 };
 
+function meErrorMessage(status: number, data: unknown) {
+  if (status === 401 || status === 403) {
+    return "Token inválido. Gere um token em Integrações → Permissões de Acesso (não use o Secret do aplicativo).";
+  }
+  if (typeof data === "string" && data.trim()) return data.slice(0, 280);
+  if (data && typeof data === "object") {
+    const rec = data as Record<string, unknown>;
+    if (typeof rec.message === "string" && rec.message.trim()) return rec.message;
+    if (typeof rec.error === "string" && rec.error.trim()) return rec.error;
+    if (rec.errors && typeof rec.errors === "object") {
+      const parts: string[] = [];
+      for (const [key, value] of Object.entries(rec.errors as Record<string, unknown>)) {
+        if (Array.isArray(value)) parts.push(`${key}: ${value.join(", ")}`);
+        else if (typeof value === "string") parts.push(`${key}: ${value}`);
+      }
+      if (parts.length) return parts.join(" · ");
+    }
+  }
+  return "O Melhor Envio não aceitou a etiqueta.";
+}
+
+function asObject(data: unknown): Record<string, unknown> | null {
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    const rec = data as Record<string, unknown>;
+    if (rec.data && typeof rec.data === "object" && !Array.isArray(rec.data)) {
+      return rec.data as Record<string, unknown>;
+    }
+    return rec;
+  }
+  return null;
+}
+
+function asList(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray((data as { data?: unknown }).data)) {
+    return (data as { data: unknown[] }).data;
+  }
+  return [];
+}
+
+function digitsPhone(value: string) {
+  let digits = value.replace(/\D/g, "");
+  if (digits.startsWith("55") && digits.length > 11) digits = digits.slice(2);
+  return digits;
+}
+
+function melhorServiceId(serviceId?: number) {
+  if (!serviceId || serviceId <= 0) return 0;
+  if (serviceId < 100) return serviceId;
+  const code = String(serviceId);
+  if (code.includes("3220") || code.includes("40010") || code.includes("4162")) return 2;
+  return 1;
+}
+
 function meHeaders() {
   return {
     Accept: "application/json",
@@ -210,9 +264,9 @@ function packedBox(products: ReturnType<typeof quoteProducts>) {
 
 async function senderFromAccount() {
   const profileRes = await meFetch("/me");
-  const profile = (profileRes.ok ? profileRes.data : {}) as MeProfile;
+  const profile = (asObject(profileRes.data) ?? {}) as MeProfile;
   const addressRes = await meFetch("/me/addresses");
-  const addresses = Array.isArray(addressRes.data) ? (addressRes.data as MeAddress[]) : [];
+  const addresses = asList(addressRes.data) as MeAddress[];
   const origin = fromCep();
   const address =
     addresses.find((item) => (item.postal_code ?? "").replace(/\D/g, "") === origin) ??
@@ -225,10 +279,7 @@ async function senderFromAccount() {
   return {
     name,
     email: profile.email || CONTACT_EMAIL,
-    phone: (profile.phone?.phone || process.env.MELHOR_ENVIO_FROM_PHONE || "11995895103").replace(
-      /\D/g,
-      "",
-    ),
+    phone: digitsPhone(profile.phone?.phone || process.env.MELHOR_ENVIO_FROM_PHONE || "11995895103"),
     document: (profile.document || process.env.MELHOR_ENVIO_FROM_DOCUMENT || "").replace(/\D/g, ""),
     address: address.address || process.env.MELHOR_ENVIO_FROM_STREET || "Ateliê",
     complement: address.complement || "",
@@ -245,10 +296,10 @@ export async function getMelhorEnvioAccount() {
     return { ready: false as const, name: "", email: "" };
   }
   const result = await meFetch("/me");
-  if (!result.ok || !result.data || typeof result.data !== "object") {
+  const profile = asObject(result.data) as MeProfile | null;
+  if (!result.ok || !profile) {
     return { ready: false as const, name: "", email: "" };
   }
-  const profile = result.data as MeProfile;
   return {
     ready: true as const,
     name: [profile.firstname, profile.lastname].filter(Boolean).join(" ").trim(),
@@ -272,6 +323,7 @@ export type MelhorEnvioOrderInput = {
     state: string;
   };
   items: Array<{ slug?: string; name: string; qty: number; unitCents: number }>;
+  document?: string;
 };
 
 export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
@@ -292,29 +344,49 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
     ? packedBox(products)
     : { height: 4, width: 16, length: 22, weight: 0.3 };
 
-  let serviceId = input.serviceId && input.serviceId > 0 ? input.serviceId : 0;
+  let serviceId = melhorServiceId(input.serviceId);
   if (!serviceId) {
-    const quotes = await fetchMelhorEnvioQuotes(input.address.cep, cartLines);
-    serviceId = quotes[0]?.serviceId ?? 1;
+    const quotes = await fetchMelhorEnvioQuotes(
+      input.address.cep,
+      cartLines.length
+        ? cartLines
+        : [{ slug: "ciclo-mini", printId: "padrao", size: "Único", qty: 1 }],
+    );
+    serviceId = quotes[0]?.serviceId ?? 2;
   }
 
   const from = await senderFromAccount();
+  const account = await getMelhorEnvioAccount();
+  if (!account.ready) {
+    return {
+      ok: false as const,
+      message:
+        "Token inválido. Gere um token em Integrações → Permissões de Acesso (não use o Secret do aplicativo) e cadastre MELHOR_ENVIO_TOKEN na Vercel.",
+    };
+  }
+
   const insurance = Number(
     (input.items.reduce((sum, item) => sum + item.unitCents * item.qty, 0) / 100).toFixed(2),
   );
+  const recipientDocument = (input.document ?? "").replace(/\D/g, "");
 
   const payload = {
     service: serviceId,
-    from,
+    from: {
+      ...from,
+      company_document: from.document.length > 11 ? from.document : "",
+      document: from.document.length <= 11 ? from.document : "",
+      state_register: "ISENTO",
+    },
     to: {
       name: input.name,
       email: input.email,
-      phone: input.phone.replace(/\D/g, ""),
-      document: "",
+      phone: digitsPhone(input.phone),
+      document: recipientDocument,
       address: input.address.street,
       complement: input.address.complement || "",
       number: input.address.number || "s/n",
-      district: input.address.neighborhood,
+      district: input.address.neighborhood || "Centro",
       city: input.address.city,
       state_abbr: input.address.state,
       postal_code: input.address.cep.replace(/\D/g, "").slice(0, 8),
@@ -345,10 +417,10 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
   if (!cart.ok || !cart.data || typeof cart.data !== "object") {
     return {
       ok: false as const,
-      message: "O Melhor Envio não aceitou a etiqueta. Confira o endereço e o token.",
+      message: meErrorMessage(cart.status, cart.data),
     };
   }
-  const created = cart.data as {
+  const created = (asObject(cart.data) ?? cart.data) as {
     id?: string;
     protocol?: string;
     tracking?: string;
