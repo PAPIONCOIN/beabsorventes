@@ -13,7 +13,7 @@ function Guia() {
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Modelos
       </p>
-      <h1 className="mt-3 font-display text-[2rem] italic sm:text-4xl">Tamanhos e modelos</h1>
+      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Tamanhos e modelos</h1>
       <p className="mt-4 max-w-xl text-muted">
         Tecido ecológico 100% algodão orgânico e tingimento sustentável com
         certificação internacional GOTS.

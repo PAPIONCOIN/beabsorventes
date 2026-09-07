@@ -29,7 +29,7 @@ function Cuidados() {
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Como lavar
       </p>
-      <h1 className="mt-3 font-display text-[2rem] italic sm:text-4xl">Lavar, secar, repetir</h1>
+      <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Lavar, secar, repetir</h1>
       <p className="mt-4 max-w-xl text-muted">
         Pode ser lavado em máquina. Não utilizar secadora. Três gestos, sempre
         iguais.

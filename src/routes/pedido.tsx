@@ -17,7 +17,7 @@ function Pedido() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
-      <BrandMark className="mx-auto mb-6 size-24" />
+      <BrandMark className="mx-auto mb-6 size-32" />
       <p className="text-xs font-medium tracking-wide text-primary uppercase">
         Pedido
       </p>

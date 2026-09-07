@@ -64,7 +64,7 @@ function Contato() {
         <p className="text-xs font-medium tracking-wide text-primary uppercase">
           Contato
         </p>
-        <h1 className="mt-3 font-display text-[2rem] italic sm:text-4xl">Fala com a gente</h1>
+        <h1 className="mt-3 font-display text-4xl italic sm:text-5xl">Fala com a gente</h1>
         <p className="mt-4 max-w-xl text-muted">
           Dúvida de fluxo, pedido ou troca — responde no WhatsApp e no e-mail,
           em horário comercial.
@@ -151,7 +151,7 @@ function Contato() {
       </div>
 
       <aside className="h-fit rounded-xl bg-bg-warm p-6">
-        <BrandMark className="mb-4 size-20" />
+        <BrandMark className="mb-4 size-28" />
         <h2 className="font-display text-2xl italic">Ateliê</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Segunda a sexta, das 9h às 18h.

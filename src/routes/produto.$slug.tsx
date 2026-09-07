@@ -75,19 +75,19 @@ function ProductPage() {
             </div>
           ) : null}
         </div>
-        <div className="lg:sticky lg:top-28">
-          <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
+        <div className="lg:sticky lg:top-36">
+          <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
             {flowLabel(product.flow)}
             {product.lengthCm ? ` · ${product.lengthCm} cm` : ""}
           </p>
-          <h1 className="mt-2 font-display text-[2rem] italic sm:text-4xl">{product.name}</h1>
-          <p className="mt-4 text-2xl tabular-nums">
+          <h1 className="mt-2 font-display text-4xl italic sm:text-5xl">{product.name}</h1>
+          <p className="mt-4 text-3xl tabular-nums">
             {formatBRL(product.priceCents)}
           </p>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-base text-muted">
             ou 3× de {formatBRL(parcel)} sem juros
           </p>
-          <p className="mt-5 max-w-md leading-relaxed text-muted">
+          <p className="mt-5 max-w-md text-base leading-relaxed text-muted">
             {product.description}
           </p>
 

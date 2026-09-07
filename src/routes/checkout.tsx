@@ -245,7 +245,7 @@ function Checkout() {
         </Button>
       </form>
       <aside className="order-first h-fit rounded-xl bg-bg-warm p-5 sm:p-6 lg:order-last">
-        <BrandMark className="mb-4 size-16" />
+        <BrandMark className="mb-4 size-24" />
         <h2 className="font-display text-2xl italic">Pedido</h2>
         <ul className="mt-4 space-y-3 text-sm">
           {lines.map((line) => {

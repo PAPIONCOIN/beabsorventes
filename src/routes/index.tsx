@@ -27,19 +27,19 @@ function Home() {
         <img
           src="/images/brand/banner.jpg"
           alt="Kit de absorventes reutilizáveis de tecido beabsorventes"
-          className="h-[28rem] w-full object-cover object-[78%_center] sm:h-[32rem] lg:h-[38rem] lg:object-[70%_center]"
+          className="h-[32rem] w-full object-cover object-[78%_center] sm:h-[36rem] lg:h-[42rem] lg:object-[70%_center]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/75 to-bg/20 sm:bg-gradient-to-r sm:from-bg sm:via-bg/80 sm:to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/85 to-bg/35 sm:bg-gradient-to-r sm:from-bg sm:via-bg/88 sm:to-bg/10" />
         <div className="absolute inset-0 flex items-end sm:items-center">
           <div className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-0">
-            <BrandMark className="mb-3 size-14 sm:mb-5 sm:size-20" />
-            <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase sm:tracking-[0.2em]">
+            <BrandMark className="mb-4 size-24 sm:mb-6 sm:size-32 lg:size-40" />
+            <p className="text-xs font-medium tracking-[0.14em] text-primary uppercase sm:text-sm sm:tracking-[0.18em]">
               Algodão orgânico · certificado GOTS
             </p>
-            <h1 className="mt-3 max-w-lg font-display text-[2.15rem] leading-[1.08] italic sm:mt-4 sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 max-w-xl font-display text-4xl leading-[1.08] italic sm:mt-4 sm:text-5xl lg:text-7xl">
               Seu ciclo, com outro cuidado.
             </h1>
-            <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed text-muted sm:mt-5 sm:text-base">
+            <p className="mt-4 max-w-md text-base leading-relaxed text-fg/80 sm:mt-5 sm:text-lg">
               Kit 4 absorventes — Mini, Íntimo, Principal e Denso. Camadas
               certas para o ciclo inteiro.
             </p>
@@ -93,10 +93,10 @@ function Home() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
+            <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
               Tamanhos e modelos
             </p>
-            <h2 className="mt-2 font-display text-[1.75rem] italic sm:text-3xl">As peças</h2>
+            <h2 className="mt-2 font-display text-3xl italic sm:text-4xl">As peças</h2>
           </div>
           <Link to="/loja" className="shrink-0 text-sm text-primary hover:underline">
             Ver todas
@@ -118,7 +118,7 @@ function Home() {
               className="aspect-square rounded-lg"
             />
             <div>
-              <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
+              <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
                 O ciclo completo
               </p>
               <h2 className="mt-3 font-display text-4xl italic">{kit.name}</h2>
@@ -139,10 +139,10 @@ function Home() {
       ) : null}
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
+        <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
           Guia
         </p>
-        <h2 className="mt-2 font-display text-[1.75rem] italic sm:text-3xl">Do Mini ao Noturno</h2>
+        <h2 className="mt-2 font-display text-3xl italic sm:text-4xl">Do Mini ao Noturno</h2>
         <div className="-mx-4 mt-8 flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0">
           {pads.map((product) => (
             <Link
@@ -157,10 +157,10 @@ function Home() {
                 className="aspect-square rounded-lg"
                 imgClassName="p-3 sm:p-4"
               />
-              <p className="mt-2 font-display text-lg italic leading-tight">
+              <p className="mt-2 font-display text-xl italic leading-tight">
                 {product.shortName}
               </p>
-              <p className="text-xs text-muted">
+              <p className="text-sm text-muted">
                 {product.lengthCm} cm · {product.layers} camadas
               </p>
             </Link>
@@ -171,7 +171,7 @@ function Home() {
       <section className="border-y border-border bg-bg-warm">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2">
           <div>
-            <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
+            <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
               Guia rápido
             </p>
             <h2 className="mt-3 font-display text-3xl italic">

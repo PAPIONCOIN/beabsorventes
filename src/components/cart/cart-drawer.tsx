@@ -40,7 +40,7 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {lines.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center">
-              <BrandMark className="size-20" />
+              <BrandMark className="size-28" />
               <p className="mt-4 text-sm text-muted">
                 Escolha um absorvente na loja. O kit de 4 peças é um bom começo.
               </p>

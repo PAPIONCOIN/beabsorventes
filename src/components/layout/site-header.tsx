@@ -26,21 +26,21 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
-      <p className="bg-primary px-3 py-2 text-center text-[10px] font-medium tracking-[0.08em] text-primary-fg uppercase sm:px-4 sm:text-[11px] sm:tracking-[0.12em]">
+      <p className="bg-primary px-3 py-2.5 text-center text-xs font-medium tracking-[0.08em] text-primary-fg uppercase sm:px-4 sm:tracking-[0.12em]">
         <span className="sm:hidden">PIX 5% · 3× sem juros · 5 dias úteis</span>
         <span className="hidden sm:inline">
           PIX 5% · até 3× sem juros · envio em 5 dias úteis
         </span>
       </p>
       <div className="border-b border-border bg-bg/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-[4.25rem] sm:px-6">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:h-[4.75rem] sm:px-6">
           <Logo className="min-w-0" />
           <nav className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="text-sm text-muted transition-colors hover:text-fg"
+                className="text-base text-muted transition-colors hover:text-fg"
                 activeProps={{ className: "text-fg" }}
               >
                 {item.label}
@@ -80,7 +80,7 @@ export function SiteHeader() {
         <SheetContent side="left" className="max-w-xs">
           <SheetHeader>
             <SheetTitle>
-              <Logo withName={false} markClassName="size-16" />
+              <Logo withName={false} markClassName="size-20" />
             </SheetTitle>
           </SheetHeader>
           <nav className="flex flex-col gap-1 px-4 py-4">
