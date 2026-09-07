@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
+import { ProductPhoto } from "@/components/product/product-photo";
 import { QtyStepper } from "@/components/product/qty-stepper";
 import { useCartStore } from "@/lib/cart-store";
 import {
@@ -45,15 +46,13 @@ function ProductPage() {
         <span className="mx-2">/</span>
         {product.shortName}
       </p>
-      <div className="mt-6 grid gap-10 lg:grid-cols-2">
+      <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:items-start">
         <div>
-          <div className="overflow-hidden rounded-xl bg-bg-warm">
-            <img
-              src={photo}
-              alt={product.name}
-              className="aspect-photo w-full object-cover"
-            />
-          </div>
+          <ProductPhoto
+            src={photo}
+            alt={product.name}
+            className="aspect-square rounded-lg"
+          />
           {product.gallery.length > 1 ? (
             <div className="mt-3 flex gap-2">
               {product.gallery.map((src) => (
@@ -65,41 +64,67 @@ function ProductPage() {
                     photo === src ? "ring-2 ring-fg" : "ring-1 ring-border"
                   }`}
                 >
-                  <img src={src} alt="" className="size-16 object-cover" />
+                  <ProductPhoto
+                    src={src}
+                    alt=""
+                    className="size-16"
+                    imgClassName="p-1.5"
+                  />
                 </button>
               ))}
             </div>
           ) : null}
         </div>
-        <div>
-          <p className="text-xs font-medium tracking-wide text-primary uppercase">
+        <div className="lg:sticky lg:top-28">
+          <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
             {flowLabel(product.flow)}
             {product.lengthCm ? ` · ${product.lengthCm} cm` : ""}
           </p>
           <h1 className="mt-2 font-display text-4xl italic">{product.name}</h1>
-          <p className="mt-4 text-lg tabular-nums">{formatBRL(product.priceCents)}</p>
+          <p className="mt-4 text-2xl tabular-nums">
+            {formatBRL(product.priceCents)}
+          </p>
           <p className="mt-1 text-sm text-muted">
-            até 3× de {formatBRL(parcel)} sem juros
+            ou 3× de {formatBRL(parcel)} sem juros
           </p>
-          <p className="mt-4 max-w-md leading-relaxed text-muted">
+          <p className="mt-5 max-w-md leading-relaxed text-muted">
             {product.description}
-          </p>
-          <p className="mt-3 text-xs text-muted">
-            Código {product.sku} · sai em {product.leadDays} dias úteis
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <QtyStepper value={qty} onChange={setQty} />
             <Button
               size="lg"
+              className="min-w-44 flex-1 sm:flex-none"
               onClick={() => add({ slug: product.slug, printId, size, qty })}
             >
               Adicionar à sacola
             </Button>
           </div>
 
+          <dl className="mt-8 grid gap-2 border-t border-border pt-6 text-sm text-muted">
+            <div className="flex justify-between gap-4">
+              <dt>Envio</dt>
+              <dd>até {product.leadDays} dias úteis</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt>Tecido</dt>
+              <dd>algodão orgânico GOTS</dd>
+            </div>
+            {product.layers ? (
+              <div className="flex justify-between gap-4">
+                <dt>Camadas</dt>
+                <dd>{product.layers} absorventes + impermeável</dd>
+              </div>
+            ) : null}
+            <div className="flex justify-between gap-4">
+              <dt>Lavagem</dt>
+              <dd>máquina, sem secadora</dd>
+            </div>
+          </dl>
+
           {product.contents ? (
-            <ul className="mt-8 space-y-1 text-sm text-muted">
+            <ul className="mt-6 space-y-1 text-sm text-muted">
               {product.contents.map((item) => {
                 const inner = getProduct(item.slug);
                 return (
@@ -111,9 +136,9 @@ function ProductPage() {
               })}
             </ul>
           ) : (
-            <ul className="mt-8 space-y-1 text-sm text-muted">
+            <ul className="mt-6 space-y-1 text-sm text-muted">
               {product.details.map((line) => (
-                <li key={line}>{line}</li>
+                <li key={line}>— {line}</li>
               ))}
             </ul>
           )}

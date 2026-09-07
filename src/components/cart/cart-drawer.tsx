@@ -54,7 +54,7 @@ export function CartDrawer() {
                     <img
                       src={product.image}
                       alt=""
-                      className="size-20 rounded-md object-cover"
+                      className="size-20 rounded-md bg-surface object-contain p-1.5"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{product.shortName}</p>

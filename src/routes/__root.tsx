@@ -23,7 +23,7 @@ export const Route = createRootRoute({
         content:
           "Absorventes ecológicos reutilizáveis de tecido 100% algodão orgânico. Feito girassol, conecte-se com seu ciclo e seja seu Sol.",
       },
-      { name: "theme-color", content: "#a05243" },
+      { name: "theme-color", content: "#8c2118" },
     ],
     links: [
       { rel: "icon", type: "image/png", href: "/images/brand/favicon.png" },

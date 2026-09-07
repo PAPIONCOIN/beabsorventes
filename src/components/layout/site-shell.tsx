@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { useCartStore } from "@/lib/cart-store";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -15,6 +16,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <CartDrawer />
       <main className="flex-1">{children}</main>
       <SiteFooter />
+      <WhatsAppButton />
     </div>
   );
 }

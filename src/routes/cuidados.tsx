@@ -43,7 +43,7 @@ function Cuidados() {
             <img
               src={step.image}
               alt={step.alt}
-              className={`aspect-photo w-full rounded-xl object-cover ${index % 2 ? "lg:order-2" : ""}`}
+              className={`aspect-square w-full rounded-lg bg-surface object-contain p-8 ${index % 2 ? "lg:order-2" : ""}`}
             />
             <div>
               <p className="text-xs tabular-nums text-muted">0{index + 1}</p>

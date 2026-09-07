@@ -16,7 +16,7 @@ const NAV = [
   { to: "/guia", label: "Modelos" },
   { to: "/cuidados", label: "Como lavar" },
   { to: "/sobre", label: "Quem somos" },
-  { to: "/contato", label: "Fale conosco" },
+  { to: "/contato", label: "Contato" },
 ] as const;
 
 export function SiteHeader() {
@@ -25,47 +25,52 @@ export function SiteHeader() {
   const count = useCartStore((s) => cartCount(s.lines));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-sm">
-      <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Logo />
-        <nav className="hidden items-center gap-7 lg:flex">
-          {NAV.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="text-sm text-muted transition-colors hover:text-fg"
-              activeProps={{ className: "text-fg" }}
+    <header className="sticky top-0 z-40">
+      <p className="bg-primary px-4 py-2 text-center text-[11px] font-medium tracking-[0.12em] text-primary-fg uppercase">
+        PIX 5% · até 3× sem juros · envio em 5 dias úteis
+      </p>
+      <div className="border-b border-border bg-bg/90 backdrop-blur-sm">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <Logo />
+          <nav className="hidden items-center gap-8 lg:flex">
+            {NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="text-sm text-muted transition-colors hover:text-fg"
+                activeProps={{ className: "text-fg" }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => openCart()}
+              aria-label={count ? `Sacola, ${count} peças` : "Sacola"}
             >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={() => openCart()}
-            aria-label={count ? `Sacola, ${count} peças` : "Sacola"}
-          >
-            <ShoppingBag />
-            {count > 0 ? (
-              <span className="absolute top-1.5 right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-fg">
-                {count}
-              </span>
-            ) : null}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setMenu(true)}
-            aria-label="Abrir menu"
-          >
-            <Menu />
-          </Button>
+              <ShoppingBag />
+              {count > 0 ? (
+                <span className="absolute top-1.5 right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-fg">
+                  {count}
+                </span>
+              ) : null}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setMenu(true)}
+              aria-label="Abrir menu"
+            >
+              <Menu />
+            </Button>
+          </div>
         </div>
       </div>
       <Sheet open={menu} onOpenChange={setMenu}>

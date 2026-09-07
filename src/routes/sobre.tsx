@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { ProductPhoto } from "@/components/product/product-photo";
 
 export const Route = createFileRoute("/sobre")({ component: Sobre });
 
@@ -8,7 +9,7 @@ function Sobre() {
     <div>
       <section className="mx-auto grid max-w-6xl items-start gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2">
         <div>
-          <p className="text-xs font-medium tracking-wide text-primary uppercase">
+        <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
             Quem somos
           </p>
           <h1 className="mt-3 font-display text-4xl italic">
@@ -48,10 +49,10 @@ function Sobre() {
             <Link to="/loja">Ver as peças</Link>
           </Button>
         </div>
-        <img
+        <ProductPhoto
           src="/images/products/pad-3.jpg"
           alt="Absorvente reutilizável de tecido beabsorventes"
-          className="aspect-photo w-full rounded-xl object-cover"
+          className="aspect-square rounded-lg"
         />
       </section>
     </div>

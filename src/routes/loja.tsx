@@ -8,7 +8,7 @@ export const Route = createFileRoute("/loja")({ component: Loja });
 
 const FILTERS: { id: Category | "all"; label: string }[] = [
   { id: "all", label: "Tudo" },
-  { id: "pad", label: "Tecido sustentável" },
+  { id: "pad", label: "Absorventes" },
   { id: "liner", label: "Protetor diário" },
   { id: "kit", label: "Kits" },
 ];
@@ -19,7 +19,7 @@ function Loja() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <p className="text-xs font-medium tracking-wide text-primary uppercase">
+      <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
         Loja
       </p>
       <h1 className="mt-3 font-display text-4xl italic">As peças</h1>
@@ -34,7 +34,7 @@ function Loja() {
             type="button"
             onClick={() => setFilter(item.id)}
             className={cn(
-              "h-11 rounded-full border px-4 text-sm",
+              "h-10 rounded-full border px-4 text-sm transition-colors",
               filter === item.id
                 ? "border-fg bg-fg text-bg"
                 : "border-border bg-surface text-fg hover:bg-bg-warm",
@@ -44,7 +44,7 @@ function Loja() {
           </button>
         ))}
       </div>
-      <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
           <ProductCard key={product.slug} product={product} />
         ))}
