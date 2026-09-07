@@ -405,6 +405,171 @@ export async function getMelhorEnvioAccount() {
   };
 }
 
+export async function diagnoseMelhorEnvioAuth() {
+  const token = meToken();
+  const userAgent = `Beabsorventes (${CONTACT_EMAIL})`;
+  const origin = fromCep();
+  const sandbox = process.env.MELHOR_ENVIO_SANDBOX === "true";
+  const inspection = inspectAccessToken(token);
+
+  const probes: Array<{ name: string; env: string; status: number; detail: string }> = [];
+
+  async function probe(env: "production" | "sandbox", path: string, init?: RequestInit) {
+    const base =
+      env === "sandbox"
+        ? "https://sandbox.melhorenvio.com.br/api/v2"
+        : "https://www.melhorenvio.com.br/api/v2";
+    if (!token) {
+      probes.push({ name: path, env, status: 0, detail: "sem token" });
+      return;
+    }
+    try {
+      const response = await fetch(`${base}${path}`, {
+        ...init,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "User-Agent": userAgent,
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+      const text = await response.text();
+      probes.push({
+        name: path,
+        env,
+        status: response.status,
+        detail: snippet(text),
+      });
+    } catch (error) {
+      probes.push({
+        name: path,
+        env,
+        status: 0,
+        detail: error instanceof Error ? error.message : "falha de rede",
+      });
+    }
+  }
+
+  const env = sandbox ? "sandbox" : "production";
+  await probe(env, "/me");
+  await probe(env, "/me/addresses");
+  await probe(env, "/me/shipment/companies");
+  await probe(env, "/me/shipment/calculate", {
+    method: "POST",
+    body: JSON.stringify({
+      from: { postal_code: origin || "11700170" },
+      to: { postal_code: "01310100" },
+      products: [
+        {
+          id: "ciclo-mini",
+          width: 11,
+          height: 2,
+          length: 16,
+          weight: 0.1,
+          insurance_value: 29.9,
+          quantity: 1,
+        },
+      ],
+      options: { receipt: false, own_hand: false },
+    }),
+  });
+
+  const meOk = probes.some((row) => row.name === "/me" && row.status === 200);
+  const calc = probes.find((row) => row.name === "/me/shipment/calculate");
+  const calcOk = calc?.status === 200 && !/unauthorized/i.test(calc.detail);
+
+  let verdict = "Token ausente. Cadastre MELHOR_ENVIO_TOKEN na Vercel.";
+  if (token && inspection.kind === "secret") {
+    verdict =
+      "O valor parece o Secret do aplicativo. Troque pelo token de Integrações → Permissões de Acesso (começa com eyJ).";
+  } else if (token && inspection.expired) {
+    verdict = "O token expirou. Gere outro em Integrações → Permissões de Acesso.";
+  } else if (token && inspection.kind === "jwt" && inspection.scopes.length > 0 && !inspection.hasCalculate) {
+    verdict =
+      "O token não tem a permissão shipping-calculate. Gere outro marcando Calcular fretes, Carrinho, Pedidos e Rastreio.";
+  } else if (meOk && !calcOk) {
+    verdict =
+      "A conta autentica, mas a cotação é recusada (403). O token precisa da permissão Calcular fretes.";
+  } else if (calcOk) {
+    verdict = "Autenticação e cotação ok. O CEP da loja já usa o Melhor Envio.";
+  } else if (!meOk && token) {
+    verdict =
+      "O token não autenticou. Confira se é de produção (não sandbox) e se foi colado inteiro na Vercel.";
+  }
+
+  return {
+    tokenPresent: Boolean(token),
+    tokenChars: token.length,
+    tokenKind: inspection.kind,
+    scopes: inspection.scopes,
+    expired: inspection.expired,
+    expiresAt: inspection.expiresAt,
+    hasCalculate: inspection.hasCalculate,
+    sandbox,
+    origin,
+    userAgent,
+    probes,
+    verdict,
+  };
+}
+
+function inspectAccessToken(token: string) {
+  if (!token) {
+    return {
+      kind: "missing" as const,
+      scopes: [] as string[],
+      expired: null as boolean | null,
+      expiresAt: "",
+      hasCalculate: false,
+    };
+  }
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return {
+      kind: "secret" as const,
+      scopes: [] as string[],
+      expired: null,
+      expiresAt: "",
+      hasCalculate: false,
+    };
+  }
+  try {
+    const padded = parts[1].replace(/-/g, "+").replace(/_/g, "/") + "===".slice((parts[1].length + 3) % 4);
+    const payload = JSON.parse(Buffer.from(padded, "base64").toString("utf8")) as {
+      exp?: number;
+      scopes?: unknown;
+      scope?: unknown;
+    };
+    const raw = payload.scopes ?? payload.scope ?? [];
+    const scopes = Array.isArray(raw)
+      ? raw.map((item) => String(item))
+      : String(raw)
+          .split(/[ ,]+/)
+          .filter(Boolean);
+    const expiresAt = payload.exp ? new Date(payload.exp * 1000).toISOString() : "";
+    const expired = payload.exp ? payload.exp * 1000 < Date.now() : null;
+    const hasCalculate = scopes.some((scope) =>
+      /shipping-calculate|cart-read|shipping-preview|\*/i.test(scope),
+    );
+    return { kind: "jwt" as const, scopes, expired, expiresAt, hasCalculate };
+  } catch {
+    return {
+      kind: "jwt" as const,
+      scopes: [] as string[],
+      expired: null,
+      expiresAt: "",
+      hasCalculate: false,
+    };
+  }
+}
+
+function snippet(text: string) {
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  if (trimmed.length <= 180) return trimmed;
+  return `${trimmed.slice(0, 180)}…`;
+}
+
 export type MelhorEnvioOrderInput = {
   orderId: string;
   serviceId?: number;

@@ -141,4 +141,14 @@ export const testMelhorEnvioQuote = createServerFn({ method: "POST" }).handler(a
   };
 });
 
+export const diagnoseMelhorEnvio = createServerFn({ method: "POST" }).handler(async () => {
+  const { isAdmin } = await import("@/lib/customers");
+  const { diagnoseMelhorEnvioAuth } = await import("@/lib/melhor-envio");
+  if (!(await isAdmin())) {
+    return { ok: false as const, message: "Entre de novo." };
+  }
+  const report = await diagnoseMelhorEnvioAuth();
+  return { ok: true as const, report };
+});
+
 export { shippingPayable, FREE_SHIPPING_FROM };

@@ -28,7 +28,7 @@ import {
   type ShopOrder,
 } from "@/lib/shop-orders";
 import { listContactMessages, type ContactMessage } from "@/lib/contact";
-import { testMelhorEnvioQuote } from "@/lib/shipping";
+import { diagnoseMelhorEnvio, testMelhorEnvioQuote } from "@/lib/shipping";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -90,6 +90,8 @@ function Admin() {
   const [pullNote, setPullNote] = useState("");
   const [quoteNote, setQuoteNote] = useState("");
   const [quoting, setQuoting] = useState(false);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagLines, setDiagLines] = useState<string[]>([]);
   const [shipError, setShipError] = useState("");
   const [shipDocs, setShipDocs] = useState<Record<string, string>>({});
   const [trackCodes, setTrackCodes] = useState<Record<string, string>>({});
@@ -373,8 +375,53 @@ function Admin() {
             >
               {quoting ? "Cotando…" : "Testar cotação Melhor Envio"}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={diagnosing}
+              onClick={async () => {
+                setDiagnosing(true);
+                setDiagLines([]);
+                setShipError("");
+                try {
+                  const result = await diagnoseMelhorEnvio();
+                  if (!result.ok) {
+                    setShipError(result.message);
+                    return;
+                  }
+                  const report = result.report;
+                  setDiagLines([
+                    report.verdict,
+                    `Token: ${report.tokenPresent ? `${report.tokenChars} caracteres · ${report.tokenKind}` : "ausente"}`,
+                    `Ambiente: ${report.sandbox ? "sandbox" : "produção"} · origem ${report.origin}`,
+                    report.scopes.length ? `Permissões: ${report.scopes.join(", ")}` : "Permissões: não vieram no token",
+                    report.expiresAt
+                      ? `Validade: ${report.expired ? "expirado" : "ok"} (${report.expiresAt})`
+                      : "",
+                    ...report.probes.map(
+                      (probe) =>
+                        `${probe.status || "—"} ${probe.name} · ${probe.detail || "ok"}`,
+                    ),
+                  ].filter(Boolean));
+                } catch {
+                  setShipError("Não foi possível diagnosticar o Melhor Envio agora.");
+                } finally {
+                  setDiagnosing(false);
+                }
+              }}
+            >
+              {diagnosing ? "Diagnosticando…" : "Diagnosticar autenticação"}
+            </Button>
             {pullNote ? <p className="text-sm text-muted">{pullNote}</p> : null}
             {quoteNote ? <p className="text-sm text-muted">{quoteNote}</p> : null}
+            {diagLines.length ? (
+              <ul className="w-full space-y-1 rounded-md bg-bg px-3 py-2 text-xs text-muted">
+                {diagLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         </div>
       ) : null}
