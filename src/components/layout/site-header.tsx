@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { cartCount, useCartStore } from "@/lib/cart-store";
 import { closeAccount } from "@/lib/shop-orders";
-import { useShopSession } from "@/lib/use-shop-session";
+import { useShopSession, useShopSessionStore } from "@/lib/use-shop-session";
 
 const NAV = [
   { to: "/loja", label: "Loja" },
@@ -79,9 +79,9 @@ function AccountMenu({
             className={`${itemClass} w-full text-left`}
             onClick={async () => {
               await closeAccount();
+              useShopSessionStore.getState().clear();
               setOpen(false);
               onNavigate?.();
-              window.location.reload();
             }}
           >
             Sair

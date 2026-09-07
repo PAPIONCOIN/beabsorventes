@@ -12,6 +12,7 @@ import {
   openAccount,
   updateAccount,
 } from "@/lib/shop-orders";
+import { applyShopSession } from "@/lib/use-shop-session";
 import { digitsOnly, formatCep, formatCpf, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro")({ component: Cadastro });
@@ -145,6 +146,7 @@ function Cadastro() {
         await registerCustomer({ data: payload });
         try {
           await openAccount({ data: { email: payload.email, password: payload.password } });
+          applyShopSession({ name: payload.name, email: payload.email });
         } catch {
           /* login happens on /conta if this fails */
         }

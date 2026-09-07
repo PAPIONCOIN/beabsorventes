@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BrandMark } from "@/components/logo";
 import { getAccount, openAccount } from "@/lib/shop-orders";
+import { applyShopSession } from "@/lib/use-shop-session";
 import { formatCep, formatPhone } from "@/lib/utils";
 
 export const Route = createFileRoute("/conta")({ component: Conta });
@@ -42,6 +43,10 @@ function Conta() {
         setError(result.message);
         return;
       }
+      applyShopSession({
+        name: result.customer?.name || result.orders[0]?.name || "",
+        email: result.customer?.email || email,
+      });
       await navigate({ to: "/compras" });
     } catch {
       setError("Não foi possível entrar agora.");
