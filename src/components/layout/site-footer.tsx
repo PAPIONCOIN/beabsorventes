@@ -1,6 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/logo";
 
+const EMAIL = "beabsorventes@gmail.com";
+const PHONE_DISPLAY = "+55 11 99589-5103";
+const WHATSAPP = "https://wa.me/5511995895103";
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-border">
@@ -29,7 +33,21 @@ export function SiteFooter() {
         <div className="text-sm text-muted">
           <p>Envios para todo o Brasil.</p>
           <p className="mt-1">Frete grátis a partir de R$ 180.</p>
-          <p className="mt-4">contato@beabsorventes.com</p>
+          <p className="mt-4">
+            <a className="hover:text-fg" href={`mailto:${EMAIL}`}>
+              {EMAIL}
+            </a>
+          </p>
+          <p className="mt-1">
+            <a
+              className="hover:text-fg"
+              href={WHATSAPP}
+              target="_blank"
+              rel="noreferrer"
+            >
+              WhatsApp {PHONE_DISPLAY}
+            </a>
+          </p>
         </div>
       </div>
     </footer>
