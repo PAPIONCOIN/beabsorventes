@@ -40,6 +40,9 @@ export function SiteFooter() {
           <Link to="/conta" className="flex min-h-11 items-center text-muted hover:text-fg">
             Login
           </Link>
+          <Link to="/rastreio" className="flex min-h-11 items-center text-muted hover:text-fg">
+            Rastrear pedido
+          </Link>
           <Link to="/admin" className="flex min-h-11 items-center text-muted hover:text-fg">
             Administração
           </Link>

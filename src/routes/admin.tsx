@@ -19,9 +19,11 @@ import { formatCep, formatCpf, formatPhone, formatBRL } from "@/lib/utils";
 import { ORIGIN_CEP_LABEL } from "@/lib/origin-cep";
 import {
   adminSendToMelhorEnvio,
+  adminSetTracking,
   getMelhorEnvioStatus,
   listAdminOrders,
   orderStatusLabel,
+  refreshOrderTracking,
   type ShopOrder,
 } from "@/lib/shop-orders";
 import { listContactMessages, type ContactMessage } from "@/lib/contact";
@@ -84,6 +86,7 @@ function Admin() {
   const [sending, setSending] = useState<string | null>(null);
   const [shipError, setShipError] = useState("");
   const [shipDocs, setShipDocs] = useState<Record<string, string>>({});
+  const [trackCodes, setTrackCodes] = useState<Record<string, string>>({});
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -279,7 +282,7 @@ function Admin() {
           <p className="font-medium">Sistema de frete</p>
           <p className="mt-2 text-muted">
             Origem {ORIGIN_CEP_LABEL} · Praia Grande/SP · cotação e etiqueta pelo
-            Melhor Envio.
+            Melhor Envio. Webhook de rastreio: /api/webhooks/rastreio
           </p>
           <p className={`mt-2 ${melhor.ready ? "text-muted" : "text-primary"}`}>
             {melhor.ready
@@ -462,6 +465,66 @@ function Admin() {
                       Abrir carrinho
                     </a>
                   ) : null}
+                </div>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div className="max-w-[16rem] space-y-1.5">
+                    <Label htmlFor={`track-${order.orderId}`}>Código de rastreio</Label>
+                    <Input
+                      id={`track-${order.orderId}`}
+                      value={trackCodes[order.orderId] ?? order.tracking}
+                      onChange={(e) =>
+                        setTrackCodes((prev) => ({
+                          ...prev,
+                          [order.orderId]: e.target.value,
+                        }))
+                      }
+                      placeholder="AA123456789BR"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const tracking = trackCodes[order.orderId] ?? order.tracking;
+                      if (!tracking.trim()) return;
+                      setShipError("");
+                      const result = await adminSetTracking({
+                        data: { orderId: order.orderId, tracking },
+                      });
+                      if (!result.ok) {
+                        setShipError(result.message);
+                        return;
+                      }
+                      await load(true);
+                    }}
+                  >
+                    Salvar rastreio
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={sending === `track-${order.orderId}`}
+                    onClick={async () => {
+                      setShipError("");
+                      setSending(`track-${order.orderId}`);
+                      try {
+                        const result = await refreshOrderTracking({
+                          data: { orderId: order.orderId },
+                        });
+                        if (!result.ok) {
+                          setShipError(result.message);
+                          return;
+                        }
+                        await load(true);
+                      } finally {
+                        setSending(null);
+                      }
+                    }}
+                  >
+                    Atualizar do Melhor Envio
+                  </Button>
                 </div>
                 {shipError ? (
                   <p className="mt-2 text-sm text-primary">{shipError}</p>

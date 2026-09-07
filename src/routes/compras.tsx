@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/logo";
-import { getAccount, orderStatusLabel, type ShopOrder } from "@/lib/shop-orders";
+import {
+  getAccount,
+  orderStatusLabel,
+  refreshOrderTracking,
+  type ShopOrder,
+} from "@/lib/shop-orders";
 import { formatBRL } from "@/lib/utils";
 
 export const Route = createFileRoute("/compras")({ component: Compras });
@@ -11,6 +16,7 @@ function Compras() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [orders, setOrders] = useState<ShopOrder[]>([]);
+  const [refreshing, setRefreshing] = useState<string | null>(null);
 
   useEffect(() => {
     void getAccount().then((result) => {
@@ -89,23 +95,54 @@ function Compras() {
               {order.shippingLabel ? (
                 <p className="mt-3 text-xs text-muted">{order.shippingLabel}</p>
               ) : null}
-              {order.tracking ? (
-                <p className="mt-2 text-sm">
-                  Rastreio{" "}
-                  {order.trackingUrl ? (
-                    <a
-                      className="underline-offset-2 hover:underline"
-                      href={order.trackingUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {order.tracking}
-                    </a>
-                  ) : (
-                    <span className="tabular-nums">{order.tracking}</span>
-                  )}
-                </p>
-              ) : null}
+              <div className="mt-4 rounded-lg bg-bg-warm p-4">
+                <p className="text-xs tracking-wide text-muted uppercase">Rastreio</p>
+                {order.tracking ? (
+                  <p className="mt-2 text-sm">
+                    {order.trackingUrl ? (
+                      <a
+                        className="underline-offset-2 hover:underline"
+                        href={order.trackingUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {order.tracking}
+                      </a>
+                    ) : (
+                      <span className="tabular-nums">{order.tracking}</span>
+                    )}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-sm text-muted">
+                    Ainda sem código. Depois da postagem ele aparece aqui.
+                  </p>
+                )}
+                {order.meUuid ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    disabled={refreshing === order.orderId}
+                    onClick={async () => {
+                      setRefreshing(order.orderId);
+                      try {
+                        const result = await refreshOrderTracking({
+                          data: { orderId: order.orderId },
+                        });
+                        if (result.ok) {
+                          const account = await getAccount();
+                          if (account.ok) setOrders(account.orders);
+                        }
+                      } finally {
+                        setRefreshing(null);
+                      }
+                    }}
+                  >
+                    {refreshing === order.orderId ? "Consultando…" : "Atualizar rastreio"}
+                  </Button>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

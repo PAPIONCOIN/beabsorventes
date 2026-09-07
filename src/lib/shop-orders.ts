@@ -10,7 +10,7 @@ import {
 } from "@/lib/customers";
 import { digitsOnly } from "@/lib/utils";
 import { getPasswordHash, setPasswordForEmail, verifyPassword } from "@/lib/customer-auth";
-import { createMelhorEnvioShipment, getMelhorEnvioAccount } from "@/lib/melhor-envio";
+import { createMelhorEnvioShipment, fetchMelhorEnvioTracking, getMelhorEnvioAccount, trackingLink } from "@/lib/melhor-envio";
 
 const COOKIE = "bea_conta";
 
@@ -567,4 +567,126 @@ export const adminSendToMelhorEnvio = createServerFn({ method: "POST" })
       return { ok: false as const, message: "Entre de novo." };
     }
     return sendPaidOrderToMelhorEnvio(data.orderId, data.document);
+  });
+
+export const adminSetTracking = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      orderId: z.string().min(3),
+      tracking: z.string().trim().min(5),
+    }),
+  )
+  .handler(async ({ data }) => {
+    if (!(await isAdmin())) {
+      return { ok: false as const, message: "Entre de novo." };
+    }
+    const tracking = data.tracking.replace(/\s/g, "").toUpperCase();
+    await updateOrderStatus(data.orderId, "posted", {
+      tracking,
+      trackingUrl: trackingLink(tracking),
+    });
+    return { ok: true as const, tracking, trackingUrl: trackingLink(tracking) };
+  });
+
+export const refreshOrderTracking = createServerFn({ method: "POST" })
+  .validator(z.object({ orderId: z.string().min(3) }))
+  .handler(async ({ data }) => {
+    try {
+      const sql = await ensureOrdersTable();
+      const rows = await sql<Parameters<typeof mapOrder>[0]>`
+        select o.*, coalesce(nullif(o.document, ''), c.document, '') as customer_document
+        from orders o
+        left join customers c on lower(c.email) = o.email
+        where o.order_id = ${data.orderId}
+        limit 1
+      `;
+      const order = rows[0] ? mapOrder(rows[0]) : null;
+      if (!order) return { ok: false as const, message: "Pedido não encontrado." };
+      const email = await sessionEmail();
+      if (!(await isAdmin()) && email !== order.email) {
+        return { ok: false as const, message: "Entre na conta para atualizar." };
+      }
+      if (!order.meUuid) {
+        return {
+          ok: false as const,
+          message: "Gere o envio no Melhor Envio para obter o rastreio.",
+        };
+      }
+      const info = await fetchMelhorEnvioTracking(order.meUuid);
+      if (!info.ok || !info.tracking) {
+        return {
+          ok: false as const,
+          message: "Ainda não há código de rastreio neste envio.",
+        };
+      }
+      const mapped =
+        info.status === "delivered"
+          ? "delivered"
+          : info.status === "posted" || info.status === "generated"
+            ? "posted"
+            : order.status;
+      await updateOrderStatus(order.orderId, mapped, {
+        tracking: info.tracking,
+        trackingUrl: info.trackingUrl,
+      });
+      return {
+        ok: true as const,
+        tracking: info.tracking,
+        trackingUrl: info.trackingUrl,
+        status: mapped,
+      };
+    } catch (error) {
+      console.error("[orders] refresh tracking", error);
+      return { ok: false as const, message: "Não foi possível consultar o rastreio." };
+    }
+  });
+
+export const lookupPublicTracking = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      query: z.string().trim().min(4),
+      email: z.string().trim().optional().default(""),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const query = data.query.trim();
+    const email = data.email.trim().toLowerCase();
+    const isOrderId = query.toUpperCase().startsWith("BEA-");
+    if (isOrderId && !email) {
+      return { ok: false as const, message: "Informe o e-mail da compra." };
+    }
+    try {
+      const sql = await ensureOrdersTable();
+      const rows = await sql<Parameters<typeof mapOrder>[0]>`
+        select * from orders
+        where upper(order_id) = ${query.toUpperCase()}
+           or upper(tracking) = ${query.toUpperCase()}
+        order by created_at desc
+        limit 5
+      `;
+      const matches = rows.map(mapOrder);
+      const order =
+        matches.find((item) => !email || item.email === email) ??
+        (query.toUpperCase().startsWith("BEA-") ? undefined : matches[0]);
+      if (!order) {
+        return { ok: false as const, message: "Não encontramos este pedido." };
+      }
+      if (order.orderId.toUpperCase() === query.toUpperCase() && email && order.email !== email) {
+        return { ok: false as const, message: "Não encontramos este pedido." };
+      }
+      return {
+        ok: true as const,
+        orderId: order.orderId,
+        status: order.status,
+        statusLabel: orderStatusLabel(order.status),
+        tracking: order.tracking,
+        trackingUrl: order.trackingUrl,
+        shippingLabel: order.shippingLabel,
+        createdAt: order.createdAt,
+        items: order.items.map((item) => `${item.qty}× ${item.name}`),
+      };
+    } catch (error) {
+      console.error("[orders] lookup tracking", error);
+      return { ok: false as const, message: "Não foi possível consultar agora." };
+    }
   });

@@ -47,6 +47,9 @@ function Pedido() {
           <Link to="/compras">Compras</Link>
         </Button>
         <Button asChild variant="outline">
+          <Link to="/rastreio">Rastrear pedido</Link>
+        </Button>
+        <Button asChild variant="outline">
           <Link to="/loja">Voltar à loja</Link>
         </Button>
       </div>

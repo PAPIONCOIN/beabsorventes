@@ -21,6 +21,7 @@ import { Route as GuiaRouteImport } from './routes/guia'
 import { Route as LojaRouteImport } from './routes/loja'
 import { Route as PedidoRouteImport } from './routes/pedido'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as RastreioRouteImport } from './routes/rastreio'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as ContaRecuperarRouteImport } from './routes/conta.recuperar'
 import { Route as ContaRedefinirRouteImport } from './routes/conta.redefinir'
@@ -88,6 +89,11 @@ const PrivacidadeRoute = PrivacidadeRouteImport.update({
   path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RastreioRoute = RastreioRouteImport.update({
+  id: '/rastreio',
+  path: '/rastreio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreRoute = SobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/loja': typeof LojaRoute
   '/pedido': typeof PedidoRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/rastreio': typeof RastreioRoute
   '/sobre': typeof SobreRoute
   '/conta/recuperar': typeof ContaRecuperarRoute
   '/conta/redefinir': typeof ContaRedefinirRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/loja': typeof LojaRoute
   '/pedido': typeof PedidoRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/rastreio': typeof RastreioRoute
   '/sobre': typeof SobreRoute
   '/conta/recuperar': typeof ContaRecuperarRoute
   '/conta/redefinir': typeof ContaRedefinirRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/loja': typeof LojaRoute
   '/pedido': typeof PedidoRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/rastreio': typeof RastreioRoute
   '/sobre': typeof SobreRoute
   '/conta/recuperar': typeof ContaRecuperarRoute
   '/conta/redefinir': typeof ContaRedefinirRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/loja'
     | '/pedido'
     | '/privacidade'
+    | '/rastreio'
     | '/sobre'
     | '/conta/recuperar'
     | '/conta/redefinir'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/loja'
     | '/pedido'
     | '/privacidade'
+    | '/rastreio'
     | '/sobre'
     | '/conta/recuperar'
     | '/conta/redefinir'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/loja'
     | '/pedido'
     | '/privacidade'
+    | '/rastreio'
     | '/sobre'
     | '/conta/recuperar'
     | '/conta/redefinir'
@@ -256,6 +268,7 @@ export interface RootRouteChildren {
   LojaRoute: typeof LojaRoute
   PedidoRoute: typeof PedidoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
+  RastreioRoute: typeof RastreioRoute
   SobreRoute: typeof SobreRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
   ApiWebhooksMercadopagoRoute: typeof ApiWebhooksMercadopagoRoute
@@ -348,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rastreio': {
+      id: '/rastreio'
+      path: '/rastreio'
+      fullPath: '/rastreio'
+      preLoaderRoute: typeof RastreioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sobre': {
       id: '/sobre'
       path: '/sobre'
@@ -418,6 +438,7 @@ const rootRouteChildren: RootRouteChildren = {
   LojaRoute: LojaRoute,
   PedidoRoute: PedidoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
+  RastreioRoute: RastreioRoute,
   SobreRoute: SobreRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
   ApiWebhooksMercadopagoRoute: ApiWebhooksMercadopagoRoute,

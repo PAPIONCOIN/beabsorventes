@@ -517,3 +517,30 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
     status,
   };
 }
+
+export function trackingLink(code: string) {
+  const tracking = code.replace(/\s/g, "").toUpperCase();
+  if (/^[A-Z]{2}\d{9}[A-Z]{2}$/.test(tracking)) {
+    return `https://rastreamento.correios.com.br/app/index.php?objeto=${tracking}`;
+  }
+  return `https://www.melhorrastreio.com.br/rastreio/${tracking}`;
+}
+
+export async function fetchMelhorEnvioTracking(uuid: string) {
+  if (!uuid) {
+    return { ok: false as const, tracking: "", trackingUrl: "", status: "" };
+  }
+  const info = await meFetch(`/me/orders/${uuid}`);
+  const data = asObject(info.data);
+  if (!info.ok || !data) {
+    return { ok: false as const, tracking: "", trackingUrl: "", status: "" };
+  }
+  const tracking = asText(data.tracking || data.self_tracking);
+  const status = asText(data.status);
+  return {
+    ok: true as const,
+    tracking,
+    trackingUrl: tracking ? trackingLink(tracking) : asText(data.tracking_url),
+    status,
+  };
+}
