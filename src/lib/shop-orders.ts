@@ -251,7 +251,10 @@ export async function persistOrder(input: PersistOrderInput) {
         name = excluded.name,
         phone = case when excluded.phone = '' then orders.phone else excluded.phone end,
         document = case when excluded.document = '' then orders.document else excluded.document end,
-        status = excluded.status,
+        status = case
+          when orders.status in ('paid', 'posted', 'delivered') then orders.status
+          else excluded.status
+        end,
         payment = excluded.payment,
         items = excluded.items,
         totals = excluded.totals,
@@ -297,6 +300,10 @@ export async function updateOrderStatus(
         tracking_url = case when ${trackingUrl} = '' then tracking_url else ${trackingUrl} end,
         updated_at = now()
       where order_id = ${orderId}
+        and (
+          ${status} <> 'paid'
+          or status in ('pending', 'demo')
+        )
     `;
   } catch (error) {
     console.error("[orders] status", error);
