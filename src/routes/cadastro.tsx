@@ -66,7 +66,9 @@ function Cadastro() {
   async function lookupCep(cepDigits: string) {
     if (cepDigits.length !== 8) return;
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+      const res = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`, {
+        signal: AbortSignal.timeout(5000),
+      });
       const data = (await res.json()) as {
         erro?: boolean;
         logradouro?: string;
