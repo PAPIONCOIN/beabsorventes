@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
+import { adminEmail, adminPassword, rateLimit, sessionCookie, sessionSecret } from "@/lib/security";
 
 const COOKIE = "bea_admin";
 
@@ -36,19 +37,19 @@ const customerSchema = z.object({
   city: z.string().trim().optional().default(""),
   state: z.string().trim().optional().default(""),
   source: z.enum(["cadastro", "checkout"]).optional().default("cadastro"),
-  password: z.string().min(6).optional(),
+  password: z.string().min(6).max(72).optional(),
 });
 
 function expectedPassword() {
-  return process.env.ADMIN_PASSWORD?.trim() || "Be271003";
+  return adminPassword();
 }
 
 function expectedEmail() {
-  return (process.env.ADMIN_EMAIL?.trim() || "beabsorventes@gmail.com").toLowerCase();
+  return adminEmail();
 }
 
 function cookieSecret() {
-  return expectedPassword();
+  return sessionSecret() || expectedPassword();
 }
 
 function signedToken() {
@@ -69,6 +70,7 @@ async function cookieValue() {
 }
 
 async function isAdmin() {
+  if (!cookieSecret()) return false;
   const value = await cookieValue();
   return Boolean(value) && equal(value, signedToken());
 }
@@ -171,8 +173,11 @@ export async function upsertCustomer(input: z.infer<typeof customerSchema>) {
   `;
   const row = rows[0];
   if (row && data.password) {
-    const { setPasswordForEmail } = await import("@/lib/customer-auth");
-    await setPasswordForEmail(data.email, data.password);
+    const { getPasswordHash, setPasswordForEmail } = await import("@/lib/customer-auth");
+    const existingHash = await getPasswordHash(data.email);
+    if (!existingHash) {
+      await setPasswordForEmail(data.email, data.password);
+    }
   }
   return row ? mapRow(row) : null;
 }
@@ -189,6 +194,18 @@ export const registerCustomer = createServerFn({ method: "POST" })
   .validator(customerSchema)
   .handler(async ({ data }) => {
     try {
+      if (data.password) {
+        const existing = await getCustomerByEmail(data.email);
+        const { getPasswordHash } = await import("@/lib/customer-auth");
+        const hash = existing ? await getPasswordHash(data.email) : "";
+        if (existing && hash) {
+          return {
+            ok: false as const,
+            customer: null,
+            message: "Este e-mail já tem cadastro. Entre ou recupere a senha.",
+          };
+        }
+      }
       const customer = await upsertCustomer({ ...data, source: "cadastro" });
       if (!customer) {
         return { ok: false as const, customer: null, message: "Não foi possível gravar o cadastro." };
@@ -215,31 +232,25 @@ export const adminLogin = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
+    const limited = rateLimit(`admin:${data.email.trim().toLowerCase()}`);
+    if (!limited.ok) return { ok: false as const, message: limited.message };
+    const password = expectedPassword();
+    if (!password) {
+      return { ok: false as const, message: "Senha da administração ainda não foi configurada." };
+    }
     const emailOk = equal(data.email.trim().toLowerCase(), expectedEmail());
-    const passwordOk = equal(data.password, expectedPassword());
+    const passwordOk = equal(data.password, password);
     if (!emailOk || !passwordOk) {
       return { ok: false as const, message: "E-mail ou senha incorretos." };
     }
     const { setCookie } = await import("@tanstack/react-start/server");
-    setCookie(COOKIE, signedToken(), {
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    setCookie(COOKIE, signedToken(), sessionCookie(60 * 60 * 24 * 7));
     return { ok: true as const };
   });
 
 export const adminLogout = createServerFn({ method: "POST" }).handler(async () => {
   const { setCookie } = await import("@tanstack/react-start/server");
-  setCookie(COOKIE, "", {
-    path: "/",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 0,
-  });
+  setCookie(COOKIE, "", sessionCookie(0));
   return { ok: true as const };
 });
 
