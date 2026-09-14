@@ -7,22 +7,23 @@ import { fetchShippingQuotes } from "@/lib/shipping";
 import { shippingPayable } from "@/lib/melhor-envio";
 import { upsertCustomer } from "@/lib/customers";
 import { persistOrder } from "@/lib/shop-orders";
+import { publicOrigin } from "@/lib/security";
 
 const itemSchema = z.object({
   slug: z.string().min(1),
   printId: z.string().min(1),
   size: z.string().min(1),
-  qty: z.number().int().positive(),
+  qty: z.number().int().positive().max(20),
 });
 
 const checkoutSchema = z.object({
   name: z.string().trim().min(2),
   email: z.string().trim().email(),
   cep: z.string().regex(/^\d{8}$/),
-  street: z.string().trim().optional().default(""),
-  number: z.string().trim().optional().default("s/n"),
+  street: z.string().trim().min(2),
+  number: z.string().trim().min(1),
   complement: z.string().trim().optional().default(""),
-  neighborhood: z.string().trim().optional().default(""),
+  neighborhood: z.string().trim().min(2),
   city: z.string().trim().min(2),
   state: z.string().trim().min(2).max(2),
   payment: z.enum(["pix", "card"]),
@@ -55,18 +56,7 @@ function mpStreetNumber(value: string) {
 }
 
 async function requestOrigin() {
-  const { getRequest } = await import("@tanstack/react-start/server");
-  const request = getRequest();
-  const url = new URL(request.url);
-  const proto =
-    request.headers.get("x-forwarded-proto") ??
-    url.protocol.replace(":", "") ??
-    "https";
-  const host =
-    request.headers.get("x-forwarded-host") ??
-    request.headers.get("host") ??
-    url.host;
-  return `${proto}://${host}`;
+  return publicOrigin();
 }
 
 function pricedItems(items: CartLine[]) {
@@ -254,7 +244,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         totals,
         shippingLabel: shipping.label,
         message:
-          "Adicione a variável MERCADOPAGO_ACCESS_TOKEN para habilitar o pagamento com Mercado Pago.",
+          "O pagamento ainda não está disponível. Tente de novo em alguns minutos.",
       };
     }
 
@@ -308,7 +298,11 @@ export const createMpCheckout = createServerFn({ method: "POST" })
               ],
             }
           : {
-              excluded_payment_types: [{ id: "ticket" }, { id: "atm" }],
+              excluded_payment_types: [
+                { id: "ticket" },
+                { id: "atm" },
+                { id: "bank_transfer" },
+              ],
             },
       metadata: {
         orderId,
@@ -339,6 +333,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          "X-Idempotency-Key": orderId,
         },
         body: JSON.stringify(preference),
       },
