@@ -750,11 +750,31 @@ export async function createMelhorEnvioShipment(input: MelhorEnvioOrderInput) {
 }
 
 export function trackingLink(code: string) {
-  const tracking = code.replace(/\s/g, "").toUpperCase();
+  const tracking = code.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  if (!tracking) return "";
   if (/^[A-Z]{2}\d{9}[A-Z]{2}$/.test(tracking)) {
     return `https://rastreamento.correios.com.br/app/index.php?objeto=${tracking}`;
   }
   return `https://www.melhorrastreio.com.br/rastreio/${tracking}`;
+}
+
+export function safeTrackingUrl(value: string) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:") return "";
+    const host = url.hostname.toLowerCase();
+    const allowed =
+      host === "melhorrastreio.com.br" ||
+      host.endsWith(".melhorrastreio.com.br") ||
+      host === "rastreamento.correios.com.br" ||
+      host.endsWith(".correios.com.br") ||
+      host === "www.melhorenvio.com.br" ||
+      host.endsWith(".melhorenvio.com.br");
+    return allowed ? url.toString() : "";
+  } catch {
+    return "";
+  }
 }
 
 export type MelhorEnvioShipment = {
@@ -788,7 +808,7 @@ function parseShipment(raw: unknown): MelhorEnvioShipment | null {
   return {
     id,
     tracking,
-    trackingUrl: tracking ? trackingLink(tracking) : asText(rec.tracking_url),
+    trackingUrl: tracking ? trackingLink(tracking) : safeTrackingUrl(asText(rec.tracking_url)),
     status: asText(rec.status).toLowerCase(),
     protocol: asText(rec.protocol),
     orderTag,
