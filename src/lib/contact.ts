@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
-import { isAdmin } from "@/lib/customers";
 import { sendInboxMail } from "@/lib/send-mail";
 import { rateLimit } from "@/lib/security";
 
@@ -123,6 +122,7 @@ export const sendContactMessage = createServerFn({ method: "POST" })
   });
 
 export const listContactMessages = createServerFn({ method: "GET" }).handler(async () => {
+  const { isAdmin } = await import("@/lib/customers");
   if (!(await isAdmin())) {
     return { ok: false as const, messages: [] as ContactMessage[] };
   }
@@ -161,6 +161,7 @@ export const listContactMessages = createServerFn({ method: "GET" }).handler(asy
 export const adminDeleteContactMessage = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.number().int().positive() }))
   .handler(async ({ data }) => {
+    const { isAdmin } = await import("@/lib/customers");
     if (!(await isAdmin())) {
       return { ok: false as const, message: "Entre de novo." };
     }

@@ -1,5 +1,3 @@
-import { createHash, randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
@@ -7,30 +5,27 @@ import { getCustomerByEmail } from "@/lib/customers";
 import { digitsOnly } from "@/lib/utils";
 import { publicOrigin, rateLimit } from "@/lib/security";
 import { sendInboxMail } from "@/lib/send-mail";
-
-const scrypt = promisify(scryptCb);
-
-export async function ensurePasswordColumns() {
-  const sql = await getSql();
-  await sql`alter table customers add column if not exists password_hash text not null default ''`;
-  await sql`alter table customers add column if not exists reset_token_hash text not null default ''`;
-  await sql`alter table customers add column if not exists reset_expires timestamptz`;
-  return sql;
-}
+import { hexEqual, randomHex, scryptHash, scryptSalt, sha256Hex } from "@/lib/hmac";
 
 export async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scrypt(password, salt, 32)) as Buffer;
-  return `${salt}:${buf.toString("hex")}`;
+  const salt = await scryptSalt();
+  const hash = await scryptHash(password, salt);
+  return `${salt}:${hash}`;
 }
 
 export async function verifyPassword(password: string, stored: string) {
   const [salt, hash] = stored.split(":");
   if (!salt || !hash) return false;
-  const buf = (await scrypt(password, salt, 32)) as Buffer;
-  const expected = Buffer.from(hash, "hex");
-  if (buf.length !== expected.length) return false;
-  return timingSafeEqual(buf, expected);
+  const derived = await scryptHash(password, salt);
+  return hexEqual(derived, hash);
+}
+
+async function ensurePasswordColumns() {
+  const sql = await getSql();
+  await sql`alter table customers add column if not exists password_hash text not null default ''`;
+  await sql`alter table customers add column if not exists reset_token_hash text not null default ''`;
+  await sql`alter table customers add column if not exists reset_expires timestamptz`;
+  return sql;
 }
 
 export async function getPasswordHash(email: string) {
@@ -73,8 +68,8 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
     if (!customer) {
       return { ok: true as const };
     }
-    const token = randomBytes(24).toString("hex");
-    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const token = await randomHex(24);
+    const tokenHash = await sha256Hex(token);
     const expires = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
     const sql = await ensurePasswordColumns();
     await sql`
@@ -111,7 +106,7 @@ export const resetPasswordWithToken = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const tokenHash = createHash("sha256").update(data.token).digest("hex");
+    const tokenHash = await sha256Hex(data.token);
     const sql = await ensurePasswordColumns();
     const rows = await sql<{ email: string }>`
       select email from customers

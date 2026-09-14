@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
@@ -12,6 +11,7 @@ import { digitsOnly } from "@/lib/utils";
 import { getPasswordHash, setPasswordForEmail, verifyPassword } from "@/lib/customer-auth";
 import { createMelhorEnvioShipment, fetchMelhorEnvioTracking, getMelhorEnvioAccount, listMelhorEnvioShipments, trackingLink } from "@/lib/melhor-envio";
 import { rateLimit, sessionCookie, sessionSecret } from "@/lib/security";
+import { hexEqual, hmacHex } from "@/lib/hmac";
 
 const COOKIE = "bea_conta";
 
@@ -74,22 +74,20 @@ function cookieSecret() {
   return sessionSecret();
 }
 
-function signedEmail(email: string) {
+async function signedEmail(email: string) {
   const value = email.trim().toLowerCase();
-  const sig = createHmac("sha256", cookieSecret()).update(`conta:${value}`).digest("hex");
+  const sig = await hmacHex(cookieSecret(), `conta:${value}`);
   return `${value}::${sig}`;
 }
 
-function readSignedEmail(raw: string) {
+async function readSignedEmail(raw: string) {
   if (!cookieSecret()) return "";
   const at = raw.lastIndexOf("::");
   if (at < 0) return "";
   const email = raw.slice(0, at);
   const sig = raw.slice(at + 2);
-  const expected = createHmac("sha256", cookieSecret()).update(`conta:${email}`).digest("hex");
-  const a = Buffer.from(sig);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return "";
+  const expected = await hmacHex(cookieSecret(), `conta:${email}`);
+  if (!(await hexEqual(sig, expected))) return "";
   return email;
 }
 
@@ -101,7 +99,7 @@ async function cookieValue() {
 }
 
 async function sessionEmail() {
-  return readSignedEmail(await cookieValue());
+  return await readSignedEmail(await cookieValue());
 }
 
 async function ensureOrdersTable() {
@@ -429,7 +427,7 @@ export const openAccount = createServerFn({ method: "POST" })
     if (!cookieSecret()) {
       return { ok: false as const, message: "A loja ainda está configurando o acesso seguro." };
     }
-    setCookie(COOKIE, signedEmail(email), sessionCookie(60 * 60 * 24 * 14));
+    setCookie(COOKIE, await signedEmail(email), sessionCookie(60 * 60 * 24 * 14));
     return {
       ok: true as const,
       customer,

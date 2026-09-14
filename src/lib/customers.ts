@@ -1,8 +1,8 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { adminEmail, adminPassword, rateLimit, sessionCookie, sessionSecret } from "@/lib/security";
+import { hmacDigestEqual, hmacHex } from "@/lib/hmac";
 
 const COOKIE = "bea_admin";
 
@@ -52,14 +52,12 @@ function cookieSecret() {
   return sessionSecret() || expectedPassword();
 }
 
-function signedToken() {
-  return createHmac("sha256", cookieSecret()).update("admin-ok").digest("hex");
+async function signedToken() {
+  return hmacHex(cookieSecret(), "admin-ok");
 }
 
-function equal(a: string, b: string) {
-  const left = createHmac("sha256", cookieSecret()).update(a).digest();
-  const right = createHmac("sha256", cookieSecret()).update(b).digest();
-  return timingSafeEqual(left, right);
+async function equal(a: string, b: string) {
+  return hmacDigestEqual(cookieSecret(), a, b);
 }
 
 async function cookieValue() {
@@ -72,7 +70,7 @@ async function cookieValue() {
 async function isAdmin() {
   if (!cookieSecret()) return false;
   const value = await cookieValue();
-  return Boolean(value) && equal(value, signedToken());
+  return Boolean(value) && (await equal(value, await signedToken()));
 }
 
 export { isAdmin };
@@ -238,13 +236,13 @@ export const adminLogin = createServerFn({ method: "POST" })
     if (!password) {
       return { ok: false as const, message: "Senha da administração ainda não foi configurada." };
     }
-    const emailOk = equal(data.email.trim().toLowerCase(), expectedEmail());
-    const passwordOk = equal(data.password, password);
+    const emailOk = await equal(data.email.trim().toLowerCase(), expectedEmail());
+    const passwordOk = await equal(data.password, password);
     if (!emailOk || !passwordOk) {
       return { ok: false as const, message: "E-mail ou senha incorretos." };
     }
     const { setCookie } = await import("@tanstack/react-start/server");
-    setCookie(COOKIE, signedToken(), sessionCookie(60 * 60 * 24 * 7));
+    setCookie(COOKIE, await signedToken(), sessionCookie(60 * 60 * 24 * 7));
     return { ok: true as const };
   });
 

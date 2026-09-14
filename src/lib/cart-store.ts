@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getProduct, type PrintId, type SizeId } from "@/lib/products";
-import { PIX_DISCOUNT, shippingFor } from "@/lib/utils";
+import { getProduct, type PrintId, type SizeId } from "./products.ts";
+import { PIX_DISCOUNT, shippingFor } from "./utils.ts";
 
 export type CartLine = {
   slug: string;
@@ -131,9 +131,11 @@ export const useCartStore = create<CartState>()(
       skipHydration: true,
       merge: (persisted, current) => {
         const stored = persisted as { lines?: CartLine[] } | undefined;
+        const incoming = sanitizeLines(stored?.lines ?? []);
+        const live = sanitizeLines(current.lines);
         return {
           ...current,
-          lines: sanitizeLines(stored?.lines ?? current.lines),
+          lines: live.length > 0 ? live : incoming,
         };
       },
     },
