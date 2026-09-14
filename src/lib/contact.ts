@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { isAdmin } from "@/lib/customers";
 import { sendInboxMail } from "@/lib/send-mail";
+import { rateLimit } from "@/lib/security";
 
 export const CONTACT_EMAIL = "beabsorventes@gmail.com";
 export const CONTACT_PHONE_DISPLAY = "+55 11 99589-5103";
@@ -81,6 +82,10 @@ const contactSchema = z.object({
 export const sendContactMessage = createServerFn({ method: "POST" })
   .validator(contactSchema)
   .handler(async ({ data }) => {
+    const limited = rateLimit(`contact:${data.email.toLowerCase()}`, 6, 60 * 60 * 1000);
+    if (!limited.ok) {
+      return { ok: false as const, mailed: false, message: limited.message };
+    }
     let saved = false;
     try {
       const sql = await ensureContactTable();

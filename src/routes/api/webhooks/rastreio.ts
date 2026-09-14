@@ -18,7 +18,7 @@ function authorized(request: Request, rawBody: string) {
   }
 
   if (!shared && !meSecret) {
-    return true;
+    return false;
   }
   return false;
 }

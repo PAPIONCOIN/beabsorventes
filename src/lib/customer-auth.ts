@@ -5,6 +5,8 @@ import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { getCustomerByEmail } from "@/lib/customers";
 import { digitsOnly } from "@/lib/utils";
+import { publicOrigin, rateLimit } from "@/lib/security";
+import { sendInboxMail } from "@/lib/send-mail";
 
 const scrypt = promisify(scryptCb);
 
@@ -58,24 +60,15 @@ export async function setPasswordForEmail(email: string, password: string) {
 }
 
 async function appOrigin() {
-  const { getRequest } = await import("@tanstack/react-start/server");
-  const request = getRequest();
-  const url = new URL(request.url);
-  const proto =
-    request.headers.get("x-forwarded-proto") ??
-    url.protocol.replace(":", "") ??
-    "https";
-  const host =
-    request.headers.get("x-forwarded-host") ??
-    request.headers.get("host") ??
-    url.host;
-  return `${proto}://${host}`;
+  return publicOrigin();
 }
 
 export const requestPasswordReset = createServerFn({ method: "POST" })
   .validator(z.object({ email: z.string().trim().email() }))
   .handler(async ({ data }) => {
     const email = data.email.trim().toLowerCase();
+    const limited = rateLimit(`reset:${email}`, 5, 30 * 60 * 1000);
+    if (!limited.ok) return { ok: true as const };
     const customer = await getCustomerByEmail(email).catch(() => null);
     if (!customer) {
       return { ok: true as const };
@@ -94,20 +87,15 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
     const origin = await appOrigin();
     const link = `${origin}/conta/redefinir?token=${token}`;
     try {
-      await fetch(`https://formsubmit.co/ajax/${email}`, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        body: (() => {
-          const body = new FormData();
-          body.append("_subject", "Redefinir senha — beabsorventes");
-          body.append("_template", "box");
-          body.append("_captcha", "false");
-          body.append(
-            "mensagem",
-            `Para criar uma nova senha, abra este link em até 2 horas:\n\n${link}\n\nSe você não pediu isso, ignore este e-mail.`,
-          );
-          return body;
-        })(),
+      await sendInboxMail({
+        subject: `Redefinir senha — ${email}`,
+        replyTo: email,
+        fields: {
+          Cliente: customer.name,
+          Email: email,
+          Link: link,
+          Aviso: "Link válido por 2 horas. Se a cliente não pediu, ignore.",
+        },
       });
     } catch (error) {
       console.error("[auth] reset-mail", error);
@@ -119,7 +107,7 @@ export const resetPasswordWithToken = createServerFn({ method: "POST" })
   .validator(
     z.object({
       token: z.string().min(16),
-      password: z.string().min(6),
+      password: z.string().min(6).max(72),
     }),
   )
   .handler(async ({ data }) => {
@@ -146,11 +134,15 @@ export const resetPasswordWithIdentity = createServerFn({ method: "POST" })
       email: z.string().trim().email(),
       document: z.string().trim().optional().default(""),
       phone: z.string().trim().optional().default(""),
-      password: z.string().min(6),
+      password: z.string().min(6).max(72),
     }),
   )
   .handler(async ({ data }) => {
     const email = data.email.trim().toLowerCase();
+    const limited = rateLimit(`reset-id:${email}`, 5, 30 * 60 * 1000);
+    if (!limited.ok) {
+      return { ok: false as const, message: limited.message };
+    }
     const customer = await getCustomerByEmail(email).catch(() => null);
     if (!customer) {
       return { ok: false as const, message: "E-mail ou dados não conferem." };
@@ -164,10 +156,10 @@ export const resetPasswordWithIdentity = createServerFn({ method: "POST" })
       phone.length >= 10 &&
       storedPhone.length >= 10 &&
       phone.slice(-10) === storedPhone.slice(-10);
-    if (!cpfOk && !phoneOk) {
+    if (!cpfOk || !phoneOk) {
       return {
         ok: false as const,
-        message: "Informe o CPF ou o WhatsApp do cadastro.",
+        message: "Informe o CPF e o WhatsApp do cadastro.",
       };
     }
     try {

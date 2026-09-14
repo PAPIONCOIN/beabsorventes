@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { updateOrderTracking } from "@/lib/shop-orders";
+import { safeTrackingUrl, trackingLink } from "@/lib/melhor-envio";
 
 export type TrackingUpdate = {
   source: "melhor-envio" | "correios" | "generico";
@@ -85,12 +86,13 @@ export function parseTrackingPayload(
       event: rec.event,
       status: typeof data.status === "string" ? data.status : rec.event,
       tracking,
-      trackingUrl:
+      trackingUrl: safeTrackingUrl(
         typeof data.tracking_url === "string"
           ? data.tracking_url
           : tracking
-            ? `https://www.melhorrastreio.com.br/rastreio/${tracking}`
-            : null,
+            ? trackingLink(tracking)
+            : "",
+      ) || null,
       protocol: typeof data.protocol === "string" ? data.protocol : null,
       orderTag: firstTag?.tag ?? (typeof data.orderId === "string" ? data.orderId : null),
     };

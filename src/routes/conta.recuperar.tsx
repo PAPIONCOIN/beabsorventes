@@ -66,7 +66,7 @@ function Recuperar() {
       ) : (
         <>
           <p className="mt-3 text-sm text-muted">
-            Confirme o e-mail e o CPF ou o WhatsApp do cadastro e crie uma nova
+            Confirme o e-mail, o CPF e o WhatsApp do cadastro e crie uma nova
             senha.
           </p>
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
