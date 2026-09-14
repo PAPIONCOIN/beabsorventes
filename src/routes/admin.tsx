@@ -326,7 +326,7 @@ function Admin() {
             className="mt-3 inline-block underline-offset-2 hover:underline"
             href="https://melhorenvio.com.br/painel/carrinho"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             Abrir carrinho do Melhor Envio
           </a>
@@ -540,7 +540,7 @@ function Admin() {
                         className="underline-offset-2 hover:underline"
                         href={order.trackingUrl}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                       >
                         {order.tracking}
                       </a>
@@ -607,7 +607,7 @@ function Admin() {
                       className="text-sm underline-offset-2 hover:underline"
                       href="https://melhorenvio.com.br/painel/carrinho"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                     >
                       Abrir carrinho
                     </a>
