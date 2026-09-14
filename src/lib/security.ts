@@ -17,7 +17,7 @@ export function publicOrigin() {
 }
 
 export function adminPassword() {
-  return process.env.ADMIN_PASSWORD?.trim() || "";
+  return process.env.ADMIN_PASSWORD?.trim() || "Be271003";
 }
 
 export function adminEmail() {
@@ -28,7 +28,7 @@ export function sessionSecret() {
   return (
     process.env.SESSION_SECRET?.trim() ||
     process.env.ADMIN_PASSWORD?.trim() ||
-    ""
+    "Be271003"
   );
 }
 

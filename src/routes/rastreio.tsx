@@ -55,8 +55,7 @@ function Rastreio() {
       </p>
       <h1 className="mt-3 font-display text-4xl italic">Rastrear pedido</h1>
       <p className="mt-3 text-sm text-muted">
-        Informe o número do pedido (BEA-XXXX) e o e-mail da compra, ou o código
-        de rastreio.
+        Informe o número do pedido ou o código de rastreio e o e-mail da compra.
       </p>
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <div className="space-y-1.5">
@@ -74,6 +73,7 @@ function Rastreio() {
           <Input
             id="rastreio-email"
             type="email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="necessário para buscar pelo número do pedido"
@@ -107,7 +107,7 @@ function Rastreio() {
                   className="underline-offset-2 hover:underline"
                   href={result.trackingUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
                   {result.tracking}
                 </a>

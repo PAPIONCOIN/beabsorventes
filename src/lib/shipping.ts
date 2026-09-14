@@ -13,7 +13,7 @@ const itemSchema = z.object({
   slug: z.string().min(1),
   printId: z.string().optional().default("padrao"),
   size: z.string().optional().default("Único"),
-  qty: z.number().int().positive(),
+  qty: z.number().int().positive().max(20),
 });
 
 export type QuotedShipping = ShippingQuote & { payableCents: number };

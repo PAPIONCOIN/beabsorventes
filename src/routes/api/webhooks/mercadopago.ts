@@ -57,7 +57,7 @@ export const Route = createFileRoute("/api/webhooks/mercadopago")({
 async function handleMercadoPago(request: Request) {
         const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
         if (!token) {
-          return Response.json({ ok: false, error: "no_token" }, { status: 503 });
+          return Response.json({ ok: false }, { status: 503 });
         }
         const paymentId = await paymentIdFrom(request);
         if (!paymentId) return Response.json({ ok: true, ignored: true });
