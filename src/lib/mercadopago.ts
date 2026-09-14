@@ -59,6 +59,20 @@ async function requestOrigin() {
   return publicOrigin();
 }
 
+function isMercadoPagoUrl(value: string) {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return (
+      host === "www.mercadopago.com.br" ||
+      host.endsWith(".mercadopago.com") ||
+      host.endsWith(".mercadopago.com.br") ||
+      host.endsWith(".mercadopago.com.ar")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function pricedItems(items: CartLine[]) {
   const lines = [];
   for (const item of items) {
@@ -280,8 +294,8 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       },
       notification_url: `${origin}/api/webhooks/mercadopago`,
       back_urls: {
-        success: `${origin}/pedido?status=success`,
-        pending: `${origin}/pedido?status=pending`,
+        success: `${origin}/pedido?status=success&pedido=${encodeURIComponent(orderId)}`,
+        pending: `${origin}/pedido?status=pending&pedido=${encodeURIComponent(orderId)}`,
         failure: `${origin}/checkout`,
       },
       auto_return: "approved",
@@ -358,7 +372,7 @@ export const createMpCheckout = createServerFn({ method: "POST" })
       sandbox_init_point?: string;
     };
     const url = body.init_point || body.sandbox_init_point;
-    if (!url) {
+    if (!url || !isMercadoPagoUrl(url)) {
       return {
         ok: false as const,
         reason: "gateway" as const,
