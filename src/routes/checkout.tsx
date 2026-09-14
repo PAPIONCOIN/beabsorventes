@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ import {
 import { createMpCheckout, getMercadoPagoStatus } from "@/lib/mercadopago";
 import { quoteShipping } from "@/lib/shipping";
 import { saveLastOrder } from "@/lib/orders";
-import { sendOrderMail } from "@/lib/order-mail";
 import { getProduct } from "@/lib/products";
 import { BrandMark } from "@/components/logo";
 import { digitsOnly, formatBRL, formatCep, formatCpf, formatPhone, FREE_SHIPPING_FROM } from "@/lib/utils";
@@ -22,9 +21,7 @@ import { getAccount } from "@/lib/shop-orders";
 export const Route = createFileRoute("/checkout")({ component: Checkout });
 
 function Checkout() {
-  const navigate = useNavigate();
   const lines = useCartStore((s) => s.lines);
-  const clear = useCartStore((s) => s.clear);
   const [payment, setPayment] = useState<"pix" | "card">("pix");
   const [quotes, setQuotes] = useState<
     {
@@ -108,7 +105,9 @@ function Checkout() {
     if (cep.length !== 8) return;
     void loadQuotes(cep);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+        signal: AbortSignal.timeout(5000),
+      });
       const data = (await res.json()) as {
         erro?: boolean;
         logradouro?: string;
@@ -197,21 +196,7 @@ function Checkout() {
         return;
       }
       if (result.reason === "missing_token") {
-        saveLastOrder({
-          ...mailPayload,
-          createdAt: new Date().toISOString(),
-          status: "demo",
-        });
-        try {
-          await sendOrderMail({
-            ...mailPayload,
-            status: "Teste (sem Mercado Pago)",
-          });
-        } catch (error) {
-          console.error("[order-mail]", error);
-        }
-        clear();
-        await navigate({ to: "/pedido", search: { status: "demo" } });
+        toast.error(result.message);
         return;
       }
       toast.error(result.message);
