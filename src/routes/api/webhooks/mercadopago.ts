@@ -84,7 +84,19 @@ async function handleMercadoPago(request: Request) {
         }
 
         const existing = await getOrder(orderId);
-        const alreadyPaid = existing?.status === "paid" || existing?.status === "posted" || existing?.status === "delivered";
+        if (!existing) {
+          console.error("[mp-webhook] unknown order", orderId);
+          return Response.json({ ok: true, ignored: true, reason: "unknown_order" });
+        }
+
+        const paidCents = Math.round((payment.transaction_amount ?? 0) * 100);
+        const expected = existing.totals?.total ?? 0;
+        if (expected > 0 && Math.abs(paidCents - expected) > 100) {
+          console.error("[mp-webhook] amount mismatch", orderId, paidCents, expected);
+          return Response.json({ ok: false, error: "amount_mismatch" }, { status: 409 });
+        }
+
+        const alreadyPaid = existing.status === "paid" || existing.status === "posted" || existing.status === "delivered";
         await updateOrderStatus(orderId, alreadyPaid ? existing?.status || "paid" : "paid");
 
         if (!alreadyPaid) {
