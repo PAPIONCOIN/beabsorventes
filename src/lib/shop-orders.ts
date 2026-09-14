@@ -11,6 +11,7 @@ import {
 import { digitsOnly } from "@/lib/utils";
 import { getPasswordHash, setPasswordForEmail, verifyPassword } from "@/lib/customer-auth";
 import { createMelhorEnvioShipment, fetchMelhorEnvioTracking, getMelhorEnvioAccount, listMelhorEnvioShipments, trackingLink } from "@/lib/melhor-envio";
+import { rateLimit, sessionCookie, sessionSecret } from "@/lib/security";
 
 const COOKIE = "bea_conta";
 
@@ -70,7 +71,7 @@ const profileSchema = z.object({
 });
 
 function cookieSecret() {
-  return process.env.ADMIN_PASSWORD?.trim() || "Be271003";
+  return sessionSecret();
 }
 
 function signedEmail(email: string) {
@@ -80,6 +81,7 @@ function signedEmail(email: string) {
 }
 
 function readSignedEmail(raw: string) {
+  if (!cookieSecret()) return "";
   const at = raw.lastIndexOf("::");
   if (at < 0) return "";
   const email = raw.slice(0, at);
@@ -358,6 +360,10 @@ export const openAccount = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const email = data.email.trim().toLowerCase();
+    const limited = rateLimit(`login:${email}`, 10, 15 * 60 * 1000);
+    if (!limited.ok) {
+      return { ok: false as const, message: limited.message };
+    }
     let customer: Customer | null = null;
     try {
       customer = await getCustomerByEmail(email);
@@ -399,22 +405,24 @@ export const openAccount = createServerFn({ method: "POST" })
       const storedCep = customer?.cep || orders[0]?.address.cep || "";
       const phoneOk = data.phone ? phonesMatch(data.phone, storedPhone) : false;
       const cepOk = data.cep ? cepsMatch(data.cep, storedCep) : false;
-      if (!phoneOk && !cepOk) {
+      const hasPhone = digitsOnly(storedPhone).length >= 10;
+      const hasCep = digitsOnly(storedCep).length === 8;
+      const identityOk = hasPhone && hasCep ? phoneOk && cepOk : hasPhone ? phoneOk : hasCep ? cepOk : false;
+      if (!identityOk) {
         return {
           ok: false as const,
-          message: "Confira o WhatsApp ou o CEP usados no cadastro.",
+          message: hasPhone && hasCep
+            ? "Confira o WhatsApp e o CEP usados no cadastro."
+            : "Confira o WhatsApp ou o CEP usados no cadastro.",
         };
       }
     }
 
     const { setCookie } = await import("@tanstack/react-start/server");
-    setCookie(COOKIE, signedEmail(email), {
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 14,
-    });
+    if (!cookieSecret()) {
+      return { ok: false as const, message: "A loja ainda está configurando o acesso seguro." };
+    }
+    setCookie(COOKIE, signedEmail(email), sessionCookie(60 * 60 * 24 * 14));
     return {
       ok: true as const,
       customer,
@@ -466,13 +474,7 @@ export const getShopSession = createServerFn({ method: "GET" }).handler(async ()
 
 export const closeAccount = createServerFn({ method: "POST" }).handler(async () => {
   const { setCookie } = await import("@tanstack/react-start/server");
-  setCookie(COOKIE, "", {
-    path: "/",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 0,
-  });
+  setCookie(COOKIE, "", sessionCookie(0));
   return { ok: true as const };
 });
 
@@ -717,8 +719,7 @@ export const lookupPublicTracking = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const query = data.query.trim();
     const email = data.email.trim().toLowerCase();
-    const isOrderId = query.toUpperCase().startsWith("BEA-");
-    if (isOrderId && !email) {
+    if (!email) {
       return { ok: false as const, message: "Informe o e-mail da compra." };
     }
     try {
